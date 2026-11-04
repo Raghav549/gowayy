@@ -1,92 +1,171 @@
 {
-  "name": "GOWAYY Brand System v2.0 — light 'Himalayan Morning' edition",
+  "name": "GOWAYY Lavender Fields Design System v3.0",
   "generated": "2026-11-04",
-  "note": "v2 is LIGHT-ONLY by design: no black, charcoal, grey or dark surfaces anywhere. Warm paper backgrounds, espresso ink for text, per-app accents (meadow green / clay terracotta / plum).",
+  "note": "A shared lavender/lilac and warm-cream identity based on the official purple-and-orange GOWAYY mark. Light surfaces throughout; black is reserved for readable type and primary actions.",
   "restrictions": [
-    "No black, charcoal, grey or dark backgrounds in any app surface, logo, icon, splash or animation.",
-    "No neon, electric, steel, metallic, chrome or industrial materials.",
-    "No blue-dominant or cyan hues (kept as a hard guard in CI tests).",
-    "Warm paper + espresso ink + one per-app accent; accessible contrast on every pairing."
+    "Use lavender, lilac, pale purple, warm off-white and soft cream as the shared foundation.",
+    "Use the official deep-purple and orange logo without app-specific recolouring.",
+    "Black is reserved for typography, icons and primary CTA surfaces, never large backgrounds.",
+    "Avoid grey-dominated, neon, electric-blue, cyan, metallic and harsh-gradient treatments."
   ],
   "colour": {
-    "ink": "#33261B",
-    "paper": "#FAF4E9",
+    "ink": "#15121A",
+    "paper": "#FBF8F5",
     "surface": "#FFFFFF",
-    "surfaceAlt": "#F3EAD9",
-    "warmWhite": "#FFFDF8",
-    "softIvory": "#F3EAD9",
-    "mutedSilver": "#C9BBA3",
-    "silverDeep": "#8A7460",
-    "champagne": "#E8A23A",
-    "champagneLight": "#F2C063",
-    "champagneDeep": "#B97A1F",
-    "success": "#4E7D5B",
-    "warning": "#C07A2D",
-    "danger": "#B0492F",
-    "info": "#6E7F7A",
+    "surfaceAlt": "#F4EFF8",
+    "warmWhite": "#FFFCF8",
+    "softIvory": "#F8F2EA",
+    "mutedSilver": "#BDB5C5",
+    "silverDeep": "#766F7B",
+    "champagne": "#FFA500",
+    "champagneLight": "#FFC44D",
+    "champagneDeep": "#E58B00",
+    "success": "#38856A",
+    "warning": "#B97826",
+    "danger": "#B94D59",
+    "info": "#7854A8",
     "light": {
-      "bg": "#FAF4E9",
+      "bg": "#F8F3FB",
       "surface": "#FFFFFF",
-      "surfaceAlt": "#F3EAD9",
+      "surfaceAlt": "#F1EAF8",
       "raised": "#FFFFFF",
-      "text": "#33261B",
-      "textMuted": "#8A7460",
-      "border": "#E9DDC7",
-      "accent": "#1E6B4F",
-      "accentContrast": "#FFFDF8"
+      "text": "#15121A",
+      "textMuted": "#6F6876",
+      "border": "#E9E0F0",
+      "accent": "#421080",
+      "accentContrast": "#FFFFFF"
     },
     "dark": {
-      "deprecated": "v2 is light-only; this block mirrors light and exists only for type compatibility",
-      "bg": "#FAF4E9",
+      "deprecated": "Light-only lavender identity; mirrors light for compatibility.",
+      "bg": "#F8F3FB",
       "surface": "#FFFFFF",
-      "surfaceAlt": "#F3EAD9",
+      "surfaceAlt": "#F1EAF8",
       "raised": "#FFFFFF",
-      "text": "#33261B",
-      "textMuted": "#8A7460",
-      "border": "#E9DDC7",
-      "accent": "#1E6B4F",
-      "accentContrast": "#FFFDF8"
+      "text": "#15121A",
+      "textMuted": "#6F6876",
+      "border": "#E9E0F0",
+      "accent": "#421080",
+      "accentContrast": "#FFFFFF"
     },
     "apps": {
-      "customer": { "accent": "#1E6B4F", "accentName": "meadow green", "accentSoft": "#E2EFE7", "accentContrast": "#FFFDF8" },
-      "partner": { "accent": "#C2502A", "accentName": "clay terracotta", "accentSoft": "#F8E3D8", "accentContrast": "#FFFDF8" },
-      "explore": { "accent": "#6D3B5E", "accentName": "rhododendron plum", "accentSoft": "#F1E2EC", "accentContrast": "#FFFDF8" }
-    }
+      "customer": {
+        "accent": "#421080",
+        "accentName": "gowayy purple",
+        "accentSoft": "#EDE3F7",
+        "accentContrast": "#FFFFFF"
+      },
+      "partner": {
+        "accent": "#421080",
+        "accentName": "gowayy purple",
+        "accentSoft": "#EDE3F7",
+        "accentContrast": "#FFFFFF"
+      },
+      "explore": {
+        "accent": "#421080",
+        "accentName": "gowayy purple",
+        "accentSoft": "#EDE3F7",
+        "accentContrast": "#FFFFFF"
+      }
+    },
+    "purple": "#421080",
+    "purpleDeep": "#310761",
+    "lavender": "#EDE3F7",
+    "lilac": "#DCC7F2",
+    "lilacLight": "#F6F0FB",
+    "cream": "#FBF8F5"
   },
   "typography": {
-    "displayFamily": "'GOWAYY Display', 'Manrope', 'Inter', 'Segoe UI', system-ui, sans-serif",
+    "displayFamily": "'Manrope', 'Inter', 'Segoe UI', system-ui, sans-serif",
     "bodyFamily": "'Inter', 'Segoe UI', Roboto, system-ui, sans-serif",
     "monoFamily": "'SFMono-Regular', Consolas, 'Liberation Mono', monospace",
     "scale": {
-      "xs": { "size": 12, "lineHeight": 16, "tracking": 0.2 },
-      "sm": { "size": 14, "lineHeight": 20, "tracking": 0.1 },
-      "base": { "size": 16, "lineHeight": 24, "tracking": 0 },
-      "lg": { "size": 20, "lineHeight": 28, "tracking": -0.2 },
-      "xl": { "size": 24, "lineHeight": 32, "tracking": -0.4 },
-      "2xl": { "size": 32, "lineHeight": 38, "tracking": -0.8 },
-      "3xl": { "size": 40, "lineHeight": 46, "tracking": -1.2 },
-      "4xl": { "size": 56, "lineHeight": 62, "tracking": -1.8 },
-      "5xl": { "size": 72, "lineHeight": 78, "tracking": -2.4 }
+      "xs": {
+        "size": 12,
+        "lineHeight": 16,
+        "tracking": 0.2
+      },
+      "sm": {
+        "size": 14,
+        "lineHeight": 20,
+        "tracking": 0.1
+      },
+      "base": {
+        "size": 16,
+        "lineHeight": 24,
+        "tracking": 0
+      },
+      "lg": {
+        "size": 20,
+        "lineHeight": 28,
+        "tracking": -0.2
+      },
+      "xl": {
+        "size": 24,
+        "lineHeight": 32,
+        "tracking": -0.4
+      },
+      "2xl": {
+        "size": 32,
+        "lineHeight": 38,
+        "tracking": -0.8
+      },
+      "3xl": {
+        "size": 40,
+        "lineHeight": 46,
+        "tracking": -1.2
+      },
+      "4xl": {
+        "size": 56,
+        "lineHeight": 62,
+        "tracking": -1.8
+      },
+      "5xl": {
+        "size": 72,
+        "lineHeight": 78,
+        "tracking": -2.4
+      }
     },
-    "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700, "display": 800 },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700,
+      "display": 800
+    },
     "usage": {
       "hero": "4xl / display / tight tracking, espresso ink on warm paper",
       "body": "base / body / system sans",
       "caption": "xs / body / muted taupe"
     }
   },
-  "spacing": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 40, "2xl": 64 },
-  "radius": { "sm": 8, "md": 14, "lg": 20, "xl": 28, "pill": 999 },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "2xl": 48
+  },
+  "radius": {
+    "sm": 12,
+    "md": 18,
+    "lg": 24,
+    "xl": 32,
+    "pill": 999
+  },
   "shadow": {
-    "lightSm": "0 1px 2px rgba(51,38,27,.08)",
-    "lightMd": "0 10px 28px rgba(51,38,27,.12)",
-    "lightLg": "0 24px 60px rgba(51,38,27,.16)",
-    "darkSm": "0 1px 2px rgba(51,38,27,.08)",
-    "darkMd": "0 10px 28px rgba(51,38,27,.12)",
-    "darkLg": "0 24px 60px rgba(51,38,27,.16)"
+    "lightSm": "0 4px 14px rgba(67,39,94,.06)",
+    "lightMd": "0 12px 34px rgba(67,39,94,.10)",
+    "lightLg": "0 24px 58px rgba(67,39,94,.14)",
+    "darkSm": "0 4px 14px rgba(67,39,94,.06)",
+    "darkMd": "0 12px 34px rgba(67,39,94,.10)",
+    "darkLg": "0 24px 58px rgba(67,39,94,.14)"
   },
   "motion": {
-    "fast": 120, "base": 240, "slow": 480, "splash": 2600,
+    "fast": 120,
+    "base": 240,
+    "slow": 480,
+    "splash": 1900,
     "easing": "cubic-bezier(.22,.9,.28,1)",
     "stagger": 90
   }

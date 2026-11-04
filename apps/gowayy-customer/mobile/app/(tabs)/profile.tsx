@@ -12,13 +12,12 @@ import { useTheme, spacing, radius, font } from '../../src/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { c, mode } = useTheme();
+  const { c } = useTheme();
   const qc = useQueryClient();
   const user = useSession((s) => s.user);
   const refreshUser = useSession((s) => s.refresh);
   const clearSession = useSession((s) => s.clear);
   const clearJourney = useJourney((s) => s.clear);
-  const toggleTheme = useUI((s) => s.toggleTheme);
   const showToast = useUI((s) => s.showToast);
   const [firstName, setFirstName] = useState(user?.firstName ?? '');
   const [lastName, setLastName] = useState(user?.lastName ?? '');
@@ -90,10 +89,9 @@ export default function ProfileScreen() {
         <Button title="Save profile" loading={saving} onPress={() => void saveProfile()} />
       </Card>
 
-      <SectionTitle eyebrow="Appearance" title="Theme" />
+      <SectionTitle eyebrow="Appearance" title="Lavender identity" />
       <Card>
-        <Text style={{ color: c.textMuted, fontSize: font.sizes.sm }}>Current: {mode} theme. Applies across every screen.</Text>
-        <Button title={`Switch to ${mode === 'dark' ? 'light' : 'dark'} theme`} variant="secondary" onPress={toggleTheme} />
+        <Text style={{ color: c.textMuted, fontSize: font.sizes.sm }}>Soft lavender surfaces, warm cream and the official GOWAYY purple-and-orange mark.</Text>
       </Card>
 
       <SectionTitle eyebrow="Navigation" title="Quick links" />
@@ -157,5 +155,5 @@ const styles = StyleSheet.create({
   avatar: { width: 54, height: 54, borderRadius: 27, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   links: { gap: spacing.sm },
   danger: { gap: spacing.sm, marginTop: spacing.lg },
-  foot: { color: '#6B6F76', fontSize: font.sizes.xs, textAlign: 'center', marginTop: spacing.lg, marginBottom: spacing.xl },
+  foot: { color: '#6F6876', fontSize: font.sizes.xs, textAlign: 'center', marginTop: spacing.lg, marginBottom: spacing.xl },
 });

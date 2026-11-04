@@ -8,9 +8,8 @@ import { useTheme, font, spacing } from '../src/theme';
 import { expoLocationProvider } from '../src/lib/location';
 
 export default function SettingsScreen() {
-  const { c, mode } = useTheme();
+  const { c } = useTheme();
   const qc = useQueryClient();
-  const toggleTheme = useUI((s) => s.toggleTheme);
   const showToast = useUI((s) => s.showToast);
   const [label, setLabel] = useState('');
   const [placeId, setPlaceId] = useState('');
@@ -47,8 +46,8 @@ export default function SettingsScreen() {
         <Button title="Recheck connection" variant="secondary" onPress={() => void health.refetch()} />
       </Card>
       <Card>
-        <Text style={{ color: c.text, fontWeight: '600' }}>Theme: {mode}</Text>
-        <Button title="Toggle light / dark" variant="secondary" onPress={toggleTheme} />
+        <Text style={{ color: c.text, fontWeight: '600' }}>GOWAYY lavender identity</Text>
+        <Text style={{ color: c.textMuted, fontSize: font.sizes.xs }}>Soft lilac surfaces, warm cream and the official purple-and-orange mark.</Text>
       </Card>
       <Card>
         <Text style={{ color: c.text, fontWeight: '600' }}>Location permissions</Text>
@@ -76,4 +75,4 @@ export default function SettingsScreen() {
     </Screen>
   );
 }
-const styles = StyleSheet.create({ foot: { color: '#6B6F76', fontSize: font.sizes.xs, marginTop: spacing.lg, marginBottom: spacing.xl } });
+const styles = StyleSheet.create({ foot: { color: '#6F6876', fontSize: font.sizes.xs, marginTop: spacing.lg, marginBottom: spacing.xl } });

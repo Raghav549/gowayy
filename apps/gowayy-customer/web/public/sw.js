@@ -1,6 +1,6 @@
 /* GOWAYY PWA service worker: cache static shell and verified imagery, network-first for /api. */
 const CACHE = 'gowayy-shell-v1';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/brand/g-symbol.png', '/brand/wordmark.png', '/brand/favicon.png'];
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/brand/g-symbol.svg', '/brand/wordmark.svg', '/brand/app-icon.png', '/brand/splash-logo.svg', '/brand/favicon.png'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });

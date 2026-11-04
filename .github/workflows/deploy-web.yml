@@ -1,10 +1,8 @@
 name: Deploy web apps to Vercel
 
-# One Vercel project per app (matrix). Each project's Root Directory must be
-# the app's web dir (see docs/DEPLOYMENT.md §2); the per-app vercel.json there
-# builds from the monorepo root and emits dist/ inside that directory.
-# If required Vercel secrets are absent the deploy steps are skipped and the
-# report job prints exactly which secrets are missing — loud, never hidden.
+# Build each app in GitHub Actions, verify its dist/index.html, then assemble
+# Vercel's prebuilt static-output contract. This avoids Vercel's remote
+# STATIC_BUILD_NO_OUT_DIR detector for nested monorepo build outputs.
 
 on:
   push:
@@ -36,7 +34,7 @@ jobs:
           else
             echo "vercel=false" >> "$GITHUB_OUTPUT"
             echo "missing=$missing" >> "$GITHUB_OUTPUT"
-            echo "SKIPPED (visible, not hidden): missing secrets:$missing — see docs/DEPLOYMENT.md §2"
+            echo "SKIPPED (visible): missing secrets:$missing — see docs/DEPLOYMENT.md §2"
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -56,22 +54,47 @@ jobs:
         include:
           - app: customer
             project: VERCEL_PROJECT_CUSTOMER
+            workspace: '@gowayy/customer-web'
             dir: apps/gowayy-customer/web
           - app: partner
             project: VERCEL_PROJECT_PARTNER
+            workspace: '@gowayy/partner-web'
             dir: apps/gowayy-partner/web
           - app: explore
             project: VERCEL_PROJECT_EXPLORE
+            workspace: '@gowayy/explore-web'
             dir: apps/gowayy-explore/web
     steps:
       - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
+      - uses: actions/setup-node@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets[matrix.project] }}
-          working-directory: ${{ matrix.dir }}
-          vercel-args: '--prod'
+          node-version: 22
+          cache: npm
+      - name: Install monorepo dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Link Vercel project and pull production environment
+        working-directory: ${{ matrix.dir }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets[matrix.project] }}
+        run: |
+          mkdir -p .vercel
+          node -e 'require("node:fs").writeFileSync(".vercel/project.json", JSON.stringify({orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID}, null, 2))'
+          npx --yes vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+          npx --yes vercel@latest env pull .env.production.local --environment=production --yes --token "$VERCEL_TOKEN"
+      - name: Build app with Vercel production environment and assert Vite output exists
+        run: |
+          npm run build -w '${{ matrix.workspace }}'
+          test -s '${{ matrix.dir }}/dist/index.html'
+          echo 'Verified ${{ matrix.dir }}/dist/index.html'
+      - name: Prepare Vercel static output
+        run: node scripts/prepare-vercel-output.mjs '${{ matrix.app }}'
+      - name: Deploy prebuilt output
+        working-directory: ${{ matrix.dir }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes vercel@latest deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN"
 
   report:
     name: Deployment report
@@ -81,7 +104,7 @@ jobs:
     steps:
       - run: |
           if [ "${{ needs.preflight.outputs.vercel }}" = "true" ]; then
-            echo "Vercel production deploys ran for all three apps."
+            echo "Vercel prebuilt production deploys ran for all three apps."
           else
             echo "Vercel deploys SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (docs/DEPLOYMENT.md §2)."
           fi

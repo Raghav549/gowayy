@@ -1,0 +1,25 @@
+{
+  "name": "GOWAYY PARTNER",
+  "short_name": "Partner",
+  "description": "GOWAYY tools for drivers, hosts, shops and local experience partners.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8F3FB",
+  "theme_color": "#F8F3FB",
+  "icons": [
+    {
+      "src": "/brand/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/brand/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

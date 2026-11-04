@@ -1,72 +1,55 @@
-/** Cinematic 3D-informed splash: layered 2.5D G surfaces with real motion. */
+/** Lightweight, reduced-motion-aware reveal of the official layered GOWAYY mark. */
 import { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { useUI } from '../src/store/useUI';
-import { useTheme, spacing, font } from '../src/theme';
+import { useTheme } from '../src/theme';
 
-const SPLASH_MS = 2300;
-
+const SPLASH_MS = 1450;
 export default function SplashScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { c } = useTheme();
   const reducedMotion = useUI((s) => s.reducedMotion);
   const setSplashSeen = useUI((s) => s.setSplashSeen);
-  const size = Math.min(width * 0.62, 260);
-  const progress = useRef(new Animated.Value(0)).current;
+  const purple = useRef(new Animated.Value(0)).current;
+  const orange = useRef(new Animated.Value(0)).current;
+  const wordmark = useRef(new Animated.Value(0)).current;
   const navigate = useRef<() => void>(() => {});
   navigate.current = () => { setSplashSeen(true); router.replace('/onboarding'); };
 
   useEffect(() => {
     if (reducedMotion) {
-      progress.setValue(1);
-      const t = setTimeout(() => navigate.current(), 900);
-      return () => clearTimeout(t);
+      purple.setValue(1); orange.setValue(1); wordmark.setValue(1);
+      const timer = setTimeout(() => navigate.current(), 180);
+      return () => clearTimeout(timer);
     }
-    Animated.timing(progress, {
-      toValue: 1, duration: SPLASH_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
-    }).start();
-    const t = setTimeout(() => navigate.current(), SPLASH_MS + 250);
-    return () => clearTimeout(t);
-  }, [progress, reducedMotion]);
+    Animated.timing(purple, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    const orangeTimer = setTimeout(() => Animated.timing(orange, { toValue: 1, duration: 580, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(), 260);
+    const wordTimer = setTimeout(() => Animated.timing(wordmark, { toValue: 1, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(), 420);
+    const finishTimer = setTimeout(() => navigate.current(), SPLASH_MS);
+    return () => { clearTimeout(orangeTimer); clearTimeout(wordTimer); clearTimeout(finishTimer); };
+  }, [purple, orange, wordmark, reducedMotion]);
 
-  const backScale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1.12] });
-  const midScale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.62, 1] });
-  const frontScale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.86] });
-  const opacity = progress.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 1] });
-  const drift = progress.interpolate({ inputRange: [0, 1], outputRange: [34, 0] });
-  const spin = progress.interpolate({ inputRange: [0, 1], outputRange: ['-16deg', '0deg'] });
-  const lineWidth = progress.interpolate({ inputRange: [0, 1], outputRange: [0, width * 0.42] });
-
-  return (
-    <Pressable onPress={() => navigate.current()} style={[styles.root, { backgroundColor: c.bg }]} accessibilityLabel="Skip splash">
-      <View style={[styles.stage, { width: size * 1.6, height: size * 1.35 }]}>
-        <Animated.View style={[styles.layer, { opacity: opacity.interpolate({ inputRange: [0, 1], outputRange: [0, 0.16] }), transform: [{ scale: backScale }, { rotate: '-11deg' }] }]}>
-          <Image source={require('../assets/branding/g-symbol.png')} style={{ width: size, height: size }} contentFit="contain" tintColor={c.accent} />
-        </Animated.View>
-        <Animated.View style={[styles.layer, { opacity: opacity.interpolate({ inputRange: [0, 1], outputRange: [0, 0.38] }), transform: [{ scale: midScale }, { translateX: drift }, { rotate: spin }] }]}>
-          <Image source={require('../assets/branding/g-symbol.png')} style={{ width: size, height: size }} contentFit="contain" tintColor={c.accent} />
-        </Animated.View>
-        <Animated.View style={[styles.layer, { opacity, transform: [{ scale: frontScale }] }]}>
-          <Image source={require('../assets/branding/g-symbol.png')} style={{ width: size, height: size }} contentFit="contain" />
-        </Animated.View>
-      </View>
-      <Animated.View style={{ opacity }}>
-        <Text style={[styles.wordmark, { color: c.text }]}>GOWAYY</Text>
-        <Text style={[styles.tagline, { color: c.textMuted }]}>One journey. Every service.</Text>
+  const markSize = Math.min(width * 0.52, 236);
+  const lift = (value: Animated.Value) => value.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
+  return <Pressable onPress={() => navigate.current()} accessibilityRole="button" accessibilityLabel="Skip GOWAYY splash" style={[styles.root, { backgroundColor: c.bg }]}>
+    <View pointerEvents="none" style={[styles.wash, { backgroundColor: c.surfaceAlt }]} />
+    <View style={{ width: markSize, height: markSize }}>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: purple, transform: [{ translateY: lift(purple) }] }]}>
+        <Image source={require('../assets/branding/g-purple.png')} style={styles.mark} contentFit="contain" accessibilityLabel="" />
       </Animated.View>
-      <Animated.View style={[styles.line, { backgroundColor: c.accent, width: lineWidth }]} />
-    </Pressable>
-  );
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: orange, transform: [{ translateY: lift(orange) }] }]}>
+        <Image source={require('../assets/branding/g-orange.png')} style={styles.mark} contentFit="contain" accessibilityLabel="" />
+      </Animated.View>
+    </View>
+    <Animated.Text accessibilityLiveRegion="polite" style={[styles.wordmark, { opacity: wordmark, transform: [{ translateY: lift(wordmark) }] }]}>GOWAYY</Animated.Text>
+  </Pressable>;
 }
-
 const styles = StyleSheet.create({
-  root: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
-  stage: { alignItems: 'center', justifyContent: 'center' },
-  layer: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  wordmark: { fontSize: font.sizes['3xl'], fontWeight: '800', letterSpacing: 6, textAlign: 'center' },
-  tagline: { fontSize: font.sizes.sm, letterSpacing: 1.2, textAlign: 'center', marginTop: spacing.xs },
-  line: { height: 2, borderRadius: 1, marginTop: spacing.md },
+  root: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  wash: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.3 },
+  mark: { width: '100%', height: '100%' },
+  wordmark: { color: '#17131B', fontSize: 28, lineHeight: 34, fontWeight: '800', letterSpacing: 2.1 },
 });

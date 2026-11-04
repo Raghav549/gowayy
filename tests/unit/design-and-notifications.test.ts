@@ -30,29 +30,29 @@ describe('brand identity and design system', () => {
     expect(light['--gw-bg']).toBe(dark['--gw-bg']);
     expect(light['--gw-champagne']).toBe(dark['--gw-champagne']);
     expect(Object.keys(cssVariables('dark')).length).toBeGreaterThan(20);
-    // per-app accents exist and are distinct
-    expect(brandTokens.colour.apps.customer.accent).not.toBe(brandTokens.colour.apps.partner.accent);
-    expect(brandTokens.colour.apps.partner.accent).not.toBe(brandTokens.colour.apps.explore.accent);
+    // all three products share one master mark and the same purple primary identity
+    expect(brandTokens.colour.apps.customer.accent).toBe(brandTokens.colour.apps.partner.accent);
+    expect(brandTokens.colour.apps.partner.accent).toBe(brandTokens.colour.apps.explore.accent);
   });
 
-  it('enforces the strict colour restrictions (no blue/cyan/neon palette)', () => {
-    // Assert against the actual colour values, not the human-readable
-    // `restrictions` documentation which legitimately names the forbidden hues.
+  it('enforces the lavender-and-lilac palette and official shared purple/orange identity', () => {
     expect(brandTokens.restrictions.length).toBeGreaterThan(0);
-    const json = JSON.stringify(brandTokens.colour);
-    expect(json).not.toMatch(/cyan|neon|electric|blue glow/i);
-    // The palette is charcoal / ivory / champagne, with the blue channel never dominant.
-    const hexes = json.match(/#[0-9a-fA-F]{6}/g) ?? [];
-    expect(hexes.length).toBeGreaterThan(15);
-    for (const hex of hexes) {
-      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-      expect(b > r + 40 && b > g + 40).toBe(false);
-    }
+    const c = brandTokens.colour;
+    expect(c.purple).toBe('#421080');
+    expect(c.champagne).toBe('#FFA500');
+    expect(c.light.bg).toBe(c.dark.bg);
+    expect(c.apps.customer.accent).toBe(c.apps.partner.accent);
+    expect(c.apps.partner.accent).toBe(c.apps.explore.accent);
+    expect(JSON.stringify(c)).not.toMatch(/cyan|neon|electric|metallic/i);
+    const hexes = JSON.stringify(c).match(/#[0-9a-fA-F]{6}/g) ?? [];
+    expect(hexes.length).toBeGreaterThan(20);
+    expect(hexes).toContain('#EDE3F7');
+    expect(hexes).toContain('#DCC7F2');
   });
 
   it('has a full typographic scale and restrained motion tokens', () => {
     expect(Object.keys(brandTokens.typography.scale).length).toBeGreaterThanOrEqual(8);
-    expect(brandTokens.typography.displayFamily).toMatch(/GOWAYY Display/);
+    expect(brandTokens.typography.displayFamily).toMatch(/Manrope/);
     expect(brandTokens.motion.splash).toBeLessThan(4000);
     expect(brandTokens.restrictions.length).toBeGreaterThan(0);
   });

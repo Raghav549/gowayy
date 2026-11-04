@@ -42,7 +42,7 @@ export default function App() {
   const location = useLocation();
   const isAuth = location.pathname.startsWith('/auth/');
 
-  if (!splashDone) return <Suspense fallback={<div className="splash"><div className="splash__content"><img className="splash__wordmark show" src="/brand/wordmark.svg" alt="GOWAYY" /></div></div>}><Splash onDone={() => setSplashDone(true)} /></Suspense>;
+  if (!splashDone) return <Suspense fallback={<div className="brand-splash"><div className="brand-splash__lockup"><span className="brand-splash__mark"><img src="/brand/g-symbol.svg" alt="" /></span><span className="brand-splash__wordmark">GOWAYY</span></div></div>}><Splash onDone={() => setSplashDone(true)} /></Suspense>;
   if (!onboarded) return <Onboarding onFinish={() => setOnboarded(true)} />;
   if (isAuth) return <Routes><Route path="/auth/register" element={<RegisterFlow />} /><Route path="/auth/login" element={<LoginScreen />} /><Route path="/auth/forgot" element={<ForgotScreen />} /><Route path="*" element={<Navigate to="/auth/register" replace />} /></Routes>;
   if (loading) return <div className="auth-shell"><div className="card">Restoring your session…</div></div>;

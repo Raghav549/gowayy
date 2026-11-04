@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserRound, LogOut, Moon, Sun, MapPin, Plus, Trash2, ShieldAlert, Bell, HelpCircle, Camera, CreditCard, ArrowRight } from 'lucide-react';
+import { UserRound, LogOut, MapPin, Plus, Trash2, ShieldAlert, Bell, HelpCircle, Camera, CreditCard, ArrowRight } from 'lucide-react';
 import { addressSchema } from '@gowayy/validation';
 import { catalogue } from '@gowayy/catalog';
 import { client } from '../lib/client';
@@ -17,7 +17,7 @@ export function Profile() {
   const user = useSession((s) => s.user);
   const refresh = useSession((s) => s.refresh);
   const clear = useSession((s) => s.clear);
-  const { theme, setTheme, showToast } = useUI();
+  const showToast = useUI((s) => s.showToast);
   const [firstName, setFirstName] = useState(user?.firstName ?? '');
   const [lastName, setLastName] = useState(user?.lastName ?? '');
   const [address, setAddress] = useState({ label: '', line: '', city: '', pincode: '' });
@@ -75,7 +75,7 @@ export function Profile() {
           <div className="card">
             <h3>Preferences</h3>
             <div className="stack" style={{ marginTop: 14 }}>
-              <div className="between"><span className="row small"><Moon size={16} /> Theme</span><button className="btn btn--secondary btn--sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />} {theme === 'dark' ? 'Light' : 'Dark'}</button></div>
+              <div className="between"><span className="row small"><span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg,#EDE3F7,#421080)' }} /> Appearance</span><span className="badge badge--accent">Lavender identity</span></div>
               <div className="between"><span className="row small"><Bell size={16} /> Notifications</span><button className="btn btn--secondary btn--sm" onClick={() => navigate('/profile')}>{notifications.data?.unreadCount ?? 0} unread</button></div>
               <div className="between"><span className="row small"><CreditCard size={16} /> Payment records</span><span className="badge">{payments.data?.length ?? 0}</span></div>
             </div>
