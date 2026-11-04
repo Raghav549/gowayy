@@ -1,5 +1,11 @@
 name: Deploy web apps to Vercel
 
+# One Vercel project per app (matrix). Each project's Root Directory must be
+# the app's web dir (see docs/DEPLOYMENT.md §2); the per-app vercel.json there
+# builds from the monorepo root and emits dist/ inside that directory.
+# If required Vercel secrets are absent the deploy steps are skipped and the
+# report job prints exactly which secrets are missing — loud, never hidden.
+
 on:
   push:
     branches: [main]
@@ -27,11 +33,10 @@ jobs:
           done
           if [ -z "$missing" ]; then
             echo "vercel=true" >> "$GITHUB_OUTPUT"
-            echo "All Vercel secrets are configured." 
           else
             echo "vercel=false" >> "$GITHUB_OUTPUT"
             echo "missing=$missing" >> "$GITHUB_OUTPUT"
-            echo "SKIPPED (visible, not hidden): missing secrets:$missing — add them in repo Settings → Secrets and variables → Actions, see docs/DEPLOYMENT.md"
+            echo "SKIPPED (visible, not hidden): missing secrets:$missing — see docs/DEPLOYMENT.md §2"
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -40,61 +45,44 @@ jobs:
           VERCEL_PROJECT_PARTNER: ${{ secrets.VERCEL_PROJECT_PARTNER }}
           VERCEL_PROJECT_EXPLORE: ${{ secrets.VERCEL_PROJECT_EXPLORE }}
 
-  deploy-customer:
-    name: Deploy GOWAYY customer web
+  deploy:
+    name: 'Deploy ${{ matrix.app }} web'
     needs: preflight
     if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: customer
+            project: VERCEL_PROJECT_CUSTOMER
+            dir: apps/gowayy-customer/web
+          - app: partner
+            project: VERCEL_PROJECT_PARTNER
+            dir: apps/gowayy-partner/web
+          - app: explore
+            project: VERCEL_PROJECT_EXPLORE
+            dir: apps/gowayy-explore/web
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_CUSTOMER }}
-          working-directory: apps/gowayy-customer/web
-          vercel-args: '--prod'
-
-  deploy-partner:
-    name: Deploy GOWAYY PARTNER web
-    needs: preflight
-    if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_PARTNER }}
-          working-directory: apps/gowayy-partner/web
-          vercel-args: '--prod'
-
-  deploy-explore:
-    name: Deploy GOWAYY EXPLORE web
-    needs: preflight
-    if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_EXPLORE }}
-          working-directory: apps/gowayy-explore/web
+          vercel-project-id: ${{ secrets[matrix.project] }}
+          working-directory: ${{ matrix.dir }}
           vercel-args: '--prod'
 
   report:
     name: Deployment report
     if: always()
-    needs: [preflight, deploy-customer, deploy-partner, deploy-explore]
+    needs: [preflight, deploy]
     runs-on: ubuntu-latest
     steps:
       - run: |
           if [ "${{ needs.preflight.outputs.vercel }}" = "true" ]; then
-            echo "Vercel deploys ran for all three apps."
+            echo "Vercel production deploys ran for all three apps."
           else
-            echo "Vercel deploys SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (see docs/DEPLOYMENT.md). No deploy was attempted; nothing was hidden."
+            echo "Vercel deploys SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (docs/DEPLOYMENT.md §2)."
           fi
-          echo "job results: customer=${{ needs.deploy-customer.result }} partner=${{ needs.deploy-partner.result }} explore=${{ needs.deploy-explore.result }}"
+          echo "deploy results: ${{ toJSON(needs.deploy.results) }}"

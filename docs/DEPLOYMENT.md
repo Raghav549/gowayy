@@ -4,7 +4,20 @@ Three web apps deploy to **Vercel** (one project per app), the customer Android 
 with **EAS**, and the backend runs on **Supabase** (PostgreSQL + PostGIS + Edge Functions).
 CI/CD is GitHub Actions (`.github/workflows/`).
 
-## 0. CI root-cause note
+## 0. CI root-cause notes
+
+- `[STATIC_BUILD_NO_OUT_DIR] No Output Directory named "dist"` (Vercel): the project
+  Root Directory was not the app web dir. Fixed by the explicit per-app `vercel.json`
+  contract above + `test -d` assertion in the build command.
+- `Generated an empty chunk: "three"` (Vite): the shared root `vite.config.ts` listed
+  `three` in `manualChunks`, but only the customer app imports three.js. The `three`
+  chunk now lives only in `apps/gowayy-customer/web/vite.config.ts`.
+- Partner/explore Android bundles failed with `Cannot find module 'babel-preset-expo'`:
+  added `babel-preset-expo ~58.0.24` (SDK 58) to both apps' devDependencies.
+- Android builds are never silently skipped: `mobile-build.yml` runs a `native-check`
+  matrix job (prebuild + `expo export --platform android` + artifact upload) on every
+  push/PR, and an `eas-build` matrix on main that FAILS with the exact remediation if
+  `EXPO_TOKEN` is missing.
 
 Earlier workflow runs failed in the runner-provisioning step ("Set up job") and one action
 slug (`actions/setup-deno`) did not exist. Repairs: `denoland/setup-deno@v1`, explicit
@@ -39,9 +52,17 @@ server-authoritative pricing, stock checks and idempotency.
 Create three Vercel projects (one per app). For each project set:
 
 - **Root Directory**: `apps/gowayy-customer/web` · `apps/gowayy-partner/web` · `apps/gowayy-explore/web`
-- The per-app `vercel.json` in that directory handles install/build from the monorepo
-  root (`npm ci` at root, `npm run build:<app>`, output `dist`), SPA rewrites, PWA
-  headers and security headers.
+  (this is the exact fix for `[STATIC_BUILD_NO_OUT_DIR] No Output Directory named "dist"`:
+  Vercel resolves `outputDirectory` relative to the project Root Directory, so the root
+  must be the app dir — then `outputDirectory: "dist"` is `<app>/web/dist`, which is
+  exactly where the build command emits it)
+- **Framework preset**: Other (vercel.json sets `"framework": null`)
+- **Install command** (in per-app `vercel.json`): `cd ../.. && npm ci --no-audit --no-fund`
+- **Build command** (in per-app `vercel.json`): `cd ../.. && npm run build -w @gowayy/<app>-web && test -d apps/gowayy-<app>/web/dist`
+  — the `test -d` makes a wrong root/output combination fail at build time with a clear
+  message instead of a post-build Vercel error
+- **Output directory**: `dist` (relative to the app web root), SPA rewrites, PWA and
+  security headers are all in the per-app `vercel.json`.
 
 GitHub secrets for `deploy-web.yml`:
 

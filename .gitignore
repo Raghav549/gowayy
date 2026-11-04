@@ -13,3 +13,5 @@ apps/dev-api/data/*.json
 apps/web/public/generated/
 image-search/
 *.tsbuildinfo
+dist-android/
+apps/gowayy-*/mobile/android/
