@@ -40,12 +40,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
+      - name: Install monorepo workspace dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install mobile dependencies
         run: npm ci --no-audit --no-fund
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Typecheck
-        run: npx tsc --noEmit -p tsconfig.json
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Typecheck (from repo root — mobile tsconfigs resolve @gowayy/* into packages/, which need root node_modules)
+        run: npm run typecheck:${{ matrix.app == 'customer' && 'mobile' || matrix.app == 'partner' && 'partner-mobile' || 'explore-mobile' }}
       - name: Generate native Android project (expo prebuild)
         run: npx expo prebuild --platform android --no-install
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
