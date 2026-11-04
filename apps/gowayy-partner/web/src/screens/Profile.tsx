@@ -22,7 +22,7 @@ export function Profile() {
   });
   const uploadDoc = useMutation({
     mutationFn: () => client.uploadPartnerDocument(doc),
-    onSuccess: async (r: any) => { showToast(r.demoNotice ?? 'Document stored as pending', 'info'); setDoc({ ...doc, number: '' }); await qc.invalidateQueries({ queryKey: ['partner-verification'] }); },
+    onSuccess: async (r: any) => { showToast('Document uploaded — verification pending', 'info'); setDoc({ ...doc, number: '' }); await qc.invalidateQueries({ queryKey: ['partner-verification'] }); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
   const del = useMutation({
@@ -51,7 +51,7 @@ export function Profile() {
         {verification.isLoading ? <Skeleton style={{ height: 60 }} /> : (
           <>
             <div className="chips">
-              {(verification.data as any)?.documents?.map((d: any) => <span key={d.id} className="badge badge--warning">{d.type} · {d.status}{d.demo ? ' (demo)' : ''}</span>)}
+              {(verification.data as any)?.documents?.map((d: any) => <span key={d.id} className="badge badge--warning">{d.type} · {d.status}</span>)}
               {!(verification.data as any)?.documents?.length && <span className="small muted">No documents uploaded.</span>}
             </div>
             <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>

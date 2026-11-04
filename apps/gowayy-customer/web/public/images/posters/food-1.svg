@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500" role="img" aria-label="LOCAL KITCHENS">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A9493F"/><stop offset="1" stop-color="#4A1E1A"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".28"/><stop offset="1" stop-color="#ffffff" stop-opacity=".04"/></linearGradient></defs>
+<rect width="1200" height="500" fill="url(#bg)"/>
+<circle cx="1010" cy="90" r="200" fill="#ffffff" opacity=".08"/><circle cx="1100" cy="430" r="150" fill="#ffffff" opacity=".06"/>
+<g transform="translate(760 55)">
+<ellipse cx="200" cy="370" rx="190" ry="28" fill="#17131B" opacity=".18"/>
+<path d="M90 250c0-55 70-100 140-100s140 45 140 100z" fill="#E0A458"/><rect x="90" y="250" width="280" height="26" rx="13" fill="#8B4A22"/>
+<path d="M100 300h260l-18 44a30 30 0 0 1-28 19H146a30 30 0 0 1-28-19z" fill="#F6E7C8"/>
+<circle cx="165" cy="300" r="26" fill="#6E9B72"/><circle cx="230" cy="300" r="26" fill="#E4572E"/><circle cx="295" cy="300" r="26" fill="#F2C14E"/>
+<path d="M410 110l110 110-40 40-110-110z" fill="#F2C14E"/><path d="M520 220l40-40 36 36-40 40z" fill="#E4572E"/>
+<circle cx="500" cy="90" r="10" fill="#FFFFFF" opacity=".5"/><circle cx="560" cy="140" r="6" fill="#FFFFFF" opacity=".4"/>
+</g>
+<rect x="64" y="88" width="560" height="324" rx="28" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".22"/>
+<text x="104" y="150" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#FFFFFF" opacity=".85">Warm bowls and hill favourites</text>
+<text x="104" y="228" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="58" font-weight="800" fill="#FFFFFF">LOCAL KITCHENS</text>
+<text x="104" y="280" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" fill="#FFFFFF" opacity=".9">20% off dinner</text>
+<rect x="104" y="322" width="290" height="58" rx="29" fill="#17131B"/>
+<text x="132" y="359" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#FFFFFF">Order food →</text>
+<text x="104" y="404" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" fill="#FFFFFF" opacity=".7">/food</text>
+</svg>

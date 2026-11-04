@@ -8,7 +8,7 @@ import { client } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useSession } from '../store/useSession';
 import { useUI } from '../store/useUI';
-import { SectionHead, EmptyState, DemoBanner, Field } from '../components/ui';
+import { SectionHead, EmptyState, Field } from '../components/ui';
 
 export function Profile() {
   usePageMeta('Your profile');
@@ -132,7 +132,6 @@ export function Profile() {
         </div>
         <p className="tiny muted" style={{ marginTop: 10 }}>Sessions are stored server-side and the token is kept in local storage (Expo Secure Store on mobile). Account deletion soft-deletes the profile.</p>
       </section>
-      <DemoBanner>Demo OTP adapter, sandbox payments and seeded partner inventory are in use. No real email, payment gateway or hosted Supabase project is connected.</DemoBanner>
     </div>
   );
 }

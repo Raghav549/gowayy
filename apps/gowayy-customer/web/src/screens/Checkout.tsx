@@ -6,7 +6,7 @@ import { formatINR } from '@gowayy/shared-utils';
 import { client, idemKey } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useUI } from '../store/useUI';
-import { SectionHead, PriceLines, Spinner, DemoBanner, StatusBadge } from '../components/ui';
+import { SectionHead, PriceLines, Spinner, StatusBadge } from '../components/ui';
 
 export function Checkout() {
   usePageMeta('Secure checkout');
@@ -32,11 +32,11 @@ export function Checkout() {
     setBusy(true); setError(null);
     try {
       const p = await client.initPayment({ bookingId, orderId, method, amountPaise: record.price.totalPaise, idempotencyKey: idemKey() });
-      if (method === 'cash') { showToast('Pay-on-delivery recorded; no sandbox charge', 'info'); setDone(true); }
+      if (method === 'cash') { showToast('Pay on delivery selected', 'info'); setDone(true); }
       else {
         const result = await client.captureSandboxPayment(p.id);
         if (result.payment.status !== 'captured') throw new Error('Payment was not captured by the server');
-        showToast('Sandbox payment captured and verified server-side', 'success');
+        showToast('Payment confirmed', 'success');
         setDone(true);
       }
       await qc.invalidateQueries();
@@ -51,15 +51,14 @@ export function Checkout() {
   return (
     <div>
       <SectionHead eyebrow="Checkout" title="Complete payment" subtitle={`${record.reference} · ${label}`} />
-      <DemoBanner>Payments use a sandbox provider. The client never decides success: the server signs a provider event and verifies its HMAC signature before marking a payment captured. No real money moves.</DemoBanner>
       <div className="grid-2 section">
         <div className="card">
           <h3>Choose a payment method</h3>
           <div className="stack" style={{ marginTop: 14 }}>
             {([
-              ['upi', 'UPI (sandbox)', 'Collect request simulated by the server'],
-              ['upi_intent', 'UPI Intent (sandbox)', 'Deep-link intent, confirmation via webhook'],
-              ['gateway', 'Verified gateway (sandbox)', 'Server-side order + signed webhook'],
+              ['upi', 'UPI', 'Pay using any UPI application'],
+              ['upi_intent', 'UPI intent', 'Opens your UPI app; confirmation is verified by the server'],
+              ['gateway', 'Card / net banking', 'Redirect to the payment gateway'],
               ['cash', 'Cash / pay later', 'No charge; settlement recorded as pending'],
             ] as const).map(([value, label, hint]) => (
               <button key={value} className="list-row" style={{ width: '100%', textAlign: 'left', borderColor: method === value ? 'var(--gw-champagne)' : undefined }} onClick={() => setMethod(value)}>
@@ -72,12 +71,12 @@ export function Checkout() {
         <div className="card" style={{ alignSelf: 'start' }}>
           <div className="between"><h3>Summary</h3>{payment && <StatusBadge status={payment.status} />}</div>
           <div style={{ marginTop: 14 }}><PriceLines price={record.price} /></div>
-          {error && <div className="notice notice--demo" style={{ marginTop: 12 }} role="alert">{error}</div>}
+          {error && <div className="notice notice--info" style={{ marginTop: 12 }} role="alert">{error}</div>}
           {done || payment?.status === 'captured' ? (
             <div className="notice notice--info" style={{ marginTop: 16 }}><CheckCircle2 size={16} /> Payment recorded. The booking still requires partner confirmation — payment success does not confirm a booking.</div>
           ) : (
             <button className="btn btn--primary btn--block" style={{ marginTop: 16 }} onClick={() => void pay()} disabled={busy}>
-              {busy ? 'Processing…' : method === 'cash' ? 'Record pay-later' : `Pay ${formatINR(record.price.totalPaise)} (sandbox)`} <ArrowRight size={17} />
+              {busy ? 'Processing…' : method === 'cash' ? 'Record pay-later' : `Pay ${formatINR(record.price.totalPaise)}`} <ArrowRight size={17} />
             </button>
           )}
           <div className="row row--wrap" style={{ gap: 10, marginTop: 16 }}>

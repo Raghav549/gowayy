@@ -107,7 +107,7 @@ export function Cart() {
             <button className="btn btn--secondary btn--sm" onClick={() => qc.invalidateQueries({ queryKey: ['cart-quote'] })}><Tag size={14} /> Apply</button>
           </div>
           <button className="btn btn--primary btn--block" style={{ marginTop: 14 }} onClick={() => navigate('/checkout')}>Proceed to buy · {q ? formatINR(q.quote.totalPaise) : ''}</button>
-          <p className="tiny muted" style={{ marginTop: 10 }}>Prices and stock are re-validated by the server at checkout. Demo store data is labelled as such.</p>
+          <p className="tiny muted" style={{ marginTop: 10 }}>Prices and stock are confirmed again when you place the order.</p>
         </aside>
       </div>
     </div>

@@ -1,0 +1,26 @@
+{
+  "name": "@gowayy/admin-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start --host 0.0.0.0",
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "expo": "~57.0.31",
+    "expo-splash-screen": "~57.0.10",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-webview": "13.16.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.18",
+    "babel-preset-expo": "~57.0.16",
+    "typescript": "^5.6.3"
+  }
+}

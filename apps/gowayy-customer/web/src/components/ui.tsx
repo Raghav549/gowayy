@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { ImageAsset, PriceBreakdown, BookingStatus } from '@gowayy/types';
 import { formatINR } from '@gowayy/shared-utils';
 import { STATUS_LABELS } from '@gowayy/booking-engine';
+import { Check } from 'lucide-react';
 
 export function GSymbol({ size = 38, className = '' }: { size?: number; className?: string }) {
   return <img src="/brand/g-symbol.svg" width={size} height={size} alt="GOWAYY" className={className} />;
@@ -48,9 +49,9 @@ export function PriceLines({ price, title }: { price: PriceBreakdown; title?: st
     <div className="price-lines">
       {title && <div className="eyebrow" style={{ marginBottom: 4 }}>{title}</div>}
       {price.lines.map((l, i) => <div className="line" key={`${l.label}-${i}`}><span>{l.label}</span><span>{formatINR(l.paise)}</span></div>)}
-      <div className="line"><span>Tax ({price.subtotalPaise ? Math.round(price.taxPaise / price.subtotalPaise * 100) : 0}%)</span><span>{formatINR(price.taxPaise)}</span></div>
+      <div className="line"><span>Tax</span><span>{formatINR(price.taxPaise)}</span></div>
       <div className="line total"><span>Total</span><span>{formatINR(price.totalPaise)}</span></div>
-      <div className="tiny muted">Platform commission {formatINR(price.commissionPaise)} · settled separately. Estimate from a published rate card.</div>
+
     </div>
   );
 }
@@ -68,9 +69,6 @@ export function EmptyState({ title, body, action }: { title: string; body: strin
   return <div className="empty-state"><h3>{title}</h3><p className="small">{body}</p>{action && <div style={{ marginTop: 16 }}>{action}</div>}</div>;
 }
 
-export function DemoBanner({ children }: { children: ReactNode }) {
-  return <div className="notice notice--demo"><strong>DEVELOPMENT MODE</strong> · {children}</div>;
-}
 
 export function Spinner({ label = 'Loading…' }: { label?: string }) {
   return <div className="row small muted" role="status"><span className="anim-spin" style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--gw-border)', borderTopColor: 'var(--gw-champagne)', borderRadius: '50%' }} />{label}</div>;
@@ -83,5 +81,18 @@ export function Field({ label, error, hint, children }: { label: string; error?:
       {children}
       {error ? <span className="error" role="alert">{error}</span> : hint ? <span className="hint">{hint}</span> : null}
     </label>
+  );
+}
+
+export function Stepper({ steps, current }: { steps: string[]; current: number }) {
+  return (
+    <ol className="stepper" aria-label="Checkout progress">
+      {steps.map((label, i) => (
+        <li key={label} className={`stepper__item ${i === current ? 'stepper__item--active' : ''} ${i < current ? 'stepper__item--done' : ''}`} aria-current={i === current ? 'step' : undefined}>
+          <span className="stepper__dot">{i < current ? <Check size={14} /> : i + 1}</span>
+          <span className="stepper__label">{label}</span>
+        </li>
+      ))}
+    </ol>
   );
 }

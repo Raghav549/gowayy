@@ -90,11 +90,11 @@ test('out-of-stock variant is rejected server-side', async () => {
 
 test('partner claim → inventory adjust → earnings → settlement', async () => {
   const token = await registerAndLogin('partner@example.com');
-  const claim = await j(await fetch(`${BASE}/partners/claim`, auth(token, { method: 'POST', body: JSON.stringify({ role: 'grocery', listingId: 'grc_1' }) })));
+  const claim = await j(await fetch(`${BASE}/partners/claim`, auth(token, { method: 'POST', body: JSON.stringify({ role: 'grocery', listingId: 'grc_3' }) })));
   assert.ok(claim.user.roles.includes('grocery'));
   const inv = await j(await fetch(`${BASE}/partner/inventory`, auth(token)));
   assert.ok(inv.items.length > 0);
-  const adj = await j(await fetch(`${BASE}/partner/inventory`, auth(token, { method: 'POST', body: JSON.stringify({ listingId: 'grc_1', productId: inv.items[0].id, delta: 3 }) })));
+  const adj = await j(await fetch(`${BASE}/partner/inventory`, auth(token, { method: 'POST', body: JSON.stringify({ listingId: 'grc_3', productId: inv.items[0].id, delta: 3 }) })));
   assert.equal(adj.stock, inv.items[0].stock + 3);
   const overview = await j(await fetch(`${BASE}/partner/overview`, auth(token)));
   assert.ok(overview.roles.includes('grocery'));

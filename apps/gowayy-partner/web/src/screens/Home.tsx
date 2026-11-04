@@ -16,7 +16,7 @@ export function Home() {
     <div className="stack">
       <SectionHead eyebrow="GOWAYY PARTNER" title="Partner home" subtitle={`Roles: ${roles.join(', ') || 'none yet'} · verification: ${verification}`} />
       {verification !== 'verified' && (
-        <div className="notice notice--demo"><FileCheck size={15} /> <span><strong>Verification pending.</strong> Upload documents from Profile to activate partner features. <Link className="link" to="/profile">Open profile</Link></span></div>
+        <div className="notice notice--info"><FileCheck size={15} /> <span><strong>Verification pending.</strong> Upload documents from Profile to activate partner features. <Link className="link" to="/profile">Open profile</Link></span></div>
       )}
       <div className="grid-3">
         <div className="card"><Stat label="Open requests" value={o.counts?.openRequests ?? 0} /></div>

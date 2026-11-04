@@ -9,8 +9,8 @@ import { client, idemKey } from '../lib/client';
 import { usePageMeta, useRequireAuth } from '../lib/guards';
 import { useJourney } from '../store/useJourney';
 import { useUI } from '../store/useUI';
-import { Field, SectionHead, PriceLines, ImageFrame, DemoBanner } from '../components/ui';
-import { ConnectedRecommendations, DestinationSelect, DemoListingBadge, DataNotice } from './shared';
+import { Field, SectionHead, PriceLines, ImageFrame, Stepper } from '../components/ui';
+import { ConnectedRecommendations, DestinationSelect } from './shared';
 import { MapView } from '../components/MapView';
 
 type Variant = 'tourism' | 'package' | 'experience';
@@ -29,6 +29,7 @@ export function Tourism({ variant }: { variant: Variant }) {
   const [selectedId, setSelectedId] = useState(params.get('offering') ?? '');
   const [date, setDate] = useState(addDays(today, 2));
   const [guests, setGuests] = useState(journey?.travellers ?? 2);
+  const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +48,7 @@ export function Tourism({ variant }: { variant: Variant }) {
       const booking = await client.bookTourism({ offeringId: selected.id, service: variant, date, guests, journeyId: journey?.id ?? null }, idemKey());
       await qc.invalidateQueries({ queryKey: ['bookings'] });
       showToast('Tourism request created — awaiting confirmation', 'success');
-      navigate(`/checkout?booking=${booking.id}`);
+      navigate(`/checkout/booking?booking=${booking.id}`);
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not create booking'); }
     finally { setSubmitting(false); }
   };
@@ -61,7 +62,7 @@ export function Tourism({ variant }: { variant: Variant }) {
     <div>
       <SectionHead eyebrow={variant === 'tourism' ? 'Sightseeing' : variant === 'package' ? 'Packages' : 'Experiences'}
         title={variant === 'tourism' ? 'Tourism & attractions' : variant === 'package' ? 'Sightseeing packages' : 'Local experiences'}
-        subtitle={variant === 'tourism' ? 'Attractions from the destination catalogue. Plan a visit to connect transport, stays and food.' : 'Seeded demo offerings with explicit prices and durations — no fabricated live availability.'} />
+        subtitle={variant === 'tourism' ? 'Attractions from the destination catalogue. Plan a visit to connect transport, stays and food.' : 'Sightseeing packages and local experiences with clear prices and durations.'} />
       <div style={{ maxWidth: 320, marginBottom: 18 }}><DestinationSelect value={destination} onChange={setDestination} label="Filter by destination" /></div>
 
       {attraction && variant === 'tourism' && <div className="card" style={{ marginBottom: 18, borderColor: 'var(--gw-champagne)' }}>
@@ -93,7 +94,7 @@ export function Tourism({ variant }: { variant: Variant }) {
                 <div className="between"><strong>{o.name}</strong><span className="badge badge--accent">{formatINR(o.pricePaise)} / guest</span></div>
                 <p className="small muted" style={{ marginTop: 8 }}>{o.description}</p>
                 <div className="row tiny muted" style={{ marginTop: 10 }}>{variant === 'package' ? <Ticket size={13} /> : <Sparkles size={13} />} {o.duration} · {o.includes.join(' · ')}</div>
-                <div className="row" style={{ marginTop: 10 }}><DemoListingBadge /></div>
+                
               </button>
             ))}
             {offerings.length === 0 && <div className="empty-state"><h3>No offerings here yet</h3><p>Try another destination.</p></div>}
@@ -102,14 +103,24 @@ export function Tourism({ variant }: { variant: Variant }) {
             <h3>{variant === 'package' ? 'Book this package' : 'Book this experience'}</h3>
             {selected ? <div className="stack" style={{ marginTop: 14 }}>
               <p className="small"><strong>{selected.name}</strong></p>
-              <div className="grid-2" style={{ gap: 10 }}>
-                <Field label="Date"><input className="input" type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-                <Field label="Guests"><input className="input" type="number" min={1} max={20} value={guests} onChange={(e) => setGuests(Number(e.target.value))} /></Field>
-              </div>
-              {quote && <PriceLines price={quote} title="Server-calculated total" />}
-              {error && <div className="notice notice--demo" role="alert">{error}</div>}
-              <button className="btn btn--primary btn--block" onClick={() => void book()} disabled={submitting}>{submitting ? 'Creating request…' : 'Request booking'} <ArrowRight size={17} /></button>
-              <p className="tiny muted">Confirmations come from the partner, never from the client.</p>
+              <Stepper steps={["Travel details", "Review & pay"]} current={step - 1} />
+              {step === 1 && <>
+                <div className="grid-2" style={{ gap: 10 }}>
+                  <Field label="Travel date"><input className="input" type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+                  <Field label="Travellers"><input className="input" type="number" min={1} max={20} value={guests} onChange={(e) => setGuests(Number(e.target.value))} /></Field>
+                </div>
+                <button type="button" className="btn btn--primary btn--block" disabled={!date} onClick={() => setStep(2)}>Review booking <ArrowRight size={17} /></button>
+              </>}
+              {step === 2 && <>
+                <div className="small muted">{date} · {guests} traveller(s) · {selected.duration}</div>
+                {quote && <PriceLines price={quote} title="Price breakdown" />}
+                {error && <div className="notice notice--info" role="alert">{error}</div>}
+                <div className="row" style={{ gap: 8 }}>
+                  <button type="button" className="btn btn--ghost" onClick={() => setStep(1)}>Back</button>
+                  <button className="btn btn--primary" onClick={() => void book()} disabled={submitting}>{submitting ? 'Reserving…' : 'Continue to payment'} <ArrowRight size={17} /></button>
+                </div>
+                <p className="tiny muted">Your booking is confirmed once the operator accepts it.</p>
+              </>}
             </div> : <p className="small muted" style={{ marginTop: 12 }}>Select an offering to continue.</p>}
           </div>
         </div>
@@ -119,9 +130,7 @@ export function Tourism({ variant }: { variant: Variant }) {
         <SectionHead eyebrow="Map" title="Attraction map" />
         <MapView pins={attractions.map((a) => ({ id: a.id, label: a.name, ...a.coords, kind: 'attraction' }))} height={320} />
       </section>}
-      <section className="section"><DemoBanner>Offering prices and itineraries are seeded development data. Real operator availability and permits must be integrated before launch.</DemoBanner></section>
       <ConnectedRecommendations destinationId={journey?.destinationId ?? destination ?? null} />
-      <DataNotice />
     </div>
   );
 }

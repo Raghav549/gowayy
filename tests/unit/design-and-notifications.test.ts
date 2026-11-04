@@ -32,22 +32,26 @@ describe('brand identity and design system', () => {
     expect(Object.keys(cssVariables('dark')).length).toBeGreaterThan(20);
     // all three products share one master mark and the same purple primary identity
     expect(brandTokens.colour.apps.customer.accent).toBe(brandTokens.colour.apps.partner.accent);
-    expect(brandTokens.colour.apps.partner.accent).toBe(brandTokens.colour.apps.explore.accent);
+    expect(brandTokens.colour.apps.partner.accent).toBe(brandTokens.colour.apps.customer.accent);
+    expect(brandTokens.colour.apps.customer.accent).toBe('#421080');
   });
 
-  it('enforces the lavender-and-lilac palette and official shared purple/orange identity', () => {
+  it('enforces the lavender, white and champagne palette with a purple-and-gold logo', () => {
     expect(brandTokens.restrictions.length).toBeGreaterThan(0);
     const c = brandTokens.colour;
     expect(c.purple).toBe('#421080');
     expect(c.champagne).toBe('#FFA500');
+    expect(c.warmWhite).toBe('#FFFCF8');
+    expect(c.softIvory).toBe('#F8F2EA');
     expect(c.light.bg).toBe(c.dark.bg);
     expect(c.apps.customer.accent).toBe(c.apps.partner.accent);
-    expect(c.apps.partner.accent).toBe(c.apps.explore.accent);
+    expect(c.apps.partner.accent).toBe(c.apps.customer.accent);
     expect(JSON.stringify(c)).not.toMatch(/cyan|neon|electric|metallic/i);
     const hexes = JSON.stringify(c).match(/#[0-9a-fA-F]{6}/g) ?? [];
     expect(hexes.length).toBeGreaterThan(20);
-    expect(hexes).toContain('#EDE3F7');
-    expect(hexes).toContain('#DCC7F2');
+    expect(hexes).toContain('#15121A');
+    expect(hexes).toContain('#FFA500');
+    expect(hexes).not.toContain('#FDFBF7');
   });
 
   it('has a full typographic scale and restrained motion tokens', () => {

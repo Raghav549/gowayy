@@ -10,6 +10,6 @@ export function Splash({ onDone }: { onDone: () => void }) {
     return () => window.clearTimeout(timer);
   }, []);
   return <div className="brand-splash" aria-hidden="true">
-    <img src="/brand/g-symbol.svg" alt="" />
+    <img src="/brand/g-mono-inverse.svg" alt="" />
   </div>;
 }

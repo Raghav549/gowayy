@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { MapPin, ArrowUpRight, Info } from 'lucide-react';
@@ -8,9 +8,44 @@ import { client } from '../lib/client';
 import { useJourney } from '../store/useJourney';
 import { ImageFrame, SectionHead, Spinner } from '../components/ui';
 import type { RecommendationGroups } from '@gowayy/api-client';
+import { SearchSelect } from '../components/SearchSelect';
 
 export function useCatalog() {
   return useQuery({ queryKey: ['catalog'], queryFn: () => client.catalog(), staleTime: 5 * 60_000 });
+}
+
+/** Catalogue destinations merged with admin-managed database records. */
+export function useDestinations(): Destination[] {
+  const remote = useQuery({
+    queryKey: ['destinations'],
+    queryFn: async () => (await client.destinations?.())?.items as Array<Record<string, any>> | undefined,
+    staleTime: 60_000,
+  });
+  return useMemo(() => {
+    const records = (remote.data ?? []).filter((d) => d.active !== false);
+    const merged = catalogue.destinations.map((base) => {
+      const rec = records.find((d) => d.slug === base.slug || d.id === base.id);
+      if (!rec) return base;
+      const images = (rec.images ?? []).slice().sort((a: any, b: any) => Number(Boolean(b.primary)) - Number(Boolean(a.primary)) || Number(a.order ?? 0) - Number(b.order ?? 0)).filter((i: { status?: string }) => i.status !== 'unavailable').map((i: { path?: string; thumbPath?: string; alt?: string; credit?: string; sourceUrl?: string }) => ({
+        status: 'verified', assetPath: String(i.path ?? '').replace(/^\//, ''), thumbPath: String(i.thumbPath ?? i.path ?? '').replace(/^\//, ''),
+        alt: i.alt ?? base.name, credit: i.credit, sourceUrl: i.sourceUrl,
+      }));
+      return {
+        ...base,
+        name: rec.name ?? base.name,
+        region: rec.region ?? base.region,
+        description: rec.description || base.description,
+        coords: rec.coords ?? base.coords,
+        images: images.length ? images : base.images,
+      } as Destination;
+    });
+    const additions = records.filter((r) => !catalogue.destinations.some((b) => b.slug === r.slug)).map((r) => ({
+      ...r, id: r.id, slug: r.slug, name: r.name, region: r.region ?? 'Darjeeling Himalaya',
+      description: r.description ?? r.summary ?? '', activities: [], coords: r.coords ?? { lat: 27.036, lng: 88.2627 },
+      images: (r.images ?? []).map((i: { path?: string; thumbPath?: string; alt?: string; credit?: string; sourceUrl?: string }) => ({ status: 'verified', assetPath: String(i.path ?? '').replace(/^\//, ''), thumbPath: String(i.thumbPath ?? i.path ?? '').replace(/^\//, ''), alt: i.alt ?? r.name, credit: i.credit, sourceUrl: i.sourceUrl })),
+    })) as unknown as Destination[];
+    return [...merged, ...additions];
+  }, [remote.data]);
 }
 
 export function DestinationCard({ destination, onSelect }: { destination: Destination; onSelect?: () => void }) {
@@ -29,42 +64,24 @@ export function DestinationCard({ destination, onSelect }: { destination: Destin
   );
 }
 
-export function DemoListingBadge() {
-  return <span className="badge" title="Seeded sample inventory for development, not a live partner offer">Demo listing</span>;
-}
 
-export function DataNotice() {
-  return (
-    <div className="notice" style={{ marginTop: 28 }}>
-      <Info size={14} /> <strong>Data status.</strong> Destination geography comes from published references and is flagged where approximate.
-      Partner listings, menus, inventory, fares and timetables are <strong>seeded development data</strong> — they are not live offers, and no ratings or availability are invented.
-      Place photographs are only shown where the subject and licence were verified; see <Link className="link" to="/credits">image credits</Link>.
-    </div>
-  );
-}
 
 export function DestinationSelect({ value, onChange, label = 'Destination' }: { value: string; onChange: (id: string) => void; label?: string }) {
-  return (
-    <label className="field" style={{ marginBottom: 0 }}>
-      <span className="label">{label}</span>
-      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Select a destination</option>
-        {catalogue.destinations.map((d) => <option key={d.id} value={d.id}>{d.name}{d.hiddenGem ? ' (hidden gem)' : ''}</option>)}
-      </select>
-    </label>
-  );
+  const remote = useQuery({
+    queryKey: ['destinations'],
+    queryFn: async () => (await client.destinations?.())?.items as Array<{ id: string; slug: string; name: string; region?: string; hiddenGem?: boolean; active?: boolean }> | undefined,
+    staleTime: 60_000,
+  });
+  const source = (remote.data?.length ? remote.data : catalogue.destinations.map((d) => ({ id: d.id, slug: d.slug, name: d.name, region: d.region, hiddenGem: d.hiddenGem }))) as Array<{ id: string; slug: string; name: string; region?: string; hiddenGem?: boolean; active?: boolean }>;
+  const options = source
+    .filter((d) => d.active !== false)
+    .map((d) => ({ id: d.id, label: d.name, sub: d.region ?? 'Darjeeling Himalaya', keywords: d.slug }));
+  return <SearchSelect label={label} value={value} onChange={onChange} options={options} placeholder="Search destinations…" emptyText="No destination matches that search" />;
 }
 
 export function PlaceSelect({ value, onChange, label = 'Pickup' }: { value: string; onChange: (id: string) => void; label?: string }) {
-  return (
-    <label className="field" style={{ marginBottom: 0 }}>
-      <span className="label">{label}</span>
-      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Choose a place</option>
-        {catalogue.places.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-      </select>
-    </label>
-  );
+  const options = catalogue.places.map((p) => ({ id: p.id, label: p.name, sub: p.address ?? p.locality ?? '', keywords: p.kind ?? '' }));
+  return <SearchSelect label={label} value={value} onChange={onChange} options={options} placeholder={label === 'Pickup' ? 'Search pickup points…' : 'Search destinations…'} emptyText="No place matches that search" />;
 }
 
 const GROUP_META: Array<[keyof RecommendationGroups, string]> = [
@@ -91,7 +108,7 @@ export function ConnectedRecommendations({ destinationId, title = 'Complete your
           return (
             <div className="card" key={key}>
               <div className="between"><h3 style={{ fontSize: 16 }}>{label}</h3><span className="badge">{items.length}</span></div>
-              {items.length === 0 ? <p className="small muted" style={{ marginTop: 10 }}>No seeded records for this destination.</p> : (
+              {items.length === 0 ? <p className="small muted" style={{ marginTop: 10 }}>No listings for this destination yet.</p> : (
                 <div className="list" style={{ marginTop: 12 }}>
                   {items.slice(0, 3).map((item) => (
                     <Link key={item.id} to={withJourney(item.href)} className="list-row">

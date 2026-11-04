@@ -6,9 +6,9 @@ const app = process.argv[2];
 const apps = {
   customer: 'apps/gowayy-customer/web',
   partner: 'apps/gowayy-partner/web',
-  explore: 'apps/gowayy-explore/web',
+  admin: 'apps/gowayy-admin/web',
 };
-if (!Object.hasOwn(apps, app)) throw new Error('Usage: node scripts/prepare-vercel-output.mjs customer|partner|explore');
+if (!Object.hasOwn(apps, app)) throw new Error('Usage: node scripts/prepare-vercel-output.mjs customer|partner|admin');
 const webDir = resolve(apps[app]);
 const dist = join(webDir, 'dist');
 if (!statSync(dist, { throwIfNoEntry: false })?.isDirectory() || !readFileSync(join(dist, 'index.html'), 'utf8')) {
@@ -18,6 +18,13 @@ const output = join(webDir, '.vercel/output');
 rmSync(output, { recursive: true, force: true });
 mkdirSync(join(output, 'static'), { recursive: true });
 cpSync(dist, join(output, 'static'), { recursive: true });
+// Admin and partner previews reference the shared customer-owned image library.
+if (app !== 'customer') {
+  const sharedImages = resolve('apps/gowayy-customer/web/public/images');
+  if (statSync(sharedImages, { throwIfNoEntry: false })?.isDirectory()) {
+    cpSync(sharedImages, join(output, 'static/images'), { recursive: true });
+  }
+}
 writeFileSync(join(output, 'config.json'), `${JSON.stringify({
   version: 3,
   routes: [

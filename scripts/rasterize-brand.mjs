@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const apps = [
   { tag:'customer', web:'apps/gowayy-customer/web/public/brand', mobile:'apps/gowayy-customer/mobile/assets/branding', name:'GOWAYY' },
-  { tag:'explore', web:'apps/gowayy-explore/web/public/brand', mobile:'apps/gowayy-explore/mobile/assets/branding', name:'GOWAYY EXPLORE' },
+  { tag:'admin', web:'apps/gowayy-admin/web/public/brand', mobile:'apps/gowayy-admin/mobile/assets/branding', name:'GOWAYY ADMIN' },
   { tag:'partner', web:'apps/gowayy-partner/web/public/brand', mobile:'apps/gowayy-partner/mobile/assets/branding', name:'GOWAYY PARTNER' },
 ];
 const render = (svgPath, out, width, height = width) => {

@@ -21,7 +21,7 @@ export default function Index(){
     const scale=reveal.interpolate({inputRange:[0,1],outputRange:[.82,1]});
     return <Pressable onPress={()=>setPhase(user?'done':'onboarding')} accessibilityRole="button" accessibilityLabel="Skip animation" style={{flex:1,backgroundColor:colors.bg,alignItems:'center',justifyContent:'center'}}>
       <Animated.View style={{width:size,height:size,opacity:reveal,transform:[{scale}]}}>
-        <Image source={require('../assets/branding/g-symbol.png')} style={{width:'100%',height:'100%'}} contentFit="contain" accessibilityLabel="" />
+        <Image source={require('../assets/branding/splash-mark.png')} style={{width:'100%',height:'100%'}} contentFit="contain" accessibilityLabel="" />
       </Animated.View>
     </Pressable>;
   }

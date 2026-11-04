@@ -16,3 +16,4 @@ image-search/
 *.tsbuildinfo
 dist-android/
 apps/gowayy-*/mobile/android/
+apps/dev-api/data/uploads/

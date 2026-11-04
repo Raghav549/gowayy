@@ -5,7 +5,7 @@ import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { client } from '../lib/client';
 import { useSession } from '../store';
 import { useUI } from '../store';
-import { Field, DemoNotice, Brand } from '@gowayy/ui';
+import { Field, Brand } from '@gowayy/ui';
 import { Mascot } from '@gowayy/ui';
 
 /** Shared-identity auth: the same GOWAYY account works in GOWAYY, PARTNER and EXPLORE. */
@@ -15,7 +15,15 @@ export function Login() {
   const showToast = useUI((s) => s.showToast);
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [show, setShow] = useState(false);
   const login = useMutation({
-    mutationFn: () => client.login(email, password),
+    mutationFn: async () => {
+      const r = await client.login(email, password);
+      const roles = (r.user.roles ?? []) as string[];
+      const partnerRoles = ['restaurant', 'grocery', 'seller', 'property', 'tour_operator', 'driver', 'admin'];
+      if (!roles.some((role) => partnerRoles.includes(role))) {
+        throw new Error('This account has no partner access. Use a partner or the shared demo account.');
+      }
+      return r;
+    },
     onSuccess: (r) => { setAuth(r.user, r.session.token); nav('/'); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
@@ -73,8 +81,7 @@ export function Register() {
         <>
           <h1 style={{ fontSize: 26 }}>Verify your email</h1>
           <p className="small muted">Enter the six-digit code sent to {form.email}.</p>
-          <DemoNotice>Development OTP adapter — the code below is NOT a real email verification. Production uses a configured email provider.</DemoNotice>
-          {demoOtp && <div className="notice notice--info" style={{ marginTop: 10 }}><ShieldCheck size={14} /> Demo code: <strong style={{ fontFamily: 'var(--gw-mono)' }}>{demoOtp}</strong></div>}
+          {demoOtp && <details className="notice notice--info" style={{ marginTop: 10 }}><summary className="small"><ShieldCheck size={14} /> Development verification code</summary><p className="small" style={{ marginTop: 6 }}>No email provider is connected in this build. Test code: <strong style={{ fontFamily: 'var(--gw-mono)' }}>{demoOtp}</strong></p></details>}
           <Field label="Verification code"><input className="input" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} style={{ fontFamily: 'var(--gw-mono)', fontSize: 22, letterSpacing: 8, textAlign: 'center' }} /></Field>
           <button className="btn btn--primary btn--block" disabled={code.length !== 6 || verify.isPending} onClick={() => verify.mutate()}>{verify.isPending ? 'Verifying…' : 'Verify & continue'}</button>
           <button className="btn btn--ghost btn--sm" onClick={() => send.mutate()}>Resend code</button>

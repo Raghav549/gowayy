@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "GOWAYY ADMIN",
+    "slug": "gowayy-admin",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "gowayyadmin",
+    "newArchEnabled": true,
+    "icon": "./assets/branding/app-icon.png",
+    "splash": {
+      "image": "./assets/branding/splash-mark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#421080"
+    },
+    "android": {
+      "package": "app.gowayy.admin",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/icon-foreground.png",
+        "monochromeImage": "./assets/branding/icon-monochrome.png",
+        "backgroundImage": "./assets/branding/icon-background.png"
+      },
+      "permissions": [
+        "INTERNET",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "extra": {
+      "accent": "#421080",
+      "accentSoft": "#EDE3F7"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/branding/splash-mark.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#421080"
+        }
+      ]
+    ]
+  }
+}

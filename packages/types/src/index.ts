@@ -310,10 +310,12 @@ export interface Notification {
   type: string;
   title: string;
   body: string;
-  channel: 'in_app' | 'push';
+  channel: 'in_app' | 'push' | 'email' | 'sms';
   readAt: string | null;
   createdAt: string;
   dedupeKey: string;
+  reference?: string | null;
+  actionUrl?: string | null;
 }
 
 export interface User {

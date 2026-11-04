@@ -26,7 +26,7 @@ export function Onboarding() {
 
   const claim = useMutation({
     mutationFn: () => client.claimPartner(type as 'restaurant' | 'grocery' | 'property' | 'tour_operator', listingId),
-    onSuccess: () => { showToast('Listing claimed — verification is pending (demo adapter)', 'success'); void qc.invalidateQueries(); nav('/'); },
+    onSuccess: () => { showToast('Listing claimed — verification is now pending review', 'success'); void qc.invalidateQueries(); nav('/'); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
   const registerDriver = useMutation({
@@ -54,14 +54,14 @@ export function Onboarding() {
       {type && type !== 'driver' && (
         needsListing ? (
         <div className="card stack" style={{ gap: 12 }}>
-          <Field label="Choose your business listing (seeded demo catalogue)">
+          <Field label="Choose your business listing">
             <select className="select" value={listingId} onChange={(e) => setListingId(e.target.value)}>
               <option value="">Select…</option>
               {listings.map((l) => <option key={l.id} value={l.id}>{l.name} — {('destinationId' in l ? catalogue.destinations.find((d) => d.id === l.destinationId)?.name ?? '' : '')}</option>)}
             </select>
           </Field>
           <button className="btn btn--primary" disabled={!listingId || claim.isPending} onClick={() => claim.mutate()}>{claim.isPending ? 'Claiming…' : 'Claim this business'}</button>
-          <p className="tiny muted"><FileCheck size={12} style={{ verticalAlign: -1 }} /> Demo claim — production requires document verification before the role activates.</p>
+          <p className="tiny muted"><FileCheck size={12} style={{ verticalAlign: -1 }} /> Your listing goes live after GOWAYY operations verify your documents.</p>
         </div>
       ) : (
         <div className="card"><p className="small">Tour operators create their own packages under Manage → tours.</p><button className="btn btn--primary btn--block" disabled={claim.isPending} onClick={() => claim.mutate()}>Become a tour operator</button></div>

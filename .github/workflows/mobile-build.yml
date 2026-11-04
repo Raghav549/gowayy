@@ -5,7 +5,7 @@ on:
     branches: [main, 'arena/**']
     paths:
       - 'apps/gowayy-customer/**'
-      - 'apps/gowayy-explore/**'
+      - 'apps/gowayy-admin/**'
       - 'apps/gowayy-partner/**'
       - 'apps/dev-api/**'
       - 'packages/**'
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       customer: ${{ steps.filter.outputs.customer }}
-      explore: ${{ steps.filter.outputs.explore }}
+      admin: ${{ steps.filter.outputs.admin }}
       partner: ${{ steps.filter.outputs.partner }}
     steps:
       - uses: actions/checkout@v4
@@ -57,8 +57,8 @@ jobs:
               - 'package-lock.json'
               - 'tsconfig.base.json'
               - '.github/workflows/mobile-build.yml'
-            explore:
-              - 'apps/gowayy-explore/**'
+            admin:
+              - 'apps/gowayy-admin/**'
               - 'apps/dev-api/**'
               - 'packages/**'
               - 'assets/brand/**'
@@ -94,8 +94,8 @@ jobs:
         include:
           - app: customer
             package: app.gowayy.customer
-          - app: explore
-            package: app.gowayy.explore
+          - app: admin
+            package: app.gowayy.admin
           - app: partner
             package: app.gowayy.partner
     steps:
@@ -131,7 +131,7 @@ jobs:
         run: |
           case '${{ matrix.app }}' in
             customer) npm run typecheck:mobile ;;
-            explore) npm run typecheck:explore-mobile ;;
+            admin) npm run typecheck:admin-mobile ;;
             partner) npm run typecheck:partner-mobile ;;
           esac
       - id: version
@@ -230,7 +230,7 @@ jobs:
           echo "Verified $APP $variant APK: $actual_package $actual_name ($actual_code), $(du -h "$apk" | cut -f1)."
 
       - name: Create per-app update metadata
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && matrix.app != 'admin'
         env:
           APP: ${{ matrix.app }}
           RUN_NUMBER: ${{ github.run_number }}

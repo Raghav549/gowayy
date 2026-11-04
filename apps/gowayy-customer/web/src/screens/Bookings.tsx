@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { downloadInvoice } from '../lib/invoice';
+import { downloadInvoice as downloadServerInvoice } from '../lib/invoice';
 import { ClipboardList, ArrowRight, Star, Download, CreditCard, XCircle } from 'lucide-react';
 import { formatINR } from '@gowayy/shared-utils';
 import { SERVICE_LABELS, progressFor } from '@gowayy/booking-engine';
@@ -18,7 +20,7 @@ export function Bookings() {
     : ['completed', 'cancelled', 'refunded', 'failed'].includes(b.status));
   return (
     <div>
-      <SectionHead eyebrow="Booking history" title="Your bookings" subtitle="Status is server-authoritative. Requests are not confirmations until a partner accepts." action={<Link className="btn btn--secondary" to="/">Plan a journey <ArrowRight size={16} /></Link>} />
+      <SectionHead eyebrow="Booking history" title="Your bookings"  action={<Link className="btn btn--secondary" to="/">Plan a journey <ArrowRight size={16} /></Link>} />
       <div className="chips" style={{ marginBottom: 18 }}>
         {(['all', 'active', 'past'] as const).map((f) => <button key={f} className={`chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}
       </div>
@@ -55,7 +57,7 @@ export function BookingDetail() {
   if (!b) return <EmptyState title="Booking not found" body="It may have been removed." action={<Link className="btn btn--primary" to="/bookings">All bookings</Link>} />;
 
   const cancel = async () => {
-    if (!window.confirm('Cancel this booking? Refunds are calculated by the server.')) return;
+    if (!window.confirm('Cancel this booking?')) return;
     setBusy(true);
     try { await client.cancelBooking(b.id, 'Cancelled by customer'); await qc.invalidateQueries(); showToast('Booking cancelled', 'success'); }
     catch (e) { showToast(e instanceof Error ? e.message : 'Could not cancel', 'error'); }
@@ -67,12 +69,9 @@ export function BookingDetail() {
     catch (e) { showToast(e instanceof Error ? e.message : 'Could not save review', 'error'); }
     finally { setBusy(false); }
   };
-  const invoice = () => {
-    const lines = b.price.lines.map((l) => `<tr><td>${l.label}</td><td style="text-align:right">${formatINR(l.paise)}</td></tr>`).join('');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${b.reference}</title><style>body{font-family:system-ui;max-width:640px;margin:48px auto;color:#17131B}table{width:100%;border-collapse:collapse}td{padding:8px;border-bottom:1px solid #ddd}h1{letter-spacing:.1em}</style></head><body><h1>GOWAYY</h1><p><strong>Invoice ${b.reference}</strong> — ${b.title}</p><p>${b.service} · ${new Date(b.createdAt).toLocaleString()}</p><table>${lines}<tr><td><strong>Tax</strong></td><td style="text-align:right">${formatINR(b.price.taxPaise)}</td></tr><tr><td><strong>Total</strong></td><td style="text-align:right"><strong>${formatINR(b.price.totalPaise)}</strong></td></tr></table><p style="color:#666">Sandbox transaction record. Not a tax invoice for real payments.</p></body></html>`;
-    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-    const a = document.createElement('a'); a.href = url; a.download = `${b.reference}-invoice.html`; a.click(); URL.revokeObjectURL(url);
-    showToast('Invoice downloaded', 'success');
+  const invoice = async () => {
+    try { await downloadInvoice('bookings', b.id, b.reference); }
+    catch (e) { showToast(e instanceof Error ? e.message : 'Invoice could not be downloaded', 'error'); }
   };
 
   return (
@@ -90,7 +89,7 @@ export function BookingDetail() {
           <div className="timeline">
             {b.statusHistory.map((h, i) => <div className="timeline__item" key={`${h.status}-${i}`}><span className="timeline__dot" /><div><strong className="small">{h.status.replace(/_/g, ' ')}</strong><div className="tiny muted">{new Date(h.at).toLocaleString()} · by {h.by}{h.note ? ` · ${h.note}` : ''}</div></div></div>)}
           </div>
-          {q.data?.payment && <div className="notice notice--info" style={{ marginTop: 10 }}>Payment {q.data.payment.status} · {formatINR(q.data.payment.amountPaise)} · sandbox provider</div>}
+          {q.data?.payment && <div className="notice notice--info" style={{ marginTop: 10 }}>Payment {q.data.payment.status} · {formatINR(q.data.payment.amountPaise)}</div>}
         </div>
         <div className="stack">
           <div className="card"><h3>Price breakdown</h3><div style={{ marginTop: 14 }}><PriceLines price={b.price} /></div></div>
@@ -106,9 +105,9 @@ export function BookingDetail() {
       <div className="section card">
         <h3>Actions</h3>
         <div className="row row--wrap" style={{ gap: 10, marginTop: 14 }}>
-          {!b.paymentId && !['cancelled', 'refunded'].includes(b.status) && <Link className="btn btn--primary" to={`/checkout?booking=${b.id}`}><CreditCard size={16} /> Pay in sandbox</Link>}
+          {!b.paymentId && !['cancelled', 'refunded'].includes(b.status) && <Link className="btn btn--primary" to={`/checkout/booking?booking=${b.id}`}><CreditCard size={16} /> Complete payment</Link>}
           {!['completed', 'cancelled', 'refunded', 'in_progress'].includes(b.status) && <button className="btn btn--danger" onClick={() => void cancel()} disabled={busy}><XCircle size={16} /> Cancel booking</button>}
-          <button className="btn btn--secondary" onClick={invoice}><Download size={16} /> Download invoice</button>
+          <button className="btn btn--secondary" onClick={() => void invoice()}><Download size={16} /> Download invoice</button>
           {b.journeyId && <Link className="btn btn--secondary" to={`/journey/${b.journeyId}`}>Open trip</Link>}
           <button className="btn btn--ghost" onClick={() => navigate('/support')}>Get help</button>
         </div>

@@ -11,7 +11,7 @@ import { client, idemKey } from '../lib/client';
 import { usePageMeta, useRequireAuth } from '../lib/guards';
 import { useJourney } from '../store/useJourney';
 import { useUI } from '../store/useUI';
-import { Field, SectionHead, PriceLines, DemoBanner } from '../components/ui';
+import { Field, SectionHead, PriceLines } from '../components/ui';
 import { PlaceSelect, ConnectedRecommendations } from './shared';
 import { MapView } from '../components/MapView';
 
@@ -50,7 +50,7 @@ export function Parcels() {
       const booking = await client.bookParcel(parsed.data, idemKey());
       await qc.invalidateQueries({ queryKey: ['bookings'] });
       showToast('Parcel request created — awaiting a delivery partner', 'success');
-      navigate(`/checkout?booking=${booking.id}`);
+      navigate(`/checkout/booking?booking=${booking.id}`);
     } catch (e) { setServerError(e instanceof Error ? e.message : 'Could not create parcel request'); }
     finally { setSubmitting(false); }
   };
@@ -78,13 +78,12 @@ export function Parcels() {
               <div className="row small muted" style={{ margin: '14px 0', gap: 16 }}><span><RouteIcon size={14} /> {formatDistance(route.distanceKm)}</span><span>{formatDuration(route.durationMin)}</span></div>
               <PriceLines price={quote} />
             </>}
-            {serverError && <div className="notice notice--demo" style={{ marginTop: 12 }} role="alert">{serverError}</div>}
+            {serverError && <div className="notice notice--info" style={{ marginTop: 12 }} role="alert">{serverError}</div>}
             <button className="btn btn--primary btn--block" style={{ marginTop: 16 }} onClick={() => void submit()} disabled={submitting}>{submitting ? 'Creating request…' : 'Request pickup'} <ArrowRight size={17} /></button>
             <p className="tiny muted" style={{ marginTop: 8 }}>A delivery partner must accept the job before dispatch.</p>
           </div>
         </div>
       </div>
-      <section className="section"><DemoBanner>Delivery partner assignment is governed by the shared dispatch rules; an incompatible job cannot be assigned during a passenger trip.</DemoBanner></section>
       <ConnectedRecommendations destinationId={journey?.destinationId ?? null} />
     </div>
   );
