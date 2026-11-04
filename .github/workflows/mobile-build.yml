@@ -107,11 +107,10 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             apps/gowayy-${{ matrix.app }}/mobile/package-lock.json
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools, platforms;android-37, build-tools;37.0.0, ndk;27.1.12297006'
