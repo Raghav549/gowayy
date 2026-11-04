@@ -7,12 +7,12 @@ verified, and what is not. Nothing below claims a build or deployment that was n
 
 - Original layered 2.5D **G** SVG + wordmark, Android icon, adaptive icon, monochrome
   icon, splash logo, colour tokens and typography system in `assets/brand/`.
-- Web: custom Three.js splash with reduced-motion path; four animated SVG onboarding
-  scenes; multi-step registration with six-box OTP, forgot/reset, session persistence;
-  five-area navigation; light/dark themes; PWA manifest + service worker.
-- Mobile: layered Reanimated splash, four Reanimated/Gesture Handler onboarding scenes,
-  four-step registration with OTP auto-focus/backspace/paste/resend/expiry, login,
-  forgot/reset, five bottom tabs (Home, Explore, Bookings, Orders, Profile).
+- Web: lightweight split purple/orange official-mark reveal with reduced-motion path;
+  five optimized, role-relevant Customer onboarding scenes; shared lavender/lilac tokens,
+  responsive role navigation; registration with six-box OTP, forgot/reset and session persistence.
+- Mobile: sequenced, undistorted official-mark reveals on Customer, Explore and Partner;
+  five optimized Customer 2.5D onboarding scenes, five bottom tabs, registration/auth flows,
+  and role-specific navigation. Shared app icons, adaptive layers, splash and favicon assets.
 - Verified: web typecheck, 59 unit tests, web build (1707 modules), mobile strict
   typecheck, Android Hermes bundle, web Metro bundle (36 chunks).
 

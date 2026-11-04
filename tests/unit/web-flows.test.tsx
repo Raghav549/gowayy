@@ -34,34 +34,33 @@ beforeAll(async () => {
 });
 afterEach(() => { cleanup(); fetchMock.mockClear(); window.localStorage.clear(); });
 
-describe('cinematic onboarding', () => {
-  it('has four animated slides, working controls, swipe navigation and indicators', () => {
+describe('lavender illustrated onboarding', () => {
+  it('shows five distinct service scenes with working controls, swipe navigation and indicators', () => {
     const onFinish = vi.fn();
     const { container } = render(<Onboarding onFinish={onFinish} />);
-    expect(screen.getAllByRole('tab')).toHaveLength(4);
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('GOWAYY');
-    expect(screen.getByRole('button', { name: /previous/i })).toBeDisabled();
+    expect(screen.getAllByRole('tab')).toHaveLength(5);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Fresh finds, right to your door.');
+    expect(screen.getByRole('button', { name: /previous page/i })).toBeDisabled();
+    expect(screen.getByRole('img', { name: /vegetables and fruit bob gently/i })).toBeInTheDocument();
+    expect((screen.getByRole('img', { name: /vegetables and fruit bob gently/i }) as HTMLImageElement).src).toContain('groceries-animated.webp');
 
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Food & Groceries');
-    expect(screen.getByText('Order what you need.')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /scooter/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('A smoother way to get there.');
+    expect(screen.getByRole('img', { name: /car arrives while its passenger waves/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Settle into somewhere lovely.');
 
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Book Cabs');
-    expect(screen.getByRole('img', { name: /waving driver/i })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /previous/i }));
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Food & Groceries');
-
-    // Swipe left advances; the artwork and text change with it.
+    fireEvent.click(screen.getByRole('button', { name: /previous page/i }));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('A smoother way to get there.');
     const el = container.querySelector('.onboarding')!;
     fireEvent.pointerDown(el, { clientX: 300 });
     fireEvent.pointerUp(el, { clientX: 200 });
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Book Cabs');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Settle into somewhere lovely.');
 
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Book Your Stay');
+    fireEvent.click(screen.getByRole('tab', { name: /go to destinations/i }));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Find the places worth the trip.');
+    fireEvent.click(screen.getByRole('tab', { name: /go to local experiences/i }));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Make room for the local story.');
     fireEvent.click(screen.getByRole('button', { name: /get started/i }));
     expect(onFinish).toHaveBeenCalledTimes(1);
   });

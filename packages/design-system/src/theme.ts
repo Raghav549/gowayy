@@ -3,10 +3,9 @@ import { cssVariables, type ThemeMode } from './tokens.ts';
 const STORAGE_KEY = 'gowayy.theme';
 
 export function resolveInitialTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'dark';
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  // GOWAYY now ships a single warm-lavender visual identity; do not inherit an
+  // operating-system or stale local preference that could restore the old dark UI.
+  return 'light';
 }
 
 export function applyTheme(mode: ThemeMode, root: HTMLElement = document.documentElement): void {

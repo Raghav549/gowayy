@@ -59,7 +59,7 @@ export function Home() {
           <h1>Where would you like to go?</h1>
           <p>One account for cabs, stays, food, groceries, sightseeing and parcels — connected by a single journey.</p>
           <div className="hero__search" style={{ position: 'relative' }}>
-            <Search size={19} color="#6B6F76" />
+            <Search size={19} color="var(--gw-text-muted)" />
             <input aria-label="Universal search" placeholder="Try “Darjeeling”, “momos” or “airport”" value={query}
               onChange={(e) => setQuery(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => window.setTimeout(() => setFocused(false), 160)}
               onKeyDown={(e) => { if (e.key === 'Enter') submitSearch(); }} />

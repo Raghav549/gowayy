@@ -56,4 +56,4 @@ export default function SupportScreen() {
     </Screen>
   );
 }
-const styles = StyleSheet.create({ foot: { color: '#6B6F76', fontSize: font.sizes.xs, marginTop: spacing.lg, marginBottom: spacing.xl } });
+const styles = StyleSheet.create({ foot: { color: '#6F6876', fontSize: font.sizes.xs, marginTop: spacing.lg, marginBottom: spacing.xl } });

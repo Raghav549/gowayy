@@ -42,5 +42,4 @@ render('g-mono.svg', join(web, 'favicon.png'), 64);
 // Compose the standard Android launcher icon from adaptive layers.
 execFileSync('convert', [join(web, 'icon-bg.png'), join(web, 'icon-fg.png'), '-compose', 'over', '-composite', join(mobile, 'app-icon.png')]);
 copyFileSync(join(mobile, 'app-icon.png'), join(web, 'app-icon.png'));
-copyFileSync(join(web, 'favicon.png'), join(web, 'favicon.ico'));
 console.log('brand assets complete');

@@ -34,11 +34,11 @@ function Toast() {
 }
 
 function Shell() {
-  const { c, mode } = useTheme();
+  const { c } = useTheme();
   useNotificationPolling();
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: c.bg },

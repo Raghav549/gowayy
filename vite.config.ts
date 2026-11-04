@@ -28,9 +28,6 @@ export default defineConfig({
   },
   build: {
     target: 'es2020', sourcemap: true,
-    // NOTE: no 'three' chunk here — only the customer app imports three; a shared
-    // manualChunks entry made partner/explore emit `Generated an empty chunk: "three"`.
-    // The customer app adds its own three chunk in apps/gowayy-customer/web/vite.config.ts.
     rollupOptions: { output: { manualChunks: { react: ['react', 'react-dom', 'react-router-dom'], query: ['@tanstack/react-query'] } } },
   },
 });

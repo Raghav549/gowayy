@@ -21,8 +21,8 @@ export function Button({ title, onPress, variant = 'primary', disabled = false, 
   title: string; onPress?: () => void; variant?: Variant; disabled?: boolean; loading?: boolean; testID?: string;
 }) {
   const { c } = useTheme();
-  const bg = variant === 'primary' ? c.accent : variant === 'danger' ? c.bg : variant === 'secondary' ? c.surfaceAlt : 'transparent';
-  const fg = variant === 'primary' ? c.accentContrast : variant === 'danger' ? '#B45B4C' : c.text;
+  const bg = variant === 'primary' ? '#111014' : variant === 'danger' ? c.bg : variant === 'secondary' ? c.surfaceAlt : 'transparent';
+  const fg = variant === 'primary' ? '#FFFFFF' : variant === 'danger' ? '#B94D59' : c.text;
   return (
     <Pressable
       testID={testID}
@@ -183,9 +183,9 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1 },
   content: { flex: 1, gap: spacing.md },
   padded: { padding: spacing.lg, paddingTop: spacing.xl },
-  button: { minHeight: 46, borderRadius: radius.sm, borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
+  button: { minHeight: 48, borderRadius: radius.pill, borderWidth: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
   buttonText: { fontSize: font.sizes.base, fontWeight: '600' },
-  card: { borderRadius: radius.md, borderWidth: 1, padding: spacing.lg, gap: spacing.sm },
+  card: { borderRadius: radius.lg, borderWidth: 0.5, padding: spacing.lg, gap: spacing.sm, elevation: 2, shadowColor: '#593A73', shadowOpacity: 0.07, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } },
   sectionHead: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, marginTop: spacing.md },
   eyebrow: { fontSize: font.sizes.xs, letterSpacing: 1.5, fontWeight: '600' },
   sectionTitle: { fontSize: font.sizes.xl, fontWeight: '700', marginTop: 2 },

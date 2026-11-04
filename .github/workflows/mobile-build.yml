@@ -1,13 +1,8 @@
-name: Android builds (three apps)
+name: Android APK builds (Customer, Partner, Explore)
 
-# Two layers, both mandatory — nothing is ever silently skipped:
-#  1. native-check (every push/PR): per app, install deps, typecheck,
-#     `expo prebuild --platform android` (generates + validates the native
-#     android/ project from app.json/eas.json) and `expo export --platform
-#     android` (real Metro production bundle). Artifacts are uploaded.
-#  2. eas-build (push to main): per app, `eas build --platform android
-#     --profile production` (AAB). Requires the EXPO_TOKEN repo secret; if it
-#     is missing the job FAILS with the exact remediation instead of skipping.
+# Native Android builds are EAS-only. Every push/PR runs Expo prebuild,
+# typechecks and Android JS exports; main pushes and manual dispatches additionally
+# build preview-profile APKs in EAS, download them, and upload GitHub artifacts.
 
 on:
   push:
@@ -26,7 +21,7 @@ permissions:
 
 jobs:
   native-check:
-    name: 'Native check · ${{ matrix.app }}'
+    name: 'Expo check · ${{ matrix.app }}'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -40,34 +35,38 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - name: Install monorepo workspace dependencies
         run: npm ci --no-audit --no-fund
       - name: Install mobile dependencies
         run: npm ci --no-audit --no-fund
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Typecheck (from repo root — mobile tsconfigs resolve @gowayy/* into packages/, which need root node_modules)
+      - name: Typecheck app
         run: npm run typecheck:${{ matrix.app == 'customer' && 'mobile' || matrix.app == 'partner' && 'partner-mobile' || 'explore-mobile' }}
-      - name: Generate native Android project (expo prebuild)
+      - name: Generate native Android project (Expo prebuild)
         run: npx expo prebuild --platform android --no-install
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Verify Android applicationId / build config
-        run: |
-          grep -E '"package"|"versionCode"' app.json android/app/build.gradle | head -4
-          test -f android/app/build.gradle
+      - name: Verify Android application id / build config
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Production JS bundle for Android (expo export)
+        run: |
+          grep -E '"package"|"versionCode"' app.json | head -4
+          test -f android/app/build.gradle
+      - name: Production JS bundle for Android
         run: npx expo export --platform android --output-dir dist-android
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Upload Android bundle artifact
+      - name: Upload Expo Android bundle
         uses: actions/upload-artifact@v4
         with:
-          name: gowayy-${{ matrix.app }}-android-bundle
+          name: gowayy-${{ matrix.app }}-android-js-bundle
           path: apps/gowayy-${{ matrix.app }}/mobile/dist-android
+          if-no-files-found: error
           retention-days: 14
 
-  eas-build:
-    name: 'EAS production AAB · ${{ matrix.app }}'
+  eas-apk:
+    name: 'EAS internal APK · ${{ matrix.app }}'
     needs: native-check
+    # Production branch pushes and explicit workflow_dispatch runs create APKs;
+    # PRs still get the native prebuild and production-bundle check above.
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
@@ -79,26 +78,51 @@ jobs:
           - explore
     steps:
       - uses: actions/checkout@v4
-      - name: Verify EXPO_TOKEN is configured (fail loudly, never skip)
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::EXPO_TOKEN repository secret is missing. Android AAB builds cannot run without it."
-            echo "Add it at: GitHub repo → Settings → Secrets and variables → Actions → New repository secret → name EXPO_TOKEN, value = Expo access token (https://expo.dev/settings/access-tokens). See docs/DEPLOYMENT.md §3."
-            exit 1
-          fi
-          echo "EXPO_TOKEN present — running real EAS build."
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
+          cache: npm
+      - name: Verify EXPO_TOKEN is configured
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN repository secret is required for EAS APK builds."
+            echo "Configure it in GitHub repo Settings → Secrets and variables → Actions; see docs/DEPLOYMENT.md §3."
+            exit 1
+          fi
+      - name: Install monorepo workspace dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install mobile dependencies
         run: npm ci --no-audit --no-fund
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Verify this app is linked to a real EAS project
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+        run: |
+          node -e 'const c=require("./app.json").expo; const id=c.extra?.eas?.projectId; if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "")) { console.error("::error::Set expo.extra.eas.projectId to this app’s real EAS project UUID in app.json."); process.exit(1); }'
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build production AAB (app.gowayy.${{ matrix.app }})
-        run: eas build --platform android --profile production --non-interactive
+      - name: Build and wait for APK on EAS
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
+        run: eas build --platform android --profile preview --non-interactive --wait --json > eas-build-result.json
+      - name: Download completed APK from EAS
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+        run: |
+          build_id="$(node -e 'const r=require("./eas-build-result.json"); const b=Array.isArray(r)?r[0]:r; if (!b?.id || b.status !== "FINISHED") throw Error("EAS build did not finish successfully"); process.stdout.write(b.id)')"
+          eas build:download --build-id "$build_id" --json > eas-download-result.json
+          download_path="$(node -e 'const r=require("./eas-download-result.json"); if (!r?.path) throw Error("EAS did not return a downloaded artifact path"); process.stdout.write(r.path)')"
+          mkdir -p artifacts
+          cp "$download_path" "artifacts/gowayy-${{ matrix.app }}.apk"
+          test -s "artifacts/gowayy-${{ matrix.app }}.apk"
+          unzip -t "artifacts/gowayy-${{ matrix.app }}.apk" >/dev/null
+          sha256sum "artifacts/gowayy-${{ matrix.app }}.apk"
+          echo "Verified APK artifact for ${{ matrix.app }} ($(du -h "artifacts/gowayy-${{ matrix.app }}.apk" | cut -f1))."
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gowayy-${{ matrix.app }}-android-apk
+          path: apps/gowayy-${{ matrix.app }}/mobile/artifacts/gowayy-${{ matrix.app }}.apk
+          if-no-files-found: error
+          retention-days: 30

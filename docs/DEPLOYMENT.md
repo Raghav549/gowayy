@@ -1,28 +1,32 @@
 # Deployment — GOWAYY
 
-Three web apps deploy to **Vercel** (one project per app), the customer Android app builds
-with **EAS**, and the backend runs on **Supabase** (PostgreSQL + PostGIS + Edge Functions).
+Three web apps deploy to **Vercel** (one project per app), all three Android apps
+produce downloadable APKs in **GitHub Actions** (EAS remains available for Play Store
+AABs), and the backend runs on **Supabase** (PostgreSQL + PostGIS + Edge Functions).
 CI/CD is GitHub Actions (`.github/workflows/`).
 
 ## 0. CI root-cause notes
 
-- `[STATIC_BUILD_NO_OUT_DIR] No Output Directory named "dist"` (Vercel): the project
-  Root Directory was not the app web dir. Fixed by the explicit per-app `vercel.json`
-  contract above + `test -d` assertion in the build command.
-- `Generated an empty chunk: "three"` (Vite): the shared root `vite.config.ts` listed
-  `three` in `manualChunks`, but only the customer app imports three.js. The `three`
-  chunk now lives only in `apps/gowayy-customer/web/vite.config.ts`.
-- Partner/explore Android bundles failed with `Cannot find module 'babel-preset-expo'`:
-  added `babel-preset-expo ~58.0.24` (SDK 58) to both apps' devDependencies.
-- Android builds are never silently skipped: `mobile-build.yml` runs a `native-check`
-  matrix job (prebuild + `expo export --platform android` + artifact upload) on every
-  push/PR, and an `eas-build` matrix on main that FAILS with the exact remediation if
-  `EXPO_TOKEN` is missing.
+- `[STATIC_BUILD_NO_OUT_DIR] No Output Directory named "dist"` (Vercel): `deploy-web.yml`
+  now builds each Vite app in GitHub Actions, asserts `dist/index.html`, packages the
+  files as Vercel Build Output API v3 (`.vercel/output/static`), and deploys with
+  `vercel deploy --prebuilt`. Vercel no longer has to discover a nested monorepo `dist`
+  directory during its remote static-build phase. `scripts/prepare-vercel-output.mjs`
+  assembles the per-app output and SPA fallback.
+- For any separate Vercel Git-connected/UI builds, set that project's Root Directory to
+  its exact app web directory and clear Build & Development Settings overrides; those
+  builds do not use the GitHub Action's prebuilt bypass.
+- The former Three.js splash has been replaced with a lightweight split-color SVG logo
+  reveal; unused Three.js and Expo GL dependencies and the dedicated Vite chunk were removed.
+- Android builds stay EAS-only: `mobile-build.yml` runs Expo prebuild, typechecks and
+  Android bundle exports on pushes/PRs; on `main` or manual dispatch it runs EAS
+  `preview` builds, downloads the resulting APKs, validates ZIP integrity and uploads
+  them as GitHub Actions artifacts.
 
 Earlier workflow runs failed in the runner-provisioning step ("Set up job") and one action
 slug (`actions/setup-deno`) did not exist. Repairs: `denoland/setup-deno@v1`, explicit
 `permissions: contents: read` on every workflow, per-app mobile installs/typechecks in
-CI, and three EAS build jobs. All workflow steps are also run locally via `npm run verify`.
+CI, native Gradle APK builds, and explicit verification of the web output directories.
 
 ## 1. Supabase (backend)
 
@@ -51,11 +55,11 @@ server-authoritative pricing, stock checks and idempotency.
 
 Create three Vercel projects (one per app). For each project set:
 
-- **Root Directory**: `apps/gowayy-customer/web` · `apps/gowayy-partner/web` · `apps/gowayy-explore/web`
-  (this is the exact fix for `[STATIC_BUILD_NO_OUT_DIR] No Output Directory named "dist"`:
-  Vercel resolves `outputDirectory` relative to the project Root Directory, so the root
-  must be the app dir — then `outputDirectory: "dist"` is `<app>/web/dist`, which is
-  exactly where the build command emits it)
+- **Root Directory for direct Vercel builds**: set each project to exactly one app web
+  directory (`apps/gowayy-customer/web`, `apps/gowayy-partner/web`, or
+  `apps/gowayy-explore/web`). Vercel resolves `outputDirectory: "dist"` relative to
+  that directory. The GitHub production workflow now deploys Build Output API prebuilt
+  bundles to avoid Vercel's nested-monorepo output-directory detection entirely.
 - **Framework preset**: Other (vercel.json sets `"framework": null`)
 - **Install command** (in per-app `vercel.json`): `cd ../.. && npm ci --no-audit --no-fund`
 - **Build command** (in per-app `vercel.json`): `cd ../.. && npm run build -w @gowayy/<app>-web && test -d apps/gowayy-<app>/web/dist`
@@ -80,7 +84,7 @@ Environment variables per project (Vercel dashboard → Settings → Environment
 | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | public values | same | same |
 | `VITE_GOWAYY_APP_URL` | — | — | URL of the customer app (booking handoff target) |
 
-Deploys run on push to `main` via `.github/workflows/deploy-web.yml` (production).
+Production deploys run on pushes to `main` via `.github/workflows/deploy-web.yml`. The workflow builds in GitHub Actions, checks each app's `dist/index.html`, assembles `.vercel/output`, and calls `vercel deploy --prebuilt --prod`. This is the reliable path that avoids Vercel's `[STATIC_BUILD_NO_OUT_DIR]` error for monorepo builds. Disable Vercel's separate Git auto-deploy trigger to avoid duplicate deployments; if retaining direct Vercel builds, use the exact per-app Root Directory above and remove conflicting Build & Development Settings overrides.
 
 ## 3. EAS — three independent Android apps
 
@@ -101,10 +105,16 @@ eas build --platform android --profile preview      # internal APK
 eas update --channel partner-production             # OTA JS-only updates (no native change)
 ```
 
-- `mobile-build.yml` builds all three production AABs on pushes to `main` touching any
-  mobile app or shared package (secret: `EXPO_TOKEN`; one Expo account, three projects).
-- EAS Update ships JS/asset-only changes per channel; native/SDK/permission changes
-  require a new EAS build and Play/internal distribution — OTA never replaces a binary.
+- `.github/workflows/mobile-build.yml` runs `native-check` (Expo prebuild, mobile
+  typechecks and Android JS exports) on every push/PR. On pushes to `main` and on
+  `workflow_dispatch`, it builds all three EAS `preview` APKs, downloads them, checks
+  archive integrity, and uploads `gowayy-{customer,partner,explore}-android-apk`
+  artifacts to the Actions run for 30 days. Download them from the workflow run's
+  **Artifacts** section (`gowayy-customer-android-apk`, etc.). The cloud APK job
+  requires the `EXPO_TOKEN` repository secret and a valid EAS project UUID in each
+  app's `expo.extra.eas.projectId`; it does not need a local Android SDK or Gradle
+  installation. The workflow checks the UUID configuration before starting paid cloud builds.
+- EAS production profiles remain AABs for Google Play (`eas build --platform android --profile production`). EAS Update ships JS/asset-only changes per channel; native, SDK, and permission changes require a new EAS build — OTA never replaces a binary.
 
 ## 4. Preview hosts
 
@@ -122,9 +132,9 @@ dev API — no `localhost` references in browser code.
 
 ## CI behaviour when deploy secrets are absent
 
-`deploy-web.yml` and `mobile-build.yml` run a `preflight` job first. If any required
-secret (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_*`, `EXPO_TOKEN`) is missing,
-the deploy/build steps are skipped and a `report` step prints exactly which secrets are
-missing — the skip is loud and visible in the run log, never silent or disguised as
-success. The main `ci.yml` workflow (typecheck, 114 tests, secret scan, web builds) is
-unaffected and remains the strict gate on every PR.
+`deploy-web.yml` checks `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and all three
+`VERCEL_PROJECT_*` secrets; if any are missing, deploys are skipped visibly and the
+report step names them. `mobile-build.yml` always runs Expo validation/bundle checks;
+its main/manual EAS APK job requires `EXPO_TOKEN` plus valid EAS project UUIDs and fails
+with remediation if either is missing. The main `ci.yml` workflow (typecheck, tests, secret scan, web builds) remains
+the strict gate on every PR.

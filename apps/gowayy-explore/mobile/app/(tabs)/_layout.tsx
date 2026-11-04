@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../src/theme';
 
@@ -9,15 +10,15 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarStyle: { position: 'absolute', left: 13, right: 13, bottom: 9, height: 72, paddingTop: 8, paddingBottom: 8, borderTopWidth: 0, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.96)', elevation: 12, shadowColor: '#43275E', shadowOpacity: 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 7 } },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
       }}
     >
-      <Tabs.Screen name="discover" options={{ title: 'Discover', tabBarIcon: ({ color, size }) => <Ionicons name="compass-outline" color={color as string} size={size} /> }} />
-      <Tabs.Screen name="gems" options={{ title: 'Hidden gems', tabBarIcon: ({ color, size }) => <Ionicons name="diamond-outline" color={color as string} size={size} /> }} />
-      <Tabs.Screen name="search" options={{ title: 'Search', tabBarIcon: ({ color, size }) => <Ionicons name="search-outline" color={color as string} size={size} /> }} />
-      <Tabs.Screen name="saved" options={{ title: 'Saved', tabBarIcon: ({ color, size }) => <Ionicons name="bookmark-outline" color={color as string} size={size} /> }} />
+      <Tabs.Screen name="discover" options={{ title: 'Discover', tabBarIcon: ({ color, size, focused }) => <View style={{ minWidth: 54, height: 28, borderRadius: 15, backgroundColor: focused ? '#17131B' : 'transparent', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="compass-outline" color={focused ? '#FFFFFF' : color as string} size={size} /></View> }} />
+      <Tabs.Screen name="gems" options={{ title: 'Hidden gems', tabBarIcon: ({ color, size, focused }) => <View style={{ minWidth: 54, height: 28, borderRadius: 15, backgroundColor: focused ? '#17131B' : 'transparent', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="diamond-outline" color={focused ? '#FFFFFF' : color as string} size={size} /></View> }} />
+      <Tabs.Screen name="search" options={{ title: 'Search', tabBarIcon: ({ color, size, focused }) => <View style={{ minWidth: 54, height: 28, borderRadius: 15, backgroundColor: focused ? '#17131B' : 'transparent', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="search-outline" color={focused ? '#FFFFFF' : color as string} size={size} /></View> }} />
+      <Tabs.Screen name="saved" options={{ title: 'Saved', tabBarIcon: ({ color, size, focused }) => <View style={{ minWidth: 54, height: 28, borderRadius: 15, backgroundColor: focused ? '#17131B' : 'transparent', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="bookmark-outline" color={focused ? '#FFFFFF' : color as string} size={size} /></View> }} />
     </Tabs>
   );
 }

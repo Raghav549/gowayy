@@ -5,8 +5,8 @@ import { projectPoints } from '@gowayy/location-engine';
 export interface MapPin extends Coordinates { id: string; label: string; kind?: string }
 
 const COLOURS: Record<string, string> = {
-  airport: '#E8A23A', stand: '#C9BBA3', destination: '#1E6B4F', landmark: '#8A7460',
-  business: '#C9BBA3', address: '#F3EAD9', hotel: '#F2C063', restaurant: '#C07A2D', attraction: '#4E7D5B',
+  airport: '#FFA500', stand: '#A98AC2', destination: '#421080', landmark: '#7E6890',
+  business: '#B5A0C9', address: '#DCC7F2', hotel: '#FFC44D', restaurant: '#C7783E', attraction: '#6E9B72',
 };
 
 /** Dependency-free interactive schematic map. Real coordinates, offline fallback provider. */
@@ -25,7 +25,7 @@ export function MapView({ pins, route, onSelect, height = 320, showLabels = true
     <div className="map">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Schematic map of destinations and route">
         <defs>
-          <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F2C063"/><stop offset="1" stopColor="#B97A1F"/></linearGradient>
+          <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#FFA500"/><stop offset="1" stopColor="#421080"/></linearGradient>
         </defs>
         {Array.from({ length: 9 }, (_, i) => <line key={`h${i}`} x1="0" x2={width} y1={i * height / 8} y2={i * height / 8} stroke="rgba(255,255,255,.035)" />)}
         {Array.from({ length: 13 }, (_, i) => <line key={`v${i}`} y1="0" y2={height} x1={i * width / 12} x2={i * width / 12} stroke="rgba(255,255,255,.035)" />)}
@@ -33,12 +33,12 @@ export function MapView({ pins, route, onSelect, height = 320, showLabels = true
         {pinPoints.map((pt, i) => {
           const pin = pins[i];
           if (!pin) return null;
-          const colour = COLOURS[pin.kind ?? ''] ?? '#1E6B4F';
+          const colour = COLOURS[pin.kind ?? ''] ?? '#421080';
           return (
             <g key={pin.id} className="map__pin" onClick={() => onSelect?.(pin)} role={onSelect ? 'button' : undefined}>
               <circle cx={pt.x} cy={pt.y} r="13" fill={colour} opacity=".14" />
-              <circle cx={pt.x} cy={pt.y} r="6" fill={colour} stroke="#33261B" strokeWidth="2" />
-              {showLabels && <text x={pt.x + 11} y={pt.y + 4} fill="var(--gw-text)" fontSize="13" fontFamily="system-ui" style={{ paintOrder: 'stroke', stroke: 'rgba(250,244,233,.9)', strokeWidth: 3 }}>{pin.label}</text>}
+              <circle cx={pt.x} cy={pt.y} r="6" fill={colour} stroke="#FFFFFF" strokeWidth="2" />
+              {showLabels && <text x={pt.x + 11} y={pt.y + 4} fill="var(--gw-text)" fontSize="13" fontFamily="system-ui" style={{ paintOrder: 'stroke', stroke: 'rgba(248,243,251,.95)', strokeWidth: 3 }}>{pin.label}</text>}
             </g>
           );
         })}

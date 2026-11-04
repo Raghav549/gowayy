@@ -3,7 +3,7 @@ import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Home, Compass, ClipboardList, ShoppingBag, UserRound, Search, Bell, MapPin, X,
-  Sun, Moon, CarFront, BedDouble, UtensilsCrossed, ShoppingBasket, Mountain, Ticket, Package, Sparkles, ChevronRight, Store, ShoppingCart,
+  CarFront, BedDouble, UtensilsCrossed, ShoppingBasket, Mountain, Ticket, Package, Sparkles, ChevronRight, Store, ShoppingCart,
 } from 'lucide-react';
 import { client } from '../lib/client';
 import { catalogue } from '@gowayy/catalog';
@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const user = useSession((s) => s.user);
-  const { theme, setTheme, setNotificationsOpen, notificationsOpen, setSearchOpen, searchOpen, toast, clearToast } = useUI();
+  const { setNotificationsOpen, notificationsOpen, setSearchOpen, searchOpen, toast, clearToast } = useUI();
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationLabel, setLocationLabel] = useState<string>('Darjeeling Himalaya');
   const [searchText, setSearchText] = useState('');
@@ -47,7 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const patchJourney = useJourney((s) => s.patch);
 
   useEffect(() => { if (toast) { const t = window.setTimeout(clearToast, 3800); return () => window.clearTimeout(t); } }, [toast, clearToast]);
-  useEffect(() => { const meta = document.querySelector('meta[name="theme-color"]'); meta?.setAttribute('content', '#FAF4E9'); }, [theme]);
+  useEffect(() => { const meta = document.querySelector('meta[name="theme-color"]'); meta?.setAttribute('content', '#F8F3FB'); }, []);
 
   const choosePlace = async (id: string, name: string) => {
     setLocationLabel(name); setLocationOpen(false);
@@ -64,7 +64,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <MapPin size={15} style={{ color: 'var(--gw-champagne)' }} /><strong>{locationLabel}</strong><ChevronRight size={14} />
           </button>
           <button className="search-trigger" onClick={() => setSearchOpen(true)}><Search size={17} /><span>Search destinations, stays, food, groceries…</span></button>
-          <button className="icon-btn" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
           <button className="icon-btn" aria-label="Notifications" onClick={() => setNotificationsOpen(true)}>
             <Bell size={18} />{(notif.data?.unreadCount ?? 0) > 0 && <span className="icon-btn__dot" />}
           </button>

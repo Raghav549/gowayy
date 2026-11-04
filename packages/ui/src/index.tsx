@@ -3,9 +3,9 @@
  * explore). Apps keep their own screens and navigation; chrome and primitives
  * live here so the brand family stays consistent.
  */
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { cssVariables, type ThemeMode } from '@gowayy/design-system';
+import { cssVariables, prefersReducedMotion, type ThemeMode } from '@gowayy/design-system';
 import { formatINR } from '@gowayy/shared-utils';
 import './web.css';
 
@@ -15,7 +15,7 @@ const ThemeCtx = createContext<{ theme: ThemeMode; setTheme: (t: ThemeMode) => v
 export const useThemeMode = () => useContext(ThemeCtx);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<ThemeMode>(() => (localStorage.getItem('gowayy-theme') as ThemeMode) || 'dark');
+  const [theme, setTheme] = useState<ThemeMode>('light');
   useEffect(() => {
     const vars = cssVariables(theme);
     for (const [k, v] of Object.entries(vars)) document.documentElement.style.setProperty(k, v);
@@ -58,12 +58,21 @@ export function AppShell({ brand, nav, sections, children, rightSlot }: { brand:
   );
 }
 
-export function SplashScreen({ logo = '/brand/splash-logo.svg', onDone, minMs = 1400 }: { logo?: string; onDone: () => void; minMs?: number }) {
+export function SplashScreen({ appName = 'GOWAYY', onDone, minMs = 1480 }: { appName?: string; onDone: () => void; minMs?: number }) {
+  const finish = useRef(onDone);
+  finish.current = onDone;
   useEffect(() => {
-    const t = window.setTimeout(onDone, minMs);
+    const t = window.setTimeout(() => finish.current(), prefersReducedMotion() ? 180 : minMs);
     return () => window.clearTimeout(t);
-  }, [onDone, minMs]);
-  return <div className="splash-page"><img src={logo} alt="Loading" /></div>;
+  }, [minMs]);
+  return <div className="splash-page">
+    <span className="splash-page__mark" aria-hidden="true">
+      <img className="splash-page__purple" src="/brand/g-purple.svg" alt="" />
+      <img className="splash-page__orange" src="/brand/g-orange.svg" alt="" />
+    </span>
+    <span className="splash-page__name" aria-live="polite">{appName}</span>
+    <button className="splash-page__skip" type="button" onClick={() => finish.current()}>Skip intro</button>
+  </div>;
 }
 
 export function Mascot({ pose = 'idle-standing', size = 120 }: { pose?: string; size?: number }) {

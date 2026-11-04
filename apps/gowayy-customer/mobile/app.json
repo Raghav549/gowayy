@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/branding/splash-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FAF4E9"
+      "backgroundColor": "#F8F3FB"
     },
     "android": {
       "package": "app.gowayy.customer",

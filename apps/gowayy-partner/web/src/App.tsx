@@ -42,7 +42,7 @@ export default function App() {
   useEffect(() => { void useSession.getState().hydrate(); }, []);
   useEffect(() => { if (toast) { const t = window.setTimeout(clearToast, 3800); return () => window.clearTimeout(t); } }, [toast, clearToast]);
 
-  if (splash) return <SplashScreen logo="/brand/splash-logo.svg" onDone={() => setSplash(false)} />;
+  if (splash) return <SplashScreen appName="GOWAYY PARTNER" onDone={() => setSplash(false)} />;
   const isAuth = location.pathname.startsWith('/auth/');
   if (loading) return <div className="splash-page"><img src="/brand/splash-logo.svg" alt="Loading" /></div>;
   if (isAuth) return <Routes><Route path="/auth/login" element={<Login />} /><Route path="/auth/register" element={<Register />} /><Route path="*" element={<Navigate to="/auth/login" replace />} /></Routes>;

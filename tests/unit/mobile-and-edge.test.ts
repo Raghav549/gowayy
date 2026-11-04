@@ -54,11 +54,24 @@ describe('Expo Android application', () => {
     expect(app.expo.android.permissions).toContain('ACCESS_FINE_LOCATION');
     expect(app.expo.android.permissions).toContain('POST_NOTIFICATIONS');
     expect(JSON.stringify(app.expo.android.intentFilters)).toContain('gowayy.app');
-    for (const asset of ['app-icon.png', 'icon-foreground.png', 'icon-background.png', 'icon-monochrome.png', 'splash-logo.png', 'g-symbol.png']) {
+    for (const asset of ['app-icon.png', 'icon-foreground.png', 'icon-background.png', 'icon-monochrome.png', 'splash-logo.png', 'g-symbol.png', 'g-purple.png', 'g-orange.png']) {
       expect(existsSync(join(root, 'apps/gowayy-customer/mobile/assets/branding', asset)), asset).toBe(true);
     }
+    for (const asset of ['groceries.webp', 'local-cab.webp', 'hotel-stay.webp', 'himalayan-discovery.webp', 'local-experience.webp',
+      'groceries-animated.webp', 'local-cab-animated.webp', 'hotel-stay-animated.webp', 'himalayan-discovery-animated.webp', 'local-experience-animated.webp']) {
+      expect(existsSync(join(root, 'assets/onboarding', asset)), asset).toBe(true);
+      expect(existsSync(join(root, 'apps/gowayy-customer/mobile/assets/onboarding', asset)), asset).toBe(true);
+      expect(existsSync(join(root, 'apps/gowayy-customer/web/public/images/onboarding', asset)), asset).toBe(true);
+    }
+    const androidWorkflow = read('.github/workflows/mobile-build.yml');
+    expect(androidWorkflow).toContain('--profile preview');
+    expect(androidWorkflow).toContain('Verify this app is linked to a real EAS project');
+    expect(androidWorkflow).toContain('eas build:download --build-id');
+    expect(androidWorkflow).toContain('gowayy-${{ matrix.app }}-android-apk');
+    expect(androidWorkflow).toContain('actions/upload-artifact@v4');
     const eas = json<Record<string, any>>('apps/gowayy-customer/mobile/eas.json');
     expect(eas.build.development.android.buildType).toBe('apk');
+    expect(eas.build.preview.android.buildType).toBe('apk');
     expect(eas.build.production.android.buildType).toBe('app-bundle');
   });
 
@@ -67,8 +80,10 @@ describe('Expo Android application', () => {
     const d = pkg.dependencies;
     expect(d['expo']).toMatch(/^~58\./);
     for (const lib of ['expo-router', 'react-native-reanimated', 'react-native-gesture-handler', 'react-native-worklets',
-      'expo-secure-store', 'expo-location', 'expo-notifications', 'expo-image', 'expo-gl',
-      'zustand', '@tanstack/react-query', 'react-hook-form', 'zod', 'three']) expect(d[lib]).toBeTruthy();
+      'expo-secure-store', 'expo-location', 'expo-notifications', 'expo-image',
+      'zustand', '@tanstack/react-query', 'react-hook-form', 'zod']) expect(d[lib]).toBeTruthy();
+    expect(d['expo-gl']).toBeUndefined();
+    expect(d.three).toBeUndefined();
     // Reanimated 4.7.1 requires worklets 0.13.x (an earlier pin of 0.7.1 broke npm resolution).
     expect(d['react-native-reanimated']).toBe('4.7.1');
     expect(d['react-native-worklets']).toMatch(/^0\.13\./);
@@ -88,6 +103,22 @@ describe('Expo Android application', () => {
       expect(src.toLowerCase()).not.toContain('admin panel interface');
     }
     expect(clientFiles.some((f) => /admin/i.test(f))).toBe(false);
+  });
+});
+
+describe('Vercel static deployment', () => {
+  it('prepares Build Output API payloads instead of relying on nested Vite dist discovery', () => {
+    const deploy = read('.github/workflows/deploy-web.yml');
+    expect(deploy).toContain('vercel@latest deploy --prebuilt --prod');
+    expect(deploy).toContain('dist/index.html');
+    const prep = read('scripts/prepare-vercel-output.mjs');
+    expect(prep).toContain("version: 3");
+    expect(prep).toContain("handle: 'filesystem'");
+    for (const app of ['customer', 'partner', 'explore']) {
+      const config = json<Record<string, any>>(`apps/gowayy-${app}/web/vercel.json`);
+      expect(config.outputDirectory).toBe('dist');
+      expect(config.buildCommand).toContain(`apps/gowayy-${app}/web/dist`);
+    }
   });
 });
 
