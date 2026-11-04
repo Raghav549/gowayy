@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "GOWAYY",
+    "slug": "gowayy",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "gowayy",
+    "newArchEnabled": true,
+    "icon": "./assets/branding/app-icon.png",
+    "splash": {
+      "image": "./assets/branding/splash-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0F12"
+    },
+    "android": {
+      "package": "app.gowayy.customer",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/icon-foreground.png",
+        "backgroundImage": "./assets/branding/icon-background.png",
+        "monochromeImage": "./assets/branding/icon-monochrome.png"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            {
+              "scheme": "gowayy"
+            },
+            {
+              "scheme": "https",
+              "host": "gowayy.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.gowayy.customer"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-location",
+      "expo-notifications",
+      "expo-splash-screen"
+    ]
+  }
+}

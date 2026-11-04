@@ -1,0 +1,288 @@
+[
+  {
+    "id": "att_01",
+    "destinationId": "dst_darjeeling",
+    "name": "Tiger Hill sunrise viewpoint",
+    "description": "Tiger Hill sunrise viewpoint — a viewpoint site associated with Darjeeling. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.036,
+      "lng": 88.2627
+    },
+    "category": "viewpoint",
+    "typicalVisitMinutes": 120,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Tiger Hill sunrise viewpoint",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_02",
+    "destinationId": "dst_darjeeling",
+    "name": "Batasia Loop & War Memorial",
+    "description": "Batasia Loop & War Memorial — a heritage site associated with Darjeeling. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.040000000000003,
+      "lng": 88.2667
+    },
+    "category": "heritage",
+    "typicalVisitMinutes": 60,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Batasia Loop & War Memorial",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_03",
+    "destinationId": "dst_darjeeling",
+    "name": "Darjeeling Himalayan Railway",
+    "description": "Darjeeling Himalayan Railway — a heritage site associated with Darjeeling. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.044,
+      "lng": 88.27069999999999
+    },
+    "category": "heritage",
+    "typicalVisitMinutes": 180,
+    "image": {
+      "status": "verified",
+      "assetPath": "images/destinations/darjeeling/darjeeling-railway-station-hero.webp",
+      "thumbPath": "images/destinations/darjeeling/darjeeling-railway-station-card.webp",
+      "alt": "Darjeeling railway station with narrow-gauge steam locomotives",
+      "credit": "Alexkom000 (Alexey Komarov), CC BY 4.0",
+      "license": "CC BY 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:2024-03-05_Darjeeling_railway_station_4.jpg"
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_04",
+    "destinationId": "dst_darjeeling",
+    "name": "Chowrasta & Mall Road",
+    "description": "Chowrasta & Mall Road — a promenade site associated with Darjeeling. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.036,
+      "lng": 88.2747
+    },
+    "category": "promenade",
+    "typicalVisitMinutes": 90,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Chowrasta & Mall Road",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_05",
+    "destinationId": "dst_darjeeling",
+    "name": "Padmaja Naidu Himalayan Zoological Park",
+    "description": "Padmaja Naidu Himalayan Zoological Park — a wildlife site associated with Darjeeling. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.040000000000003,
+      "lng": 88.2627
+    },
+    "category": "wildlife",
+    "typicalVisitMinutes": 150,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Padmaja Naidu Himalayan Zoological Park",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_06",
+    "destinationId": "dst_darjeeling",
+    "name": "Japanese Peace Pagoda",
+    "description": "Japanese Peace Pagoda — a spiritual site associated with Darjeeling. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.044,
+      "lng": 88.2667
+    },
+    "category": "spiritual",
+    "typicalVisitMinutes": 60,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Japanese Peace Pagoda",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_07",
+    "destinationId": "dst_mirik",
+    "name": "Sumendu Lake",
+    "description": "Sumendu Lake — a lake site associated with Mirik. Details are from published geographic references.",
+    "coords": {
+      "lat": 26.895,
+      "lng": 88.191
+    },
+    "category": "lake",
+    "typicalVisitMinutes": 90,
+    "image": {
+      "status": "verified",
+      "assetPath": "images/destinations/mirik/sumendu-lake-hero.webp",
+      "thumbPath": "images/destinations/mirik/sumendu-lake-card.webp",
+      "alt": "Sumendu Lake at Mirik",
+      "credit": "Benoy, CC BY-SA 3.0",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mirik_Sumendu_Lake.jpg"
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_08",
+    "destinationId": "dst_kalimpong",
+    "name": "Zang Dhok Palri Phodang",
+    "description": "Zang Dhok Palri Phodang — a spiritual site associated with Kalimpong. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.0648,
+      "lng": 88.4753
+    },
+    "category": "spiritual",
+    "typicalVisitMinutes": 90,
+    "image": {
+      "status": "verified",
+      "assetPath": "images/destinations/kalimpong/zang-dhok-palri-phodang-hero.webp",
+      "thumbPath": "images/destinations/kalimpong/zang-dhok-palri-phodang-card.webp",
+      "alt": "Zang Dhok Palri Phodang monastery, Kalimpong",
+      "credit": "Bernard Gagnon, CC BY-SA 4.0",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Zang_Dhok_Palri_Phodang_02.jpg"
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_09",
+    "destinationId": "dst_kalimpong",
+    "name": "Deolo Hill",
+    "description": "Deolo Hill — a viewpoint site associated with Kalimpong. Details are community references pending verification.",
+    "coords": {
+      "lat": 27.0688,
+      "lng": 88.4633
+    },
+    "category": "viewpoint",
+    "typicalVisitMinutes": 90,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Deolo Hill",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "att_10",
+    "destinationId": "dst_kurseong",
+    "name": "Kurseong DHR Station",
+    "description": "Kurseong DHR Station — a heritage site associated with Kurseong. Details are from published geographic references.",
+    "coords": {
+      "lat": 26.8829,
+      "lng": 88.281
+    },
+    "category": "heritage",
+    "typicalVisitMinutes": 45,
+    "image": {
+      "status": "verified",
+      "assetPath": "images/destinations/kurseong/dhr-station-hero.webp",
+      "thumbPath": "images/destinations/kurseong/dhr-station-card.webp",
+      "alt": "Darjeeling Himalayan Railway train at Kurseong station",
+      "credit": "PP Yoonus, CC BY-SA 3.0",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kurseong_Station,_Darjeeling_Himalayan_Railway_1031.jpg"
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_11",
+    "destinationId": "dst_sandakphu",
+    "name": "Singalila National Park ridge",
+    "description": "Singalila National Park ridge — a trek site associated with Sandakphu. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.109830000000002,
+      "lng": 88.00967
+    },
+    "category": "trek",
+    "typicalVisitMinutes": 720,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Singalila National Park ridge",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A previously attached photograph depicted a different nearby place and was removed; a designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_12",
+    "destinationId": "dst_ghum",
+    "name": "Ghum railway station",
+    "description": "Ghum railway station — a heritage site associated with Ghum. Details are from published geographic references.",
+    "coords": {
+      "lat": 27.016,
+      "lng": 88.259
+    },
+    "category": "heritage",
+    "typicalVisitMinutes": 45,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Ghum railway station",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "infoStatus": "published-reference"
+  },
+  {
+    "id": "att_13",
+    "destinationId": "dst_lamahatta",
+    "name": "Lamahatta Eco Park",
+    "description": "Lamahatta Eco Park — a nature site associated with Lamahatta. Details are community references pending verification.",
+    "coords": {
+      "lat": 27.022,
+      "lng": 88.262
+    },
+    "category": "nature",
+    "typicalVisitMinutes": 90,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Lamahatta Eco Park",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "att_14",
+    "destinationId": "dst_sittong",
+    "name": "Orange orchards",
+    "description": "Orange orchards — a nature site associated with Sittong. Details are community references pending verification.",
+    "coords": {
+      "lat": 26.934,
+      "lng": 88.40400000000001
+    },
+    "category": "nature",
+    "typicalVisitMinutes": 120,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Orange orchards",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "att_15",
+    "destinationId": "dst_chatakpur",
+    "name": "Senchal wildlife area",
+    "description": "Senchal wildlife area — a nature site associated with Chatakpur. Details are community references pending verification.",
+    "coords": {
+      "lat": 27.018,
+      "lng": 88.238
+    },
+    "category": "nature",
+    "typicalVisitMinutes": 120,
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Senchal wildlife area",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "infoStatus": "community-reference"
+  }
+]

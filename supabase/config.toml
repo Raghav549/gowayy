@@ -1,0 +1,44 @@
+# GOWAYY Supabase project configuration.
+# Deploy: supabase db push && supabase functions deploy gowayy-api && supabase functions deploy payment-webhook
+project_id = "gowayy"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173", "https://gowayy.app"]
+jwt_expiry = 3600
+enable_signup = true
+enable_email_confirmations = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+# Storage buckets for partner documents and verified listing imagery (private by default).
+[storage]
+enabled = true
+
+[realtime]
+enabled = true
+
+[functions.gowayy-api]
+verify_jwt = false   # the gateway verifies the caller's JWT itself via /auth/v1/user
+
+[functions.payment-webhook]
+verify_jwt = false   # HMAC signature verification is performed inside the function

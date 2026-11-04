@@ -1,0 +1,50 @@
+{
+  "name": "gowayy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GOWAYY \u2014 connected travel, transport, hospitality and local commerce platform",
+  "workspaces": [
+    "apps/web",
+    "apps/dev-api",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api & npm run dev:web",
+    "dev:web": "npm run dev -w @gowayy/web",
+    "dev:api": "npm run dev -w @gowayy/dev-api",
+    "build": "npm run build -w @gowayy/web",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "assets:build": "node scripts/build-brand-assets.mjs",
+    "verify": "npm run typecheck && npm run typecheck:mobile && npm run test && npm run test:integration && npm run test:supabase && npm run test:edge && npm run scan:secrets && npm run build",
+    "typecheck:mobile": "tsc --noEmit -p apps/mobile/tsconfig.json",
+    "test:supabase": "node --test tests/supabase/*.test.mjs",
+    "seed:supabase": "node scripts/generate-supabase-seed.mjs",
+    "test:edge": "deno check --config supabase/functions/deno.json supabase/functions/gowayy-api/index.ts supabase/functions/payment-webhook/index.ts supabase/functions/tests/shared.test.ts && deno test --config supabase/functions/deno.json supabase/functions/tests/",
+    "bundle:mobile:web": "cd apps/mobile && npx expo export --platform web --output-dir /tmp/gowayy-mobile-web",
+    "bundle:mobile:android": "cd apps/mobile && npx expo export --platform android --output-dir /tmp/gowayy-mobile-android",
+    "scan:secrets": "node scripts/scan-secrets.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.16",
+    "@resvg/resvg-js": "^2.6.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@types/three": "^0.171.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "deno": "^2.9.6",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

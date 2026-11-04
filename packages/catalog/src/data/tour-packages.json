@@ -1,0 +1,67 @@
+[
+  {
+    "id": "pkg_1",
+    "destinationId": "dst_darjeeling",
+    "name": "Darjeeling sunrise circuit",
+    "description": "Demo sightseeing package: Tiger Hill, Batasia Loop, DHR station. Seeded itinerary, not a live operator offer.",
+    "durationHours": 6,
+    "pricePaise": 320000,
+    "includes": [
+      "Tiger Hill",
+      "Batasia Loop",
+      "DHR station"
+    ],
+    "activityIds": [
+      "att_01",
+      "att_02",
+      "att_03"
+    ]
+  },
+  {
+    "id": "pkg_2",
+    "destinationId": "dst_mirik",
+    "name": "Mirik lake & tea gardens",
+    "description": "Demo sightseeing package: Sumendu Lake, Tea garden walk. Seeded itinerary, not a live operator offer.",
+    "durationHours": 8,
+    "pricePaise": 280000,
+    "includes": [
+      "Sumendu Lake",
+      "Tea garden walk"
+    ],
+    "activityIds": [
+      "att_07"
+    ]
+  },
+  {
+    "id": "pkg_3",
+    "destinationId": "dst_kalimpong",
+    "name": "Kalimpong heritage walk",
+    "description": "Demo sightseeing package: Monastery, Deolo Hill. Seeded itinerary, not a live operator offer.",
+    "durationHours": 7,
+    "pricePaise": 300000,
+    "includes": [
+      "Monastery",
+      "Deolo Hill"
+    ],
+    "activityIds": [
+      "att_08",
+      "att_09"
+    ]
+  },
+  {
+    "id": "pkg_4",
+    "destinationId": "dst_sandakphu",
+    "name": "Singalila ridge expedition",
+    "description": "Demo sightseeing package: Guided trek, Permit assistance, Meals. Seeded itinerary, not a live operator offer.",
+    "durationHours": 72,
+    "pricePaise": 1450000,
+    "includes": [
+      "Guided trek",
+      "Permit assistance",
+      "Meals"
+    ],
+    "activityIds": [
+      "att_11"
+    ]
+  }
+]

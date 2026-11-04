@@ -1,0 +1,16 @@
+{
+  "name": "GOWAYY — Connected Journeys",
+  "short_name": "GOWAYY",
+  "description": "Cabs, stays, food, groceries, tourism and local commerce in one connected journey.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0D0F12",
+  "theme_color": "#0D0F12",
+  "icons": [
+    { "src": "/brand/app-icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/icon-foreground.png", "sizes": "1024x1024", "type": "image/png", "purpose": "maskable" },
+    { "src": "/brand/g-symbol-small.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+  ]
+}

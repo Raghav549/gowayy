@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 492 104" width="984" height="208" role="img" aria-label="GOWAYY wordmark">
+  <title>GOWAYY — custom geometric wordmark</title>
+  <g fill="none" stroke="#F5F1E8" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M64 12 H18 L8 22 V78 L18 88 H64 V54 H38"/>
+    <path d="M102 12 H134 L144 22 V78 L134 88 H102 L92 78 V22 Z"/>
+    <path d="M176 12 L188 88 L208 34 L228 88 L240 12"/>
+    <path d="M260 88 L286 12 L312 88 M272 60 H300"/>
+    <path d="M344 12 L370 50 L396 12 M370 50 V88"/>
+    <path d="M428 12 L454 50 L480 12 M454 50 V88"/>
+  </g>
+</svg>

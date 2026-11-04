@@ -1,0 +1,274 @@
+[
+  {
+    "id": "prp_1",
+    "service": "homestay",
+    "name": "Hillview Guest House",
+    "destinationId": "dst_darjeeling",
+    "description": "Demo listing for a homestay in Darjeeling. Replace with verified partner data before launch.",
+    "coords": {
+      "lat": 27.038,
+      "lng": 88.2627
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Hillview Guest House",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "homestay",
+      "Demo listing"
+    ],
+    "propertyType": "homestay",
+    "rooms": [
+      {
+        "id": "room_1_1",
+        "name": "Standard room",
+        "capacityAdults": 2,
+        "capacityChildren": 1,
+        "nightlyRatePaise": 320000,
+        "totalRooms": 3
+      },
+      {
+        "id": "room_1_2",
+        "name": "Family room",
+        "capacityAdults": 4,
+        "capacityChildren": 2,
+        "nightlyRatePaise": 540000,
+        "totalRooms": 2
+      }
+    ],
+    "amenities": [
+      "Wi-Fi",
+      "Breakfast",
+      "Hot water",
+      "Mountain view"
+    ],
+    "houseRules": "Check-in after 13:00, check-out before 11:00. Government photo ID required.",
+    "cancellationPolicy": "Free cancellation 48 hours before check-in; otherwise one night is charged.",
+    "taxesPercent": 12
+  },
+  {
+    "id": "prp_2",
+    "service": "hotel",
+    "name": "Mall Road Heritage Hotel",
+    "destinationId": "dst_darjeeling",
+    "description": "Demo listing for a hotel in Darjeeling. Replace with verified partner data before launch.",
+    "coords": {
+      "lat": 27.040000000000003,
+      "lng": 88.2627
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Mall Road Heritage Hotel",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "hotel",
+      "Demo listing"
+    ],
+    "propertyType": "hotel",
+    "rooms": [
+      {
+        "id": "room_2_1",
+        "name": "Deluxe room",
+        "capacityAdults": 2,
+        "capacityChildren": 1,
+        "nightlyRatePaise": 520000,
+        "totalRooms": 6
+      },
+      {
+        "id": "room_2_2",
+        "name": "Suite",
+        "capacityAdults": 3,
+        "capacityChildren": 1,
+        "nightlyRatePaise": 880000,
+        "totalRooms": 2
+      }
+    ],
+    "amenities": [
+      "Wi-Fi",
+      "Restaurant",
+      "Heating",
+      "Luggage storage"
+    ],
+    "houseRules": "Check-in after 13:00, check-out before 11:00. Government photo ID required.",
+    "cancellationPolicy": "Free cancellation 48 hours before check-in; otherwise one night is charged.",
+    "taxesPercent": 12
+  },
+  {
+    "id": "prp_3",
+    "service": "hotel",
+    "name": "Tea Garden Lodge",
+    "destinationId": "dst_kurseong",
+    "description": "Demo listing for a lodge in Kurseong. Replace with verified partner data before launch.",
+    "coords": {
+      "lat": 26.8889,
+      "lng": 88.277
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Tea Garden Lodge",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "lodge",
+      "Demo listing"
+    ],
+    "propertyType": "lodge",
+    "rooms": [
+      {
+        "id": "room_3_1",
+        "name": "Garden room",
+        "capacityAdults": 2,
+        "capacityChildren": 0,
+        "nightlyRatePaise": 360000,
+        "totalRooms": 4
+      }
+    ],
+    "amenities": [
+      "Breakfast",
+      "Garden",
+      "Parking"
+    ],
+    "houseRules": "Check-in after 13:00, check-out before 11:00. Government photo ID required.",
+    "cancellationPolicy": "Free cancellation 48 hours before check-in; otherwise one night is charged.",
+    "taxesPercent": 12
+  },
+  {
+    "id": "prp_4",
+    "service": "homestay",
+    "name": "Lakeview Homestay",
+    "destinationId": "dst_mirik",
+    "description": "Demo listing for a homestay in Mirik. Replace with verified partner data before launch.",
+    "coords": {
+      "lat": 26.903,
+      "lng": 88.183
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Lakeview Homestay",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "homestay",
+      "Demo listing"
+    ],
+    "propertyType": "homestay",
+    "rooms": [
+      {
+        "id": "room_4_1",
+        "name": "Double room",
+        "capacityAdults": 2,
+        "capacityChildren": 1,
+        "nightlyRatePaise": 280000,
+        "totalRooms": 3
+      }
+    ],
+    "amenities": [
+      "Kitchen",
+      "Lake view",
+      "Hot water"
+    ],
+    "houseRules": "Check-in after 13:00, check-out before 11:00. Government photo ID required.",
+    "cancellationPolicy": "Free cancellation 48 hours before check-in; otherwise one night is charged.",
+    "taxesPercent": 12
+  },
+  {
+    "id": "prp_5",
+    "service": "homestay",
+    "name": "Kalimpong Cottage",
+    "destinationId": "dst_kalimpong",
+    "description": "Demo listing for a guesthouse in Kalimpong. Replace with verified partner data before launch.",
+    "coords": {
+      "lat": 27.070800000000002,
+      "lng": 88.4633
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Kalimpong Cottage",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "guesthouse",
+      "Demo listing"
+    ],
+    "propertyType": "guesthouse",
+    "rooms": [
+      {
+        "id": "room_5_1",
+        "name": "Cottage",
+        "capacityAdults": 4,
+        "capacityChildren": 2,
+        "nightlyRatePaise": 460000,
+        "totalRooms": 2
+      }
+    ],
+    "amenities": [
+      "Garden",
+      "Kitchen",
+      "Parking"
+    ],
+    "houseRules": "Check-in after 13:00, check-out before 11:00. Government photo ID required.",
+    "cancellationPolicy": "Free cancellation 48 hours before check-in; otherwise one night is charged.",
+    "taxesPercent": 12
+  },
+  {
+    "id": "prp_6",
+    "service": "hotel",
+    "name": "Ridge Trekkers Lodge",
+    "destinationId": "dst_sandakphu",
+    "description": "Demo listing for a lodge in Sandakphu. Replace with verified partner data before launch.",
+    "coords": {
+      "lat": 27.11783,
+      "lng": 88.00167
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Ridge Trekkers Lodge",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "lodge",
+      "Demo listing"
+    ],
+    "propertyType": "lodge",
+    "rooms": [
+      {
+        "id": "room_6_1",
+        "name": "Dorm bed",
+        "capacityAdults": 1,
+        "capacityChildren": 0,
+        "nightlyRatePaise": 120000,
+        "totalRooms": 8
+      },
+      {
+        "id": "room_6_2",
+        "name": "Private room",
+        "capacityAdults": 2,
+        "capacityChildren": 0,
+        "nightlyRatePaise": 300000,
+        "totalRooms": 2
+      }
+    ],
+    "amenities": [
+      "Heating",
+      "Meals",
+      "Trek permits guidance"
+    ],
+    "houseRules": "Check-in after 13:00, check-out before 11:00. Government photo ID required.",
+    "cancellationPolicy": "Free cancellation 48 hours before check-in; otherwise one night is charged.",
+    "taxesPercent": 12
+  }
+]

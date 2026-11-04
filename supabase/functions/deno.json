@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window", "dom"],
+    "checkJs": false
+  },
+  "imports": {},
+  "lint": { "rules": { "tags": ["recommended"] } },
+  "fmt": { "singleQuote": true, "lineWidth": 120 }
+}

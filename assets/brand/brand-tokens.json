@@ -1,0 +1,78 @@
+{
+  "name": "GOWAYY Brand System v1.0",
+  "generated": "2026-11-03",
+  "colour": {
+    "ink": "#0D0F12",
+    "charcoal": "#14161A",
+    "graphite": "#2B2F36",
+    "graphiteLight": "#3B4049",
+    "warmWhite": "#F5F1E8",
+    "softIvory": "#EDE6D8",
+    "mutedSilver": "#B6BCC4",
+    "silverDeep": "#8A919B",
+    "champagne": "#C9A86A",
+    "champagneLight": "#D9BE86",
+    "champagneDeep": "#8B7245",
+    "success": "#6F8F6B",
+    "warning": "#C08A4A",
+    "danger": "#B45B4C",
+    "info": "#7E8A93",
+    "light": {
+      "bg": "#F5F1E8",
+      "surface": "#FBF8F2",
+      "surfaceAlt": "#EFE9DD",
+      "raised": "#FFFFFF",
+      "text": "#14161A",
+      "textMuted": "#5C6069",
+      "border": "#DDD7CA",
+      "accent": "#8B7245",
+      "accentContrast": "#FBF8F2"
+    },
+    "dark": {
+      "bg": "#0D0F12",
+      "surface": "#171A1F",
+      "surfaceAlt": "#20242B",
+      "raised": "#262A31",
+      "text": "#F5F1E8",
+      "textMuted": "#A7AEB7",
+      "border": "#2C313A",
+      "accent": "#C9A86A",
+      "accentContrast": "#14161A"
+    }
+  },
+  "typography": {
+    "displayFamily": "'GOWAYY Display', 'Manrope', 'Inter', 'Segoe UI', system-ui, sans-serif",
+    "bodyFamily": "'Inter', 'Segoe UI', Roboto, system-ui, sans-serif",
+    "monoFamily": "'SFMono-Regular', Consolas, 'Liberation Mono', monospace",
+    "scale": {
+      "xs": { "size": 12, "lineHeight": 16, "tracking": 0.2 },
+      "sm": { "size": 14, "lineHeight": 20, "tracking": 0.1 },
+      "base": { "size": 16, "lineHeight": 24, "tracking": 0 },
+      "lg": { "size": 20, "lineHeight": 28, "tracking": -0.2 },
+      "xl": { "size": 24, "lineHeight": 32, "tracking": -0.4 },
+      "2xl": { "size": 32, "lineHeight": 38, "tracking": -0.8 },
+      "3xl": { "size": 40, "lineHeight": 46, "tracking": -1.2 },
+      "4xl": { "size": 56, "lineHeight": 62, "tracking": -1.8 },
+      "5xl": { "size": 72, "lineHeight": 78, "tracking": -2.4 }
+    },
+    "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700, "display": 800 },
+    "usage": {
+      "hero": "4xl / display / tight tracking, warm white on charcoal",
+      "sectionTitle": "2xl / bold / -0.8 tracking",
+      "cardTitle": "lg / semibold",
+      "body": "base / regular",
+      "caption": "sm / regular / muted",
+      "eyebrow": "xs / semibold / 1.6 tracking / uppercase"
+    }
+  },
+  "spacing": { "0": 0, "1": 4, "2": 8, "3": 12, "4": 16, "5": 20, "6": 24, "8": 32, "10": 40, "12": 48, "16": 64, "20": 80 },
+  "radius": { "none": 0, "xs": 4, "sm": 8, "md": 12, "lg": 16, "pill": 999 },
+  "shadow": {
+    "lightSm": "0 1px 2px rgba(20,22,26,0.06), 0 2px 8px rgba(20,22,26,0.04)",
+    "lightMd": "0 4px 12px rgba(20,22,26,0.08), 0 12px 32px rgba(20,22,26,0.06)",
+    "darkSm": "0 1px 2px rgba(0,0,0,0.4)",
+    "darkMd": "0 8px 28px rgba(0,0,0,0.45)"
+  },
+  "motion": { "fast": 140, "base": 220, "slow": 380, "page": 460, "splash": 2600, "easing": "cubic-bezier(0.22, 1, 0.36, 1)" },
+  "restrictions": ["no neon blue", "no electric blue", "no cyan", "no bright blue gradients", "no blue glow", "no blue-dominated UI"]
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "id": "shr_1",
+    "stand": "Siliguri Junction Taxi Stand",
+    "fromId": "plc_siliguri_stand",
+    "toId": "plc_darjeeling",
+    "pricePaise": 25000,
+    "seatsTotal": 8,
+    "departureTimes": [
+      "06:00",
+      "08:00",
+      "10:00",
+      "12:00",
+      "14:00",
+      "16:00"
+    ],
+    "operator": "Seeded demo operator A",
+    "permitNote": "Demo route. Real operator permits, fares and timetables must be loaded from the transport authority before launch."
+  },
+  {
+    "id": "shr_2",
+    "stand": "Siliguri Junction Taxi Stand",
+    "fromId": "plc_siliguri_stand",
+    "toId": "plc_kalimpong",
+    "pricePaise": 30000,
+    "seatsTotal": 8,
+    "departureTimes": [
+      "07:00",
+      "09:30",
+      "12:30",
+      "15:00"
+    ],
+    "operator": "Seeded demo operator B",
+    "permitNote": "Demo route; operator-defined price, verify locally."
+  },
+  {
+    "id": "shr_3",
+    "stand": "Darjeeling Motor Stand",
+    "fromId": "plc_darjeeling_stand",
+    "toId": "plc_kurseong",
+    "pricePaise": 15000,
+    "seatsTotal": 6,
+    "departureTimes": [
+      "07:30",
+      "10:00",
+      "13:00",
+      "16:30"
+    ],
+    "operator": "Seeded demo operator C",
+    "permitNote": "Demo route; subject to local shared-taxi rules."
+  },
+  {
+    "id": "shr_4",
+    "stand": "Darjeeling Motor Stand",
+    "fromId": "plc_darjeeling_stand",
+    "toId": "plc_mirik",
+    "pricePaise": 18000,
+    "seatsTotal": 6,
+    "departureTimes": [
+      "08:00",
+      "11:00",
+      "15:00"
+    ],
+    "operator": "Seeded demo operator D",
+    "permitNote": "Demo route; subject to local shared-taxi rules."
+  }
+]

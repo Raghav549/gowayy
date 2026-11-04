@@ -1,0 +1,182 @@
+[
+  {
+    "id": "plc_bagdogra",
+    "name": "Bagdogra Airport (IXB)",
+    "lat": 26.6812,
+    "lng": 88.3286,
+    "address": "Bagdogra Airport, Siliguri",
+    "locality": "Siliguri",
+    "kind": "airport"
+  },
+  {
+    "id": "plc_njp",
+    "name": "New Jalpaiguri Junction (NJP)",
+    "lat": 26.6839,
+    "lng": 88.3978,
+    "address": "NJP Railway Station",
+    "locality": "Siliguri",
+    "kind": "stand"
+  },
+  {
+    "id": "plc_siliguri_stand",
+    "name": "Siliguri Junction Taxi Stand",
+    "lat": 26.7236,
+    "lng": 88.3953,
+    "address": "Siliguri Junction",
+    "locality": "Siliguri",
+    "kind": "stand"
+  },
+  {
+    "id": "plc_darjeeling_stand",
+    "name": "Darjeeling Motor Stand",
+    "lat": 27.039,
+    "lng": 88.265,
+    "address": "Hill Cart Road, Darjeeling",
+    "locality": "Darjeeling",
+    "kind": "stand"
+  },
+  {
+    "id": "plc_kalimpong_stand",
+    "name": "Kalimpong Taxi Stand",
+    "lat": 27.06,
+    "lng": 88.462,
+    "address": "Kalimpong town",
+    "locality": "Kalimpong",
+    "kind": "stand"
+  },
+  {
+    "id": "plc_darjeeling",
+    "name": "Darjeeling",
+    "lat": 27.036,
+    "lng": 88.2627,
+    "address": "Darjeeling, West Bengal",
+    "locality": "Darjeeling",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_kalimpong",
+    "name": "Kalimpong",
+    "lat": 27.0608,
+    "lng": 88.4633,
+    "address": "Kalimpong, West Bengal",
+    "locality": "Kalimpong",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_kurseong",
+    "name": "Kurseong",
+    "lat": 26.8829,
+    "lng": 88.277,
+    "address": "Kurseong, West Bengal",
+    "locality": "Kurseong",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_mirik",
+    "name": "Mirik",
+    "lat": 26.895,
+    "lng": 88.183,
+    "address": "Mirik, West Bengal",
+    "locality": "Mirik",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_siliguri",
+    "name": "Siliguri",
+    "lat": 26.7271,
+    "lng": 88.3953,
+    "address": "Siliguri, West Bengal",
+    "locality": "Siliguri",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_lepchajagat",
+    "name": "Lepchajagat",
+    "lat": 27.005,
+    "lng": 88.222,
+    "address": "Lepchajagat, West Bengal",
+    "locality": "Lepchajagat",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_lamahatta",
+    "name": "Lamahatta",
+    "lat": 27.022,
+    "lng": 88.262,
+    "address": "Lamahatta, West Bengal",
+    "locality": "Lamahatta",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_tinchuley",
+    "name": "Tinchuley",
+    "lat": 27.03,
+    "lng": 88.33,
+    "address": "Tinchuley, West Bengal",
+    "locality": "Tinchuley",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_takdah",
+    "name": "Takdah",
+    "lat": 27.048,
+    "lng": 88.35,
+    "address": "Takdah, West Bengal",
+    "locality": "Takdah",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_chatakpur",
+    "name": "Chatakpur",
+    "lat": 27.01,
+    "lng": 88.23,
+    "address": "Chatakpur, West Bengal",
+    "locality": "Chatakpur",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_sandakphu",
+    "name": "Sandakphu",
+    "lat": 27.10583,
+    "lng": 88.00167,
+    "address": "Sandakphu, West Bengal",
+    "locality": "Sandakphu",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_sittong",
+    "name": "Sittong",
+    "lat": 26.93,
+    "lng": 88.4,
+    "address": "Sittong, West Bengal",
+    "locality": "Sittong",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_dawaipani",
+    "name": "Dawaipani",
+    "lat": 27.01,
+    "lng": 88.25,
+    "address": "Dawaipani, West Bengal",
+    "locality": "Dawaipani",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_jorebunglow",
+    "name": "Jorebunglow",
+    "lat": 26.95,
+    "lng": 88.24,
+    "address": "Jorebunglow, West Bengal",
+    "locality": "Jorebunglow",
+    "kind": "destination"
+  },
+  {
+    "id": "plc_ghum",
+    "name": "Ghum",
+    "lat": 27.008,
+    "lng": 88.247,
+    "address": "Ghum, West Bengal",
+    "locality": "Ghum",
+    "kind": "destination"
+  }
+]

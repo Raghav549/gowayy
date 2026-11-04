@@ -1,0 +1,90 @@
+[
+  {
+    "id": "hatchback",
+    "name": "Hatchback",
+    "category": "hatchback",
+    "seats": 4,
+    "baseFarePaise": 12000,
+    "perKmPaise": 1300,
+    "perMinutePaise": 300,
+    "minimumFarePaise": 25000,
+    "description": "Compact car for city and short hill trips"
+  },
+  {
+    "id": "sedan",
+    "name": "Sedan",
+    "category": "sedan",
+    "seats": 4,
+    "baseFarePaise": 16000,
+    "perKmPaise": 1700,
+    "perMinutePaise": 350,
+    "minimumFarePaise": 30000,
+    "description": "Comfortable for airport transfers"
+  },
+  {
+    "id": "suv",
+    "name": "SUV",
+    "category": "suv",
+    "seats": 6,
+    "baseFarePaise": 22000,
+    "perKmPaise": 2300,
+    "perMinutePaise": 450,
+    "minimumFarePaise": 45000,
+    "description": "For luggage, families and hill roads"
+  },
+  {
+    "id": "premium",
+    "name": "Premium car",
+    "category": "premium",
+    "seats": 4,
+    "baseFarePaise": 32000,
+    "perKmPaise": 3100,
+    "perMinutePaise": 600,
+    "minimumFarePaise": 65000,
+    "description": "Premium sedan for business travel"
+  },
+  {
+    "id": "shared",
+    "name": "Shared taxi seat",
+    "category": "shared",
+    "seats": 1,
+    "baseFarePaise": 0,
+    "perKmPaise": 0,
+    "perMinutePaise": 0,
+    "minimumFarePaise": 0,
+    "description": "Seat on an operator-defined fixed route"
+  },
+  {
+    "id": "tourist_taxi",
+    "name": "Local tourist taxi",
+    "category": "tourist_taxi",
+    "seats": 6,
+    "baseFarePaise": 18000,
+    "perKmPaise": 2000,
+    "perMinutePaise": 400,
+    "minimumFarePaise": 38000,
+    "description": "Local sightseeing by the hour or route"
+  },
+  {
+    "id": "airport_transfer",
+    "name": "Airport transfer",
+    "category": "airport",
+    "seats": 4,
+    "baseFarePaise": 18000,
+    "perKmPaise": 1800,
+    "perMinutePaise": 350,
+    "minimumFarePaise": 32000,
+    "description": "Bagdogra Airport / NJP pickup and drop"
+  },
+  {
+    "id": "outstation",
+    "name": "Outstation cab",
+    "category": "outstation",
+    "seats": 6,
+    "baseFarePaise": 24000,
+    "perKmPaise": 2100,
+    "perMinutePaise": 400,
+    "minimumFarePaise": 50000,
+    "description": "Multi-day outstation travel"
+  }
+]

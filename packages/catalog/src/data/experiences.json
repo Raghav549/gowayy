@@ -1,0 +1,38 @@
+[
+  {
+    "id": "exp_1",
+    "destinationId": "dst_darjeeling",
+    "name": "Tea estate tasting",
+    "description": "Demo local experience in Darjeeling. Host details require partner verification.",
+    "durationMinutes": 120,
+    "pricePaise": 180000,
+    "host": "Seeded demo host"
+  },
+  {
+    "id": "exp_2",
+    "destinationId": "dst_darjeeling",
+    "name": "Momos cooking session",
+    "description": "Demo local experience in Darjeeling. Host details require partner verification.",
+    "durationMinutes": 90,
+    "pricePaise": 140000,
+    "host": "Seeded demo host"
+  },
+  {
+    "id": "exp_3",
+    "destinationId": "dst_sittong",
+    "name": "Village orchard walk",
+    "description": "Demo local experience in Sittong. Host details require partner verification.",
+    "durationMinutes": 150,
+    "pricePaise": 120000,
+    "host": "Seeded demo host"
+  },
+  {
+    "id": "exp_4",
+    "destinationId": "dst_lepchajagat",
+    "name": "Birdwatching morning walk",
+    "description": "Demo local experience in Lepchajagat. Host details require partner verification.",
+    "durationMinutes": 180,
+    "pricePaise": 160000,
+    "host": "Seeded demo host"
+  }
+]
