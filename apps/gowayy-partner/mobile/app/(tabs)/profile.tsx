@@ -35,6 +35,7 @@ export default function Profile() {
         <Body muted>{user?.email ?? ''}</Body>
       </Card>
       <View style={{ gap: spacing.sm }}>
+        <Button variant="secondary" label="Check for app updates" onPress={() => router.push('/update')} />
         <Button variant="secondary" label="Sign out" onPress={() => void signOut()} />
         <Button variant="ghost" label="Delete account" onPress={deleteAccount} />
       </View>

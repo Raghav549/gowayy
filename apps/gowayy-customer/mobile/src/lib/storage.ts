@@ -43,7 +43,7 @@ async function readRaw(key: string): Promise<string | null> {
 }
 
 export async function hydrateStorage(): Promise<void> {
-  const keys = ['gowayy.theme', 'gowayy.splashSeen', 'gowayy.onboarded', 'gowayy.session.token', 'gowayy.activeJourney'];
+  const keys = ['gowayy.theme', 'gowayy.onboarded', 'gowayy.session.token', 'gowayy.activeJourney'];
   await Promise.all(keys.map(async (key) => {
     const raw = await readRaw(key);
     if (raw === null) return;

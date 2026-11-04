@@ -18,35 +18,20 @@ and never pretends demo verification is real verification. Password hashing, ses
 and rate limits run on the server. Payments are sandbox-only; capture requires a
 server-verified event, never a client-side success signal.
 
-## Android (Expo SDK 58)
+## Android (Expo SDK 58 + native Gradle)
 
 ```bash
+npm ci --prefix apps/gowayy-customer/mobile
 cd apps/gowayy-customer/mobile
-npm install --legacy-peer-deps
-cp .env.example .env        # set an absolute LAN/IP or HTTPS API URL
-npm run typecheck           # TypeScript strict
-npm run start               # Expo dev server
-npm run web                 # Expo web preview
-npm run build:android:dev   # EAS development APK (requires EAS account/project)
-npm run build:android:prod  # EAS production AAB
+npm run typecheck
+npm run start
 ```
 
-`apps/gowayy-customer/mobile/app.json` defines the `gowayy://` scheme, `gowayy.app` App Links,
-`app.gowayy.customer` package, adaptive/monochrome icons, splash, and location +
-notification permissions. `eas.json` defines `development`/`preview` APK profiles and a
-`production` app-bundle profile. Run `eas init` once to add a real `projectId` under
-`expo.extra.eas.projectId` before building; none is fabricated in this repository.
+Production and PR APKs are built by `.github/workflows/mobile-build.yml` using Expo's clean native prebuild and Gradle `assembleRelease` / `assembleDebug` tasks. No EAS account, Expo token, or EAS build service is used. The workflow checks application IDs and version data, APK signatures and archive integrity, then publishes per-app artifacts. See `docs/DEPLOYMENT.md` for signing-secret setup and release/update behavior.
 
-On a physical device `localhost` is not the API. Set
-`EXPO_PUBLIC_GOWAYY_API_BASE_URL` to a reachable origin and
-`EXPO_PUBLIC_GOWAYY_ASSET_BASE_URL` to the host serving `apps/gowayy-customer/web/public/`. Without an
-asset base the app shows the designed unavailable state for photographs rather than a
-substitute image.
+Package IDs are `app.gowayy.customer`, `app.gowayy.explore`, and `app.gowayy.partner`. The native system splash uses only the approved `g-symbol.png`; a reduced-motion-aware animated symbol-only launch transition follows. Each app's App updates screen checks its own GitHub Release, shows notes and transfer progress, verifies the downloaded package, and opens Android's installer. Android requires the user to approve unknown-source installs and confirm the update; installation is not silent.
 
-Verified in this workspace (2026-11-04): mobile `tsc --noEmit` clean,
-`expo export --platform web` produced 36 web bundles, and
-`expo export --platform android` produced a 5.2 MB Hermes bundle. No EAS build,
-APK/AAB, Supabase deployment or on-device test has been run.
+For local native Gradle builds use Java 17 and the Android SDK/platform/build tools from the workflow. On a physical device `localhost` is not the API. Set `EXPO_PUBLIC_GOWAYY_API_BASE_URL` to a reachable origin and `EXPO_PUBLIC_GOWAYY_ASSET_BASE_URL` to the host serving the customer's public assets. Without an asset base the app shows the designed unavailable state for photographs rather than a substitute image.
 
 ## Supabase backend (production target)
 

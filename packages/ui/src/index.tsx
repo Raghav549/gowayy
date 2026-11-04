@@ -58,20 +58,15 @@ export function AppShell({ brand, nav, sections, children, rightSlot }: { brand:
   );
 }
 
-export function SplashScreen({ appName = 'GOWAYY', onDone, minMs = 1480 }: { appName?: string; onDone: () => void; minMs?: number }) {
+export function SplashScreen({ onDone, minMs = 1480 }: { onDone: () => void; minMs?: number }) {
   const finish = useRef(onDone);
   finish.current = onDone;
   useEffect(() => {
     const t = window.setTimeout(() => finish.current(), prefersReducedMotion() ? 180 : minMs);
     return () => window.clearTimeout(t);
   }, [minMs]);
-  return <div className="splash-page">
-    <span className="splash-page__mark" aria-hidden="true">
-      <img className="splash-page__purple" src="/brand/g-purple.svg" alt="" />
-      <img className="splash-page__orange" src="/brand/g-orange.svg" alt="" />
-    </span>
-    <span className="splash-page__name" aria-live="polite">{appName}</span>
-    <button className="splash-page__skip" type="button" onClick={() => finish.current()}>Skip intro</button>
+  return <div className="splash-page" aria-hidden="true">
+    <img className="splash-page__mark" src="/brand/g-symbol.svg" alt="" />
   </div>;
 }
 

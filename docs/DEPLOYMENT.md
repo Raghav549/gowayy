@@ -1,140 +1,108 @@
 # Deployment — GOWAYY
 
-Three web apps deploy to **Vercel** (one project per app), all three Android apps
-produce downloadable APKs in **GitHub Actions** (EAS remains available for Play Store
-AABs), and the backend runs on **Supabase** (PostgreSQL + PostGIS + Edge Functions).
-CI/CD is GitHub Actions (`.github/workflows/`).
+The three Vite web apps deploy independently to three Vercel projects. The three native Android apps are generated from Expo prebuild and built as Gradle APKs directly on GitHub-hosted runners; no EAS account/build, Expo token, or paid build service is used. Supabase remains the hosted backend.
 
-## 0. CI root-cause notes
+## CI and root causes addressed
 
-- `[STATIC_BUILD_NO_OUT_DIR] No Output Directory named "dist"` (Vercel): `deploy-web.yml`
-  now builds each Vite app in GitHub Actions, asserts `dist/index.html`, packages the
-  files as Vercel Build Output API v3 (`.vercel/output/static`), and deploys with
-  `vercel deploy --prebuilt`. Vercel no longer has to discover a nested monorepo `dist`
-  directory during its remote static-build phase. `scripts/prepare-vercel-output.mjs`
-  assembles the per-app output and SPA fallback.
-- For any separate Vercel Git-connected/UI builds, set that project's Root Directory to
-  its exact app web directory and clear Build & Development Settings overrides; those
-  builds do not use the GitHub Action's prebuilt bypass.
-- The former Three.js splash has been replaced with a lightweight split-color SVG logo
-  reveal; unused Three.js and Expo GL dependencies and the dedicated Vite chunk were removed.
-- Android builds stay EAS-only: `mobile-build.yml` runs Expo prebuild, typechecks and
-  Android bundle exports on pushes/PRs; on `main` or manual dispatch it runs EAS
-  `preview` builds, downloads the resulting APKs, validates ZIP integrity and uploads
-  them as GitHub Actions artifacts.
+- **Android:** the former workflow generated Android source and JS bundles, then attempted EAS builds that failed when `EXPO_TOKEN` was absent. The current workflow runs `expo prebuild` on a clean runner and `./gradlew assembleDebug` for PR/branch verification or signed `assembleRelease` on `main`. Each app is isolated in a non-fail-fast matrix job, its APK is inspected for package/version/signature and uploaded separately. Main-branch builds publish one app-specific GitHub Release.
+- **Vercel `STATIC_BUILD_NO_OUT_DIR`:** each project must use its app's exact web root (`apps/gowayy-customer/web`, `apps/gowayy-explore/web`, or `apps/gowayy-partner/web`). The app-local `vercel.json` writes Vite output to `dist` relative to that root. The previous commands used `cd ../..`, which lands in `apps/`, not the repository root; workspace install/build commands now use `cd ../../..`. They verify the matching app's `dist/index.html`. Production deploys assemble `.vercel/output` for only that app and deploy via `vercel --prebuilt`; a root/output smoke test then checks the app-specific title and SPA deep link.
+- **Web app selection and status:** CI builds each web app in a separate matrix job and verifies its assets. Vercel production deployments use a separate Vercel project ID for each app. Missing Vercel credentials now fail the production workflow visibly instead of making the run green after skipping all deployments.
+- **Android versioning:** on each workflow run, the APK's version name is `0.1.0+build.<run_number>` and its integer version code is `100000 + run_number`. Package IDs remain `app.gowayy.customer`, `app.gowayy.explore`, and `app.gowayy.partner`. The package and signing certificate are both checked by Android's installer before it will replace an installed app.
 
-Earlier workflow runs failed in the runner-provisioning step ("Set up job") and one action
-slug (`actions/setup-deno`) did not exist. Repairs: `denoland/setup-deno@v1`, explicit
-`permissions: contents: read` on every workflow, per-app mobile installs/typechecks in
-CI, native Gradle APK builds, and explicit verification of the web output directories.
+## 1. Vercel — three independent web apps
 
-## 1. Supabase (backend)
+Create three Vercel projects and configure each project's **Root Directory** exactly as below. Do not set the repository root as one app's project root and do not point multiple projects at the same `dist` directory.
 
-```bash
-supabase login
-supabase link --project-ref $SUPABASE_PROJECT_REF
-supabase db push                 # applies supabase/migrations/*.sql in order
-supabase db seed                 # optional: supabase/seed/*.sql (demo catalog)
-supabase functions deploy gowayy-api
-supabase functions deploy payment-webhook
-```
+| App | Root Directory | Workspace | Vercel output directory | Title smoke test |
+| --- | --- | --- | --- | --- |
+| Customer | `apps/gowayy-customer/web` | `@gowayy/customer-web` | `dist` | `GOWAYY — Connected Journeys` |
+| Explore | `apps/gowayy-explore/web` | `@gowayy/explore-web` | `dist` | `GOWAYY EXPLORE — Discover the Himalaya` |
+| Partner | `apps/gowayy-partner/web` | `@gowayy/partner-web` | `dist` | `GOWAYY PARTNER — Grow your business` |
 
-Secrets (Supabase dashboard → Project settings → Edge Functions, **never in clients**):
+Use the **Vite** framework preset. Keep each app's committed `vercel.json` install/build/output settings; remove conflicting dashboard command/output overrides. Its monorepo install command changes to the repository root, runs `npm ci`, and the build command builds exactly one workspace before checking the app-local output. SPA rewrites route browser deep links to that app's own `index.html`. Production GitHub deploys link and pull environment for only the matrix row's Vercel project, assemble that app's files, then deploy and smoke-test `/` and a deep path.
+
+Required GitHub Actions secrets:
 
 | Secret | Purpose |
 | --- | --- |
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | public, safe for clients |
-| `SUPABASE_SERVICE_ROLE_KEY` | Edge functions only |
-| `PAYMENT_WEBHOOK_SECRET` | HMAC verification of payment provider events |
-| `JWT_SECRET` | Edge gateway token verification (Supabase JWT secret) |
+| `VERCEL_TOKEN` | Vercel CLI authentication |
+| `VERCEL_ORG_ID` | Vercel account/team id |
+| `VERCEL_PROJECT_CUSTOMER` | Customer project id |
+| `VERCEL_PROJECT_EXPLORE` | Explore project id |
+| `VERCEL_PROJECT_PARTNER` | Partner project id |
 
-RLS is enabled on every table; all mutations go through SECURITY DEFINER RPCs with
-server-authoritative pricing, stock checks and idempotency.
+Required production environment variables in **each** Vercel project:
 
-## 2. Vercel — three web apps
-
-Create three Vercel projects (one per app). For each project set:
-
-- **Root Directory for direct Vercel builds**: set each project to exactly one app web
-  directory (`apps/gowayy-customer/web`, `apps/gowayy-partner/web`, or
-  `apps/gowayy-explore/web`). Vercel resolves `outputDirectory: "dist"` relative to
-  that directory. The GitHub production workflow now deploys Build Output API prebuilt
-  bundles to avoid Vercel's nested-monorepo output-directory detection entirely.
-- **Framework preset**: Other (vercel.json sets `"framework": null`)
-- **Install command** (in per-app `vercel.json`): `cd ../.. && npm ci --no-audit --no-fund`
-- **Build command** (in per-app `vercel.json`): `cd ../.. && npm run build -w @gowayy/<app>-web && test -d apps/gowayy-<app>/web/dist`
-  — the `test -d` makes a wrong root/output combination fail at build time with a clear
-  message instead of a post-build Vercel error
-- **Output directory**: `dist` (relative to the app web root), SPA rewrites, PWA and
-  security headers are all in the per-app `vercel.json`.
-
-GitHub secrets for `deploy-web.yml`:
-
-| Secret | Value |
+| Variable | Value |
 | --- | --- |
-| `VERCEL_TOKEN` | Vercel access token |
-| `VERCEL_ORG_ID` | team/org id |
-| `VERCEL_PROJECT_CUSTOMER` / `VERCEL_PROJECT_PARTNER` / `VERCEL_PROJECT_EXPLORE` | the three project ids |
+| `VITE_GOWAYY_BACKEND` | `supabase` |
+| `VITE_SUPABASE_URL` | Public Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Public Supabase anon key; never use a service-role key |
+| `VITE_GOWAYY_APP_URL` | Customer web URL in the Explore project (booking handoff) |
 
-Environment variables per project (Vercel dashboard → Settings → Environment Variables):
+The workflow pulls the project's production environment and fails before build if the Supabase backend selector/URL/anon key are missing. Do not use the obsolete `VITE_API_URL`; the API client reads the names above (and `VITE_API_BASE_URL` only for direct HTTP transport configuration).
 
-| Variable | customer | partner | explore |
-| --- | --- | --- | --- |
-| `VITE_API_URL` | `https://<project>.supabase.co/functions/v1/gowayy-api` | same | same |
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | public values | same | same |
-| `VITE_GOWAYY_APP_URL` | — | — | URL of the customer app (booking handoff target) |
+Production deploy workflow: `.github/workflows/deploy-web.yml`; clean build/output test: `.github/workflows/ci.yml`. Disable Vercel Git auto-deploy if you want GitHub Actions to be the only production deployment path; otherwise a Vercel Git build may duplicate an Actions deploy.
 
-Production deploys run on pushes to `main` via `.github/workflows/deploy-web.yml`. The workflow builds in GitHub Actions, checks each app's `dist/index.html`, assembles `.vercel/output`, and calls `vercel deploy --prebuilt --prod`. This is the reliable path that avoids Vercel's `[STATIC_BUILD_NO_OUT_DIR]` error for monorepo builds. Disable Vercel's separate Git auto-deploy trigger to avoid duplicate deployments; if retaining direct Vercel builds, use the exact per-app Root Directory above and remove conflicting Build & Development Settings overrides.
+## 2. Native Android — direct Gradle APKs from GitHub Actions
 
-## 3. EAS — three independent Android apps
+Each project builds from its app directory after clean dependency installation and Expo prebuild. `mobile-build.yml` always runs three independent, non-fail-fast APK jobs for each qualifying push, pull request, or manual run; path detection is used only to decide which app-specific releases to publish. Pull requests and non-production branches produce installable debug APK artifacts for all three apps. Pushes to `main` produce signed release APK artifacts for all three; only the changed app(s) (or all apps on manual dispatch) get a new independent GitHub Release with their APK and update metadata. Shared packages, backend-connected modules, brand assets, and build scripts mark all apps affected. Release tags are `android-customer-build-N`, `android-explore-build-N`, and `android-partner-build-N`; no app publishes another app's package or release.
 
-Each app is its own EAS project with its own package id, icon, splash, versioning and
-update channel:
+### Signing identity (required before the first main-branch release)
 
-| App | Directory | Android package | EAS slug | OTA channel |
-| --- | --- | --- | --- | --- |
-| GOWAYY | `apps/gowayy-customer/mobile` | `app.gowayy.customer` | `gowayy` | `production` |
-| GOWAYY PARTNER | `apps/gowayy-partner/mobile` | `app.gowayy.partner` | `gowayy-partner` | `partner-production` |
-| GOWAYY EXPLORE | `apps/gowayy-explore/mobile` | `app.gowayy.explore` | `gowayy-explore` | `explore-production` |
+Release builds fail clearly unless the following **GitHub Actions repository secrets** are configured. Use one private keystore consistently for all three distinct application IDs (or adjust the workflow to use per-app keystores). Never commit the keystore, passwords, or generated APK signing material.
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+Create a private release key in a secure environment, retain a separate encrypted backup, and add the key as a repository secret. Example (replace the alias and output path; do not commit the file):
 
 ```bash
-cd apps/gowayy-partner/mobile   # same pattern for customer/explore
-npm install
-eas build --platform android --profile production   # AAB for Play
-eas build --platform android --profile preview      # internal APK
-eas update --channel partner-production             # OTA JS-only updates (no native change)
+keytool -genkeypair -v -keystore gowayy-release.keystore -storetype PKCS12 \
+  -alias gowayy-release -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 gowayy-release.keystore | gh secret set ANDROID_KEYSTORE_BASE64
+# Set the three passwords/alias interactively or with your secret-management process.
 ```
 
-- `.github/workflows/mobile-build.yml` runs `native-check` (Expo prebuild, mobile
-  typechecks and Android JS exports) on every push/PR. On pushes to `main` and on
-  `workflow_dispatch`, it builds all three EAS `preview` APKs, downloads them, checks
-  archive integrity, and uploads `gowayy-{customer,partner,explore}-android-apk`
-  artifacts to the Actions run for 30 days. Download them from the workflow run's
-  **Artifacts** section (`gowayy-customer-android-apk`, etc.). The cloud APK job
-  requires the `EXPO_TOKEN` repository secret and a valid EAS project UUID in each
-  app's `expo.extra.eas.projectId`; it does not need a local Android SDK or Gradle
-  installation. The workflow checks the UUID configuration before starting paid cloud builds.
-- EAS production profiles remain AABs for Google Play (`eas build --platform android --profile production`). EAS Update ships JS/asset-only changes per channel; native, SDK, and permission changes require a new EAS build — OTA never replaces a binary.
+The workflow decodes the secret only to the ephemeral runner's temp directory, validates the alias, passes credentials to Gradle through environment variables, then runs `apksigner verify`. Replacing/loss of this key prevents updates to previously installed release packages. Debug APKs from separate runners are for testing only and are not an update identity.
+
+### App metadata and release update flow
+
+| App | Android app directory | Application ID | Release metadata asset |
+| --- | --- | --- | --- |
+| Customer | `apps/gowayy-customer/mobile` | `app.gowayy.customer` | `gowayy-customer-update.json` |
+| Explore | `apps/gowayy-explore/mobile` | `app.gowayy.explore` | `gowayy-explore-update.json` |
+| Partner | `apps/gowayy-partner/mobile` | `app.gowayy.partner` | `gowayy-partner-update.json` |
+
+Each app's independent **App updates** screen queries public GitHub Releases and only accepts its own tag prefix, package ID and metadata asset. It shows the available version and notes, downloads with byte progress, checks APK size and checksum, and opens Android's package installer using a content URI. Android verifies package ID and signing certificate. Android 8+ requires the user to enable “Allow from this source” in the app's install permission settings and confirm installation; the app never installs silently. A successful package update retains app data, login state and app-private settings according to Android's package-update rules.
+
+A release version changes on each production workflow run (including shared-code changes). App source changes select only that app; `packages/**`, `apps/dev-api/**`, Supabase API/schema changes, shared brand assets and build scripts select all three. `workflow_dispatch` builds all three. Artifact names are `gowayy-customer-android-apk`, `gowayy-explore-android-apk`, and `gowayy-partner-android-apk`.
+
+## 3. Build and verification commands
+
+```bash
+npm ci --no-audit --no-fund
+npm ci --prefix apps/gowayy-customer/mobile --no-audit --no-fund
+npm ci --prefix apps/gowayy-explore/mobile --no-audit --no-fund
+npm ci --prefix apps/gowayy-partner/mobile --no-audit --no-fund
+npm run build -w @gowayy/customer-web
+npm run build -w @gowayy/explore-web
+npm run build -w @gowayy/partner-web
+node scripts/verify-web-output.mjs customer
+node scripts/verify-web-output.mjs explore
+node scripts/verify-web-output.mjs partner
+```
+
+The GitHub Android workflow is the native Gradle build pipeline. Local native builds additionally need the Java 17 JDK, Android API 37 platform, Build Tools 37.0.0, and NDK 27.1.12297006 requested by the current React Native 0.88 version catalog. `npx expo prebuild --platform android --clean --no-install` regenerates ignored native sources; Gradle then runs `assembleDebug` or `assembleRelease`.
 
 ## 4. Preview hosts
 
-The sandbox preview proxy (`https://{port}-{sandbox}.e2b.app`) must be accepted by dev
-servers: all Vite dev servers bind `0.0.0.0` and use relative `/api` URLs proxied to the
-dev API — no `localhost` references in browser code.
+Vite development servers bind to `0.0.0.0`, allow the Arena preview origin, and proxy `/api` to the development backend. Browser-facing code does not call browser-localhost to reach another service.
 
 ## 5. Rollback
 
-- Web: Vercel → Deployments → promote a previous production deployment.
-- Mobile OTA: `eas update --channel production --republish` with the previous bundle,
-  or roll back the channel to a previous update group.
-- DB: migrations are append-only; roll back by restoring a Supabase backup
-  (see `docs/BACKUP.md`).
-
-## CI behaviour when deploy secrets are absent
-
-`deploy-web.yml` checks `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and all three
-`VERCEL_PROJECT_*` secrets; if any are missing, deploys are skipped visibly and the
-report step names them. `mobile-build.yml` always runs Expo validation/bundle checks;
-its main/manual EAS APK job requires `EXPO_TOKEN` plus valid EAS project UUIDs and fails
-with remediation if either is missing. The main `ci.yml` workflow (typecheck, tests, secret scan, web builds) remains
-the strict gate on every PR.
+- Web: Vercel → Deployments → promote the prior deployment in that app's own project.
+- Android: publish a higher versionCode release signed with the same key; Android does not support downgrading a package in place. Revert code and release a new build.
+- Database: migrations are append-only; restore from a Supabase backup (see `docs/BACKUP.md`).

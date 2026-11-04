@@ -220,18 +220,10 @@ p { margin: 0; }
 @media (min-width: 1024px) { .toast { bottom: 28px; } }
 
 /* ---------------- official-logo splash ---------------- */
-.brand-splash { position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; justify-items: center; gap: 14px; overflow: hidden; background: radial-gradient(ellipse at 50% 34%, #EEE2F7 0%, #F8F3FB 46%, #FFFCF8 100%); }
-.brand-splash__lockup { display: grid; justify-items: center; gap: 2px; }
-.brand-splash__mark { position: relative; display: block; width: clamp(138px, 32vw, 206px); aspect-ratio: 1; }
-.brand-splash__mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.brand-splash__purple { animation: splashPurple 650ms cubic-bezier(.22,.9,.28,1) both; }
-.brand-splash__orange { animation: splashOrange 580ms cubic-bezier(.22,.9,.28,1) 260ms both; }
-.brand-splash__wordmark { color: #17131B; font-size: clamp(28px, 7vw, 40px); line-height: 1; font-weight: 800; letter-spacing: .075em; animation: fadeUp 600ms var(--gw-easing) 410ms both; }
-.brand-splash__caption { color: var(--gw-text-muted); font-size: 13px; letter-spacing: .035em; animation: fadeUp 500ms var(--gw-easing) 580ms both; }
-.brand-splash__skip { position: absolute; right: max(20px, env(safe-area-inset-right)); top: max(18px, env(safe-area-inset-top)); border: 1px solid rgba(66,16,128,.12); border-radius: 999px; padding: 9px 15px; background: rgba(255,255,255,.68); color: var(--gw-text); font: inherit; font-size: 13px; cursor: pointer; }
-@keyframes splashPurple { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
-@keyframes splashOrange { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .brand-splash__purple, .brand-splash__orange, .brand-splash__wordmark, .brand-splash__caption { animation: none; opacity: 1; transform: none; } }
+.brand-splash { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; overflow: hidden; background: var(--gw-bg); }
+.brand-splash > img { width: clamp(138px, 32vw, 206px); height: auto; animation: brandSplashReveal 1050ms cubic-bezier(.22,.9,.28,1) both; }
+@keyframes brandSplashReveal { from { opacity: 0; transform: translateY(10px) scale(.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .brand-splash > img { animation: none; opacity: 1; transform: none; } }
 
 /* ---------------- onboarding ---------------- */
 .onboarding { position: fixed; inset: 0; z-index: 190; background: var(--gw-bg); display: flex; flex-direction: column; }

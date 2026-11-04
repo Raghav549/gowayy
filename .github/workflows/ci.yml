@@ -14,56 +14,72 @@ concurrency:
 
 jobs:
   test:
-    name: Typecheck · unit · integration · supabase · edge · secrets
+    name: Typecheck · unit · integration · Supabase · edge · secrets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
+          cache-dependency-path: package-lock.json
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v2.x
-
       - name: Install workspace dependencies
         run: npm ci --no-audit --no-fund
-
-      - name: Install mobile dependencies (customer / partner / explore)
-        run: |
-          npm ci --no-audit --no-fund
-          (cd apps/gowayy-customer/mobile && npm ci --no-audit --no-fund)
-          (cd apps/gowayy-partner/mobile && npm ci --no-audit --no-fund)
-          (cd apps/gowayy-explore/mobile && npm ci --no-audit --no-fund)
-
-      - name: Typecheck (web + shared packages)
+      - name: Install Customer mobile dependencies
+        working-directory: apps/gowayy-customer/mobile
+        run: npm ci --no-audit --no-fund
+      - name: Install Explore mobile dependencies
+        working-directory: apps/gowayy-explore/mobile
+        run: npm ci --no-audit --no-fund
+      - name: Install Partner mobile dependencies
+        working-directory: apps/gowayy-partner/mobile
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck shared packages and web apps
         run: npm run typecheck
-
-      - name: Typecheck (Expo mobile — customer)
+      - name: Typecheck Customer Android app
         run: npm run typecheck:mobile
-
-      - name: Typecheck (Expo mobile — partner)
-        run: npm run typecheck:partner-mobile
-
-      - name: Typecheck (Expo mobile — explore)
+      - name: Typecheck Explore Android app
         run: npm run typecheck:explore-mobile
-
+      - name: Typecheck Partner Android app
+        run: npm run typecheck:partner-mobile
       - name: Unit tests
         run: npm run test
-
       - name: Integration tests (dev-api over HTTP)
         run: npm run test:integration
-
-      - name: Supabase schema + seed tests (PGlite)
+      - name: Supabase schema and seed tests (PGlite)
         run: npm run test:supabase
-
-      - name: Edge function tests (Deno)
+      - name: Edge function typecheck and tests (Deno)
         run: npm run test:edge
-
       - name: Secret scan
         run: npm run scan:secrets
 
-      - name: Build all three web apps
-        run: npm run build:all
+  web-build:
+    name: Build and verify ${{ matrix.app }} web app
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [customer, explore, partner]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Clean install workspace dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build only this Vite application
+        run: npm run build -w @gowayy/${{ matrix.app }}-web
+      - name: Verify app-specific output, assets and Vercel routing
+        run: node scripts/verify-web-output.mjs '${{ matrix.app }}'
+      - name: Preserve verified web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: gowayy-${{ matrix.app }}-web-dist
+          path: apps/gowayy-${{ matrix.app }}/web/dist
+          if-no-files-found: error
+          retention-days: 14

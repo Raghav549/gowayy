@@ -17,7 +17,7 @@ export async function requestPushPermission(): Promise<string | null> {
   try {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== 'granted') return null;
-    // A real push token requires an EAS projectId; without one we degrade to in-app alerts.
+    // Native device tokens are collected here; provider delivery still requires server-side FCM/APNs setup.
     const token = await Notifications.getDevicePushTokenAsync();
     return token.data ?? null;
   } catch { return null; }

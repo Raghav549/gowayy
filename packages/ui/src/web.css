@@ -109,16 +109,9 @@ a { color: inherit; }
 .switch__track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--gw-muted-silver); transition: transform .15s; }
 .switch input:checked + .switch__track { background: color-mix(in srgb, var(--gw-success) 30%, var(--gw-surface)); }
 .switch input:checked + .switch__track::after { transform: translateX(20px); background: var(--gw-success); }
-.splash-page { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 6px; overflow: hidden; background: radial-gradient(ellipse at 50% 34%, #EEE2F7 0%, #F8F3FB 48%, #FFFCF8 100%); }
-.splash-page > img { width: min(60vw, 280px); animation: fadeUp .5s var(--gw-easing) both; }
-.splash-page__mark { position: relative; display: block; width: clamp(148px, 34vw, 208px); aspect-ratio: 1; }
-.splash-page__mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.splash-page__purple { animation: splashPurple 650ms cubic-bezier(.22,.9,.28,1) both; }
-.splash-page__orange { animation: splashOrange 580ms cubic-bezier(.22,.9,.28,1) 260ms both; }
-.splash-page__name { color: #17131B; font: 800 clamp(22px, 6vw, 30px)/1.1 var(--gw-display); letter-spacing: .075em; animation: fadeUp 600ms var(--gw-easing) 420ms both; }
-.splash-page__skip { position: absolute; top: max(18px, env(safe-area-inset-top)); right: max(18px, env(safe-area-inset-right)); border: 1px solid rgba(66,16,128,.12); border-radius: 999px; padding: 9px 15px; background: rgba(255,255,255,.72); color: #51475B; font: inherit; font-size: 13px; cursor: pointer; }
-@keyframes splashPurple { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
-@keyframes splashOrange { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.splash-page { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow: hidden; background: var(--gw-bg); }
+.splash-page__mark { display: block; width: clamp(148px, 34vw, 208px); height: auto; animation: splashReveal 1050ms cubic-bezier(.22,.9,.28,1) both; }
+@keyframes splashReveal { from { opacity: 0; transform: translateY(10px) scale(.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
 
@@ -192,6 +185,6 @@ body { background: var(--gw-gradient-page); color: var(--gw-text); }
   .bottom-nav a { border-radius: 18px; font-size: 10px; }
   .bottom-nav a.active { background: #17131B; color: white; }
 }
-@media (prefers-reduced-motion: reduce) { .splash-page__purple, .splash-page__orange, .splash-page__name { animation: none; opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .splash-page__mark { animation: none; opacity: 1; transform: none; } }
 /* No role-specific legacy palettes: the shared purple/orange mark and lilac foundation remain consistent. */
 .app-customer, .app-partner, .app-explore { --gw-accent:#421080; --gw-accent-contrast:#FFFFFF; --gw-champagne:#FFA500; --gw-champagne-deep:#421080; --gw-champagne-light:#FFC44D; }

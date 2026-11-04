@@ -12,7 +12,7 @@ function App() {
   const clearToast = useUI((s) => s.clearToast);
   useEffect(() => { void useSession.getState().hydrate(); }, []);
   useEffect(() => { if (toast) { const t = window.setTimeout(clearToast, 3800); return () => window.clearTimeout(t); } }, [toast, clearToast]);
-  if (splash) return <SplashScreen appName="GOWAYY EXPLORE" onDone={() => setSplash(false)} />;
+  if (splash) return <SplashScreen onDone={() => setSplash(false)} />;
   return (
     <Shell>
       <Routes>

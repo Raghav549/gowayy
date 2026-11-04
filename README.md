@@ -26,7 +26,7 @@ npm run verify              # typecheck (web+mobile), all tests, edge checks, se
 ```
 
 See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
-[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel + EAS + Supabase deployment, and
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel + direct Gradle APK + Supabase deployment, and
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full map.
 
 ## Repository map
@@ -34,9 +34,9 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | Path | Contents |
 | --- | --- |
 | `apps/gowayy-customer/web` | Customer React+Vite PWA (port 5173): splash, 4-scene onboarding, auth w/ OTP, home, services, marketplace (products/cart/checkout), journey dashboard, profile |
-| `apps/gowayy-customer/mobile` | GOWAYY Expo SDK 58 Android app (EAS project `gowayy`, OTA channel production) |
-| `apps/gowayy-partner/web` + `/mobile` | PARTNER web (5174) + Android (`app.gowayy.partner`, own EAS project/channels): auth, onboarding, driver mode, manage, inbox, earnings, profile + verification |
-| `apps/gowayy-explore/web` + `/mobile` | EXPLORE PWA (5175) + Android (`app.gowayy.explore`, own EAS project/channels): destinations, hidden gems, booking handoff, offline shell |
+| `apps/gowayy-customer/mobile` | GOWAYY Expo SDK 58 Android app (`app.gowayy.customer`), built as a native Gradle APK in GitHub Actions |
+| `apps/gowayy-partner/web` + `/mobile` | PARTNER web (5174) + Android (`app.gowayy.partner`): auth, onboarding, driver mode, manage, inbox, earnings, profile + verification |
+| `apps/gowayy-explore/web` + `/mobile` | EXPLORE PWA (5175) + Android (`app.gowayy.explore`): destinations, hidden gems, booking handoff, offline shell |
 | `apps/dev-api` | Real Node HTTP API with JSON persistence — auth, pricing, availability, bookings, orders, server-priced commerce, verified payments, refunds, dispatch, partner hub, audit |
 | `packages/*` | Shared types, Zod validation, API client (supabase + dev transports), design system, UI kit, pricing/booking/location/notification engines, commerce, catalog |
 | `supabase/migrations` | Twelve ordered SQL migrations (80+ tables, RLS everywhere, server-priced checkout RPCs) + generated seed |
@@ -45,7 +45,7 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | `assets/mascot` | Original "Kanchu" monkey mascot, 12 SVG poses (from the reference image), lightweight static fallbacks |
 | `assets/images` | Verified exact-place photographs, WebP derivatives, `IMAGE_SOURCES.json` licence manifest, `ATTRIBUTION.md` |
 | `tests` | Vitest unit, dev-API HTTP integration, PGlite schema/behaviour tests, Deno Edge tests |
-| `.github/workflows` | CI (typecheck+tests+secrets+builds), per-app Vercel deploys, EAS Android build |
+| `.github/workflows` | CI (typecheck+tests+secrets+per-app web builds), independent Vercel deploys, native Gradle Android APK builds and releases |
 | `docs` | Architecture, setup, deployment, API, security, licensing, image research, backup, testing, phases, screenshot analysis |
 
 ## Design rules (v2 — "Himalayan Morning")
