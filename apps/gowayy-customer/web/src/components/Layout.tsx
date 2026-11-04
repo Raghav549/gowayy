@@ -47,7 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const patchJourney = useJourney((s) => s.patch);
 
   useEffect(() => { if (toast) { const t = window.setTimeout(clearToast, 3800); return () => window.clearTimeout(t); } }, [toast, clearToast]);
-  useEffect(() => { const meta = document.querySelector('meta[name="theme-color"]'); meta?.setAttribute('content', theme === 'dark' ? '#0D0F12' : '#F5F1E8'); }, [theme]);
+  useEffect(() => { const meta = document.querySelector('meta[name="theme-color"]'); meta?.setAttribute('content', '#FAF4E9'); }, [theme]);
 
   const choosePlace = async (id: string, name: string) => {
     setLocationLabel(name); setLocationOpen(false);
@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const openHit = (href: string) => { setSearchOpen(false); setSearchText(''); navigate(href); };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell app-customer">
       <header className="topbar">
         <div className="topbar__inner">
           <Link to="/" className="brand" aria-label="GOWAYY home"><GSymbol size={38} /><Wordmark height={18} /></Link>
@@ -91,7 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <NavLink to="/account" className={({ isActive }) => isActive ? 'active' : ''}><UserRound size={20} /><span>Account</span></NavLink>
         <NavLink to="/cart" className={({ isActive }) => isActive ? 'active' : ''} style={{ position: 'relative' }}>
           <ShoppingCart size={20} /><span>Cart</span>
-          {cartItems > 0 && <span className="icon-btn__dot" style={{ top: 2, right: 'calc(50% - 22px)', width: 18, height: 18, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--gw-accent)', color: '#14161A', fontWeight: 800, borderRadius: 999, position: 'absolute' }}>{cartItems > 99 ? '99+' : cartItems}</span>}
+          {cartItems > 0 && <span className="icon-btn__dot" style={{ top: 2, right: 'calc(50% - 22px)', width: 18, height: 18, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--gw-accent)', color: 'var(--gw-accent-contrast)', fontWeight: 800, borderRadius: 999, position: 'absolute' }}>{cartItems > 99 ? '99+' : cartItems}</span>}
         </NavLink>
       </nav>
 

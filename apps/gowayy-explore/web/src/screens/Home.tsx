@@ -15,7 +15,7 @@ function DestinationCard({ d }: { d: Destination }) {
         {img?.status === 'verified' && img.assetPath ? (
           <img src={`/${img.assetPath.replace(/^\//, '')}`} alt={img.alt} loading="lazy" />
         ) : (
-          <div className="image-placeholder"><img className="image-placeholder__mark" src="/brand/g-mono-inverse.png" alt="" /><div className="image-placeholder__text">Photograph unavailable</div></div>
+          <div className="image-placeholder"><img className="image-placeholder__mark" src="/brand/g-mono-inverse.svg" alt="" /><div className="image-placeholder__text">Photograph unavailable</div></div>
         )}
       </div>
       <div style={{ padding: '12px 14px 14px' }}>

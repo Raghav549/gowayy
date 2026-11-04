@@ -3,14 +3,15 @@
 One connected journey for travel, transport, hospitality and local commerce — **three apps,
 one shared backend, no admin panel**.
 
-1. **GOWAYY** (customer) — Expo Android app + responsive web PWA: cabs, shared taxis,
-   hotels/homestays, food, groceries, tourism, experiences, parcels, shopping/marketplace,
-   all attached to a shared journey context.
-2. **GOWAYY PARTNER** — own app id, package and branding for drivers, delivery partners and
-   restaurant / grocery / hotel / homestay / tour operators (claims, verification, inventory,
-   menu, rooms, tours, inbox, earnings, settlements).
-3. **GOWAYY EXPLORE** — web + PWA destination discovery with verified-only imagery, hidden
-   gems, route and safety info, and booking handoff into the GOWAYY customer app.
+1. **GOWAYY** (customer) — Expo Android app (`app.gowayy.customer`) + responsive web PWA:
+   cabs, shared taxis, hotels/homestays, food, groceries, tourism, experiences, parcels,
+   shopping/marketplace, all attached to a shared journey context.
+2. **GOWAYY PARTNER** — own Android app (`app.gowayy.partner`) + web app: drivers, delivery
+   partners, restaurant / grocery / hotel / homestay / tour operators (claims, verification,
+   inventory, menu, rooms, tours, inbox, earnings, settlements).
+3. **GOWAYY EXPLORE** — own Android app (`app.gowayy.explore`) + web PWA: destination
+   discovery with verified-only imagery, hidden gems, route and safety info, and booking
+   handoff into the GOWAYY customer app.
 
 All three share one PostgreSQL + PostGIS + Supabase backend (one DB, one auth, real-time
 cross-app sync), one design system and shared engine packages.
@@ -33,9 +34,9 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | Path | Contents |
 | --- | --- |
 | `apps/gowayy-customer/web` | Customer React+Vite PWA (port 5173): splash, 4-scene onboarding, auth w/ OTP, home, services, marketplace (products/cart/checkout), journey dashboard, profile |
-| `apps/gowayy-customer/mobile` | Expo SDK 58 Android app (EAS): same flows, Reanimated splash, 5-tab nav, OTA via EAS Update |
-| `apps/gowayy-partner/web` | Partner React+Vite app (port 5174): auth, onboarding, driver mode, manage (inventory/menu/rooms/tours), inbox, earnings, profile + verification |
-| `apps/gowayy-explore/web` | Explore PWA (port 5175): destination discovery, hidden gems, booking handoff to GOWAYY, offline shell |
+| `apps/gowayy-customer/mobile` | GOWAYY Expo SDK 58 Android app (EAS project `gowayy`, OTA channel production) |
+| `apps/gowayy-partner/web` + `/mobile` | PARTNER web (5174) + Android (`app.gowayy.partner`, own EAS project/channels): auth, onboarding, driver mode, manage, inbox, earnings, profile + verification |
+| `apps/gowayy-explore/web` + `/mobile` | EXPLORE PWA (5175) + Android (`app.gowayy.explore`, own EAS project/channels): destinations, hidden gems, booking handoff, offline shell |
 | `apps/dev-api` | Real Node HTTP API with JSON persistence — auth, pricing, availability, bookings, orders, server-priced commerce, verified payments, refunds, dispatch, partner hub, audit |
 | `packages/*` | Shared types, Zod validation, API client (supabase + dev transports), design system, UI kit, pricing/booking/location/notification engines, commerce, catalog |
 | `supabase/migrations` | Twelve ordered SQL migrations (80+ tables, RLS everywhere, server-priced checkout RPCs) + generated seed |
@@ -47,13 +48,15 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | `.github/workflows` | CI (typecheck+tests+secrets+builds), per-app Vercel deploys, EAS Android build |
 | `docs` | Architecture, setup, deployment, API, security, licensing, image research, backup, testing, phases, screenshot analysis |
 
-## Design rules
+## Design rules (v2 — "Himalayan Morning")
 
-Deep charcoal, graphite, warm white, soft ivory, muted silver and restrained champagne.
-No neon/blue-dominated palette, no generic pin or car logos. Original geometric G logo;
-original monkey mascot used sparingly (empty states, splash), never on every screen.
-Both themes, reduced-motion support, real verified photographs with honest unavailable
-states, and no fabricated ratings, prices or availability.
+Light-only system: warm paper `#FAF4E9`, white surfaces, espresso-ink text, honey-gold
+accents — **no black, charcoal, grey, dark, neon, electric, steel, metallic or chrome
+anywhere** (enforced by unit tests on the token file). Each app has its own accent:
+GOWAYY meadow green `#1E6B4F`, PARTNER clay terracotta `#C2502A`, EXPLORE rhododendron
+plum `#6D3B5E`. Original geometric G logo + per-app marks; original 12-pose monkey mascot
+used sparingly. Reduced-motion support, real verified photographs with honest unavailable
+states, no fabricated ratings, prices or availability.
 
 ## Integrity rules
 

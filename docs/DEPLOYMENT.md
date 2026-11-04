@@ -4,6 +4,13 @@ Three web apps deploy to **Vercel** (one project per app), the customer Android 
 with **EAS**, and the backend runs on **Supabase** (PostgreSQL + PostGIS + Edge Functions).
 CI/CD is GitHub Actions (`.github/workflows/`).
 
+## 0. CI root-cause note
+
+Earlier workflow runs failed in the runner-provisioning step ("Set up job") and one action
+slug (`actions/setup-deno`) did not exist. Repairs: `denoland/setup-deno@v1`, explicit
+`permissions: contents: read` on every workflow, per-app mobile installs/typechecks in
+CI, and three EAS build jobs. All workflow steps are also run locally via `npm run verify`.
+
 ## 1. Supabase (backend)
 
 ```bash
@@ -54,22 +61,29 @@ Environment variables per project (Vercel dashboard → Settings → Environment
 
 Deploys run on push to `main` via `.github/workflows/deploy-web.yml` (production).
 
-## 3. EAS — customer Android app
+## 3. EAS — three independent Android apps
+
+Each app is its own EAS project with its own package id, icon, splash, versioning and
+update channel:
+
+| App | Directory | Android package | EAS slug | OTA channel |
+| --- | --- | --- | --- | --- |
+| GOWAYY | `apps/gowayy-customer/mobile` | `app.gowayy.customer` | `gowayy` | `production` |
+| GOWAYY PARTNER | `apps/gowayy-partner/mobile` | `app.gowayy.partner` | `gowayy-partner` | `partner-production` |
+| GOWAYY EXPLORE | `apps/gowayy-explore/mobile` | `app.gowayy.explore` | `gowayy-explore` | `explore-production` |
 
 ```bash
-cd apps/gowayy-customer/mobile
+cd apps/gowayy-partner/mobile   # same pattern for customer/explore
 npm install
-expo login                     # or EXPO_TOKEN in CI
 eas build --platform android --profile production   # AAB for Play
 eas build --platform android --profile preview      # internal APK
-eas update --channel production                     # OTA JS-only updates (no native change)
+eas update --channel partner-production             # OTA JS-only updates (no native change)
 ```
 
-- Profiles and OTA channels are in `apps/gowayy-customer/mobile/eas.json`
-  (`development` / `preview` / `production`; runtimeVersion policy `appVersion`).
-- `mobile-build.yml` builds the production AAB on pushes to `main` touching the mobile
-  app or shared packages (secret: `EXPO_TOKEN`).
-- EAS Update ships JS-only changes; any native/config change requires a new build.
+- `mobile-build.yml` builds all three production AABs on pushes to `main` touching any
+  mobile app or shared package (secret: `EXPO_TOKEN`; one Expo account, three projects).
+- EAS Update ships JS/asset-only changes per channel; native/SDK/permission changes
+  require a new EAS build and Play/internal distribution — OTA never replaces a binary.
 
 ## 4. Preview hosts
 

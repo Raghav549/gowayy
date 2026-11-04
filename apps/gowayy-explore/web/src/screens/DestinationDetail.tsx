@@ -48,7 +48,7 @@ export function DestinationDetail() {
         {d.images[0]?.status === 'verified' && d.images[0].assetPath ? (
           <div className="image-frame image-frame--hero"><img src={`/${d.images[0].assetPath.replace(/^\//, '')}`} alt={d.images[0].alt} /></div>
         ) : (
-          <div className="image-frame image-frame--hero"><div className="image-placeholder"><img className="image-placeholder__mark" src="/brand/g-mono-inverse.png" alt="" /><div className="image-placeholder__text">Photograph unavailable</div><div className="tiny" style={{ maxWidth: 320 }}>{d.images[0]?.verificationNote}</div></div></div>
+          <div className="image-frame image-frame--hero"><div className="image-placeholder"><img className="image-placeholder__mark" src="/brand/g-mono-inverse.svg" alt="" /><div className="image-placeholder__text">Photograph unavailable</div><div className="tiny" style={{ maxWidth: 320 }}>{d.images[0]?.verificationNote}</div></div></div>
         )}
         <div style={{ padding: 18 }}>
           <div className="between" style={{ flexWrap: 'wrap', gap: 8 }}>

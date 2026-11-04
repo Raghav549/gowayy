@@ -1,16 +1,21 @@
-name: EAS build (GOWAYY customer Android)
+name: EAS builds (three Android apps)
 
 on:
   push:
     branches: [main]
     paths:
       - 'apps/gowayy-customer/mobile/**'
+      - 'apps/gowayy-partner/mobile/**'
+      - 'apps/gowayy-explore/mobile/**'
       - 'packages/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build-android:
-    name: Build Android app bundle
+  build-customer:
+    name: Build GOWAYY (customer) AAB
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -30,3 +35,47 @@ jobs:
       - name: Build production AAB
         run: eas build --platform android --profile production --non-interactive
         working-directory: apps/gowayy-customer/mobile
+
+  build-partner:
+    name: Build GOWAYY PARTNER AAB
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/gowayy-partner/mobile/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: apps/gowayy-partner/mobile
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Build production AAB
+        run: eas build --platform android --profile production --non-interactive
+        working-directory: apps/gowayy-partner/mobile
+
+  build-explore:
+    name: Build GOWAYY EXPLORE AAB
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/gowayy-explore/mobile/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: apps/gowayy-explore/mobile
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Build production AAB
+        run: eas build --platform android --profile production --non-interactive
+        working-directory: apps/gowayy-explore/mobile

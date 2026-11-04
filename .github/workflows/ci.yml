@@ -5,6 +5,9 @@ on:
     branches: [main, 'arena/**']
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -21,22 +24,31 @@ jobs:
           node-version: 22
           cache: npm
 
-      - uses: actions/setup-deno@v2
+      - uses: denoland/setup-deno@v1
         with:
           deno-version: v2.x
 
       - name: Install workspace dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Install mobile (Expo) dependencies
-        run: npm ci --no-audit --no-fund
-        working-directory: apps/gowayy-customer/mobile
+      - name: Install mobile dependencies (customer / partner / explore)
+        run: |
+          npm ci --no-audit --no-fund
+          (cd apps/gowayy-customer/mobile && npm ci --no-audit --no-fund)
+          (cd apps/gowayy-partner/mobile && npm ci --no-audit --no-fund)
+          (cd apps/gowayy-explore/mobile && npm ci --no-audit --no-fund)
 
       - name: Typecheck (web + shared packages)
         run: npm run typecheck
 
-      - name: Typecheck (Expo mobile)
+      - name: Typecheck (Expo mobile — customer)
         run: npm run typecheck:mobile
+
+      - name: Typecheck (Expo mobile — partner)
+        run: npm run typecheck:partner-mobile
+
+      - name: Typecheck (Expo mobile — explore)
+        run: npm run typecheck:explore-mobile
 
       - name: Unit tests
         run: npm run test

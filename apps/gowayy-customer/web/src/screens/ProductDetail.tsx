@@ -77,7 +77,7 @@ export function ProductDetail() {
           <div className="pdp__gallery card card--pad0">
             {product.images[0]?.status === 'verified' ? <img src="/placeholder" alt={product.images[0].alt} /> : (
               <div className="image-placeholder" role="img" aria-label={product.images[0]?.alt}>
-                <img className="image-placeholder__mark" src="/brand/g-mono-inverse.png" alt="" />
+                <img className="image-placeholder__mark" src="/brand/g-mono-inverse.svg" alt="" />
                 <div className="image-placeholder__text">Product image unavailable</div>
                 <div className="tiny muted" style={{ maxWidth: 280 }}>{product.images[0]?.verificationNote}</div>
               </div>

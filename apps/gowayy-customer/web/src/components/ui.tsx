@@ -4,10 +4,10 @@ import { formatINR } from '@gowayy/shared-utils';
 import { STATUS_LABELS } from '@gowayy/booking-engine';
 
 export function GSymbol({ size = 38, className = '' }: { size?: number; className?: string }) {
-  return <img src="/brand/g-symbol.png" width={size} height={size} alt="GOWAYY" className={className} />;
+  return <img src="/brand/g-symbol.svg" width={size} height={size} alt="GOWAYY" className={className} />;
 }
 export function Wordmark({ height = 20 }: { height?: number }) {
-  return <img src="/brand/wordmark.png" style={{ height, width: 'auto' }} alt="GOWAYY" />;
+  return <img src="/brand/wordmark.svg" style={{ height, width: 'auto' }} alt="GOWAYY" />;
 }
 
 export function ImageFrame({ asset, variant = '4-3', showCredit = false, className = '' }: {
@@ -26,7 +26,7 @@ export function ImageFrame({ asset, variant = '4-3', showCredit = false, classNa
         </>
       ) : (
         <div className="image-placeholder" role="img" aria-label={asset.alt}>
-          <img className="image-placeholder__mark" src="/brand/g-mono-inverse.png" alt="" />
+          <img className="image-placeholder__mark" src="/brand/g-mono-inverse.svg" alt="" />
           <div className="image-placeholder__text">Photograph unavailable</div>
           <div className="tiny muted" style={{ maxWidth: 260 }}>{asset.verificationNote ?? 'No verified licensed photograph available.'}</div>
         </div>

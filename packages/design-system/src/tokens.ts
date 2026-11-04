@@ -26,8 +26,8 @@ export function cssVariables(mode: ThemeMode): Record<string, string> {
   const t = themes[mode];
   return {
     '--gw-ink': c.ink,
-    '--gw-charcoal': c.charcoal,
-    '--gw-graphite': c.graphite,
+    '--gw-charcoal': c.ink,
+    '--gw-graphite': c.ink,
     '--gw-warm-white': c.warmWhite,
     '--gw-soft-ivory': c.softIvory,
     '--gw-muted-silver': c.mutedSilver,

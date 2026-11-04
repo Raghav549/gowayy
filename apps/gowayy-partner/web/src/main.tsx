@@ -9,7 +9,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter><Root /></BrowserRouter>
+      <BrowserRouter><div className="app-partner" style={{ minHeight: '100vh' }}><Root /></div></BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,
 );
