@@ -10,8 +10,8 @@ export const font = {
   sizes: { xs: 12, sm: 14, base: 16, lg: 20, xl: 24, '2xl': 30, '3xl': 38 },
 };
 
-export type Palette = typeof themes.dark;
-export const colors = themes.dark;
+export type Palette = typeof themes.light;
+export const colors = themes.light;
 export function palette(mode: ThemeMode): Palette { return themes[mode]; }
 
 export function useTheme(): { mode: ThemeMode; c: Palette } {

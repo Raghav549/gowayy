@@ -19,7 +19,7 @@ interface UIState {
 }
 
 export const useUI = create<UIState>((set, get) => ({
-  theme: (readStored<ThemeMode>('gowayy.theme', 'dark') === 'light' ? 'light' : 'dark'),
+  theme: (readStored<ThemeMode>('gowayy.theme', 'light') === 'light' ? 'light' : 'dark'),
   splashSeen: readStored<boolean>('gowayy.splashSeen', false),
   onboarded: readStored<boolean>('gowayy.onboarded', false),
   toast: null,
@@ -32,7 +32,7 @@ export const useUI = create<UIState>((set, get) => ({
   clearToast: () => set({ toast: null }),
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),
   rehydrate: () => set({
-    theme: readStored<ThemeMode>('gowayy.theme', 'dark'),
+    theme: readStored<ThemeMode>('gowayy.theme', 'light'),
     splashSeen: readStored<boolean>('gowayy.splashSeen', false),
     onboarded: readStored<boolean>('gowayy.onboarded', false),
   }),

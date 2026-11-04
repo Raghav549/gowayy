@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "GOWAYY EXPLORE",
+    "slug": "gowayy-explore",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "gowayyexplore",
+    "newArchEnabled": true,
+    "icon": "./assets/branding/app-icon.png",
+    "splash": {
+      "image": "./assets/branding/splash-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF4E9"
+    },
+    "android": {
+      "package": "app.gowayy.explore",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/icon-foreground.png",
+        "backgroundColor": "#F1E2EC",
+        "monochromeImage": "./assets/branding/icon-monochrome.png"
+      },
+      "permissions": ["INTERNET"]
+    },
+    "extra": {
+      "eas": { "projectId": "gowayy-explore" },
+      "accent": "#6D3B5E",
+      "accentSoft": "#F1E2EC",
+      "handoffUrl": "https://gowayy.vercel.app"
+    },
+    "plugins": ["expo-router", "expo-secure-store"]
+  }
+}

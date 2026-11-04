@@ -32,7 +32,7 @@ export function Categories() {
             const v = (p as unknown as { variants: Array<{ pricePaise: number; mrpPaise: number; stock: number; discountPercent: number }>; slug: string; name: string; brand: string; dataClass: string; rating: { average: number; count: number } | null }).variants[0];
             return (
               <Link key={p.id as string} to={`/products/${p.slug as string}`} className="card card--hover card--pad0" style={{ display: 'block' }}>
-                <div className="image-frame image-frame--4-3"><div className="image-placeholder"><img className="image-placeholder__mark" src="/brand/g-mono-inverse.png" alt="" /><div className="image-placeholder__text">Product image unavailable</div></div></div>
+                <div className="image-frame image-frame--4-3"><div className="image-placeholder"><img className="image-placeholder__mark" src="/brand/g-mono-inverse.svg" alt="" /><div className="image-placeholder__text">Product image unavailable</div></div></div>
                 <div style={{ padding: '12px 14px 14px' }}>
                   <div className="between"><span className="tiny" style={{ color: 'var(--gw-champagne-deep)', fontWeight: 700 }}>{p.brand as string}</span>{p.dataClass === 'demo-listing' && <span className="badge">Demo</span>}</div>
                   <p className="small" style={{ marginTop: 4, minHeight: 40 }}>{p.name as string}</p>

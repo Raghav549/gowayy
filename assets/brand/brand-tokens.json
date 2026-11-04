@@ -1,43 +1,56 @@
 {
-  "name": "GOWAYY Brand System v1.0",
-  "generated": "2026-11-03",
+  "name": "GOWAYY Brand System v2.0 — light 'Himalayan Morning' edition",
+  "generated": "2026-11-04",
+  "note": "v2 is LIGHT-ONLY by design: no black, charcoal, grey or dark surfaces anywhere. Warm paper backgrounds, espresso ink for text, per-app accents (meadow green / clay terracotta / plum).",
+  "restrictions": [
+    "No black, charcoal, grey or dark backgrounds in any app surface, logo, icon, splash or animation.",
+    "No neon, electric, steel, metallic, chrome or industrial materials.",
+    "No blue-dominant or cyan hues (kept as a hard guard in CI tests).",
+    "Warm paper + espresso ink + one per-app accent; accessible contrast on every pairing."
+  ],
   "colour": {
-    "ink": "#0D0F12",
-    "charcoal": "#14161A",
-    "graphite": "#2B2F36",
-    "graphiteLight": "#3B4049",
-    "warmWhite": "#F5F1E8",
-    "softIvory": "#EDE6D8",
-    "mutedSilver": "#B6BCC4",
-    "silverDeep": "#8A919B",
-    "champagne": "#C9A86A",
-    "champagneLight": "#D9BE86",
-    "champagneDeep": "#8B7245",
-    "success": "#6F8F6B",
-    "warning": "#C08A4A",
-    "danger": "#B45B4C",
-    "info": "#7E8A93",
+    "ink": "#33261B",
+    "paper": "#FAF4E9",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#F3EAD9",
+    "warmWhite": "#FFFDF8",
+    "softIvory": "#F3EAD9",
+    "mutedSilver": "#C9BBA3",
+    "silverDeep": "#8A7460",
+    "champagne": "#E8A23A",
+    "champagneLight": "#F2C063",
+    "champagneDeep": "#B97A1F",
+    "success": "#4E7D5B",
+    "warning": "#C07A2D",
+    "danger": "#B0492F",
+    "info": "#6E7F7A",
     "light": {
-      "bg": "#F5F1E8",
-      "surface": "#FBF8F2",
-      "surfaceAlt": "#EFE9DD",
+      "bg": "#FAF4E9",
+      "surface": "#FFFFFF",
+      "surfaceAlt": "#F3EAD9",
       "raised": "#FFFFFF",
-      "text": "#14161A",
-      "textMuted": "#5C6069",
-      "border": "#DDD7CA",
-      "accent": "#8B7245",
-      "accentContrast": "#FBF8F2"
+      "text": "#33261B",
+      "textMuted": "#8A7460",
+      "border": "#E9DDC7",
+      "accent": "#1E6B4F",
+      "accentContrast": "#FFFDF8"
     },
     "dark": {
-      "bg": "#0D0F12",
-      "surface": "#171A1F",
-      "surfaceAlt": "#20242B",
-      "raised": "#262A31",
-      "text": "#F5F1E8",
-      "textMuted": "#A7AEB7",
-      "border": "#2C313A",
-      "accent": "#C9A86A",
-      "accentContrast": "#14161A"
+      "deprecated": "v2 is light-only; this block mirrors light and exists only for type compatibility",
+      "bg": "#FAF4E9",
+      "surface": "#FFFFFF",
+      "surfaceAlt": "#F3EAD9",
+      "raised": "#FFFFFF",
+      "text": "#33261B",
+      "textMuted": "#8A7460",
+      "border": "#E9DDC7",
+      "accent": "#1E6B4F",
+      "accentContrast": "#FFFDF8"
+    },
+    "apps": {
+      "customer": { "accent": "#1E6B4F", "accentName": "meadow green", "accentSoft": "#E2EFE7", "accentContrast": "#FFFDF8" },
+      "partner": { "accent": "#C2502A", "accentName": "clay terracotta", "accentSoft": "#F8E3D8", "accentContrast": "#FFFDF8" },
+      "explore": { "accent": "#6D3B5E", "accentName": "rhododendron plum", "accentSoft": "#F1E2EC", "accentContrast": "#FFFDF8" }
     }
   },
   "typography": {
@@ -57,22 +70,24 @@
     },
     "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700, "display": 800 },
     "usage": {
-      "hero": "4xl / display / tight tracking, warm white on charcoal",
-      "sectionTitle": "2xl / bold / -0.8 tracking",
-      "cardTitle": "lg / semibold",
-      "body": "base / regular",
-      "caption": "sm / regular / muted",
-      "eyebrow": "xs / semibold / 1.6 tracking / uppercase"
+      "hero": "4xl / display / tight tracking, espresso ink on warm paper",
+      "body": "base / body / system sans",
+      "caption": "xs / body / muted taupe"
     }
   },
-  "spacing": { "0": 0, "1": 4, "2": 8, "3": 12, "4": 16, "5": 20, "6": 24, "8": 32, "10": 40, "12": 48, "16": 64, "20": 80 },
-  "radius": { "none": 0, "xs": 4, "sm": 8, "md": 12, "lg": 16, "pill": 999 },
+  "spacing": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 40, "2xl": 64 },
+  "radius": { "sm": 8, "md": 14, "lg": 20, "xl": 28, "pill": 999 },
   "shadow": {
-    "lightSm": "0 1px 2px rgba(20,22,26,0.06), 0 2px 8px rgba(20,22,26,0.04)",
-    "lightMd": "0 4px 12px rgba(20,22,26,0.08), 0 12px 32px rgba(20,22,26,0.06)",
-    "darkSm": "0 1px 2px rgba(0,0,0,0.4)",
-    "darkMd": "0 8px 28px rgba(0,0,0,0.45)"
+    "lightSm": "0 1px 2px rgba(51,38,27,.08)",
+    "lightMd": "0 10px 28px rgba(51,38,27,.12)",
+    "lightLg": "0 24px 60px rgba(51,38,27,.16)",
+    "darkSm": "0 1px 2px rgba(51,38,27,.08)",
+    "darkMd": "0 10px 28px rgba(51,38,27,.12)",
+    "darkLg": "0 24px 60px rgba(51,38,27,.16)"
   },
-  "motion": { "fast": 140, "base": 220, "slow": 380, "page": 460, "splash": 2600, "easing": "cubic-bezier(0.22, 1, 0.36, 1)" },
-  "restrictions": ["no neon blue", "no electric blue", "no cyan", "no bright blue gradients", "no blue glow", "no blue-dominated UI"]
+  "motion": {
+    "fast": 120, "base": 240, "slow": 480, "splash": 2600,
+    "easing": "cubic-bezier(.22,.9,.28,1)",
+    "stagger": 90
+  }
 }

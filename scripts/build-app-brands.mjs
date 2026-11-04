@@ -13,62 +13,68 @@ const baseSymbol = readFileSync(join(root, 'assets/brand/g-symbol.svg'), 'utf8')
 const APPS = [
   {
     dir: 'apps/gowayy-customer/web/public',
-    name: 'GOWAYY', tag: 'customer', accent: '#C9A86A',
-    mark: `<circle cx="432" cy="80" r="26" fill="none" stroke="#C9A86A" stroke-width="10"/><circle cx="432" cy="80" r="8" fill="#C9A86A"/>`,
+    name: 'GOWAYY', tag: 'customer', accent: '#1E6B4F', soft: '#E2EFE7', ink: '#33261B', paper: '#FAF4E9',
+    mark: `<circle cx="432" cy="80" r="26" fill="none" stroke="#1E6B4F" stroke-width="10"/><circle cx="432" cy="80" r="8" fill="#E8A23A"/>`,
   },
   {
     dir: 'apps/gowayy-partner/web/public',
-    name: 'GOWAYY PARTNER', tag: 'partner', accent: '#C9A86A',
-    mark: `<rect x="392" y="44" width="72" height="72" rx="14" fill="none" stroke="#C9A86A" stroke-width="10"/><path d="M410 80 H446 M428 62 V98" stroke="#C9A86A" stroke-width="9" stroke-linecap="round"/>`,
+    name: 'GOWAYY PARTNER', tag: 'partner', accent: '#C2502A', soft: '#F8E3D8', ink: '#33261B', paper: '#FAF4E9',
+    mark: `<rect x="392" y="44" width="72" height="72" rx="14" fill="none" stroke="#C2502A" stroke-width="10"/><path d="M410 80 H446 M428 62 V98" stroke="#C2502A" stroke-width="9" stroke-linecap="round"/>`,
   },
   {
     dir: 'apps/gowayy-explore/web/public',
-    name: 'GOWAYY EXPLORE', tag: 'explore', accent: '#C9A86A',
-    mark: `<circle cx="432" cy="80" r="30" fill="none" stroke="#C9A86A" stroke-width="9"/><path d="M446 66 L436 92 L418 94 L428 68 Z" fill="#C9A86A"/>`,
+    name: 'GOWAYY EXPLORE', tag: 'explore', accent: '#6D3B5E', soft: '#F1E2EC', ink: '#33261B', paper: '#FAF4E9',
+    mark: `<circle cx="432" cy="80" r="30" fill="none" stroke="#6D3B5E" stroke-width="9"/><path d="M446 66 L436 92 L418 94 L428 68 Z" fill="#6D3B5E"/>`,
   },
 ];
 
 const FONT = "'GOWAYY Display','Manrope','Inter','Segoe UI',system-ui,sans-serif";
 
-function symbolWithMark(mark) {
-  return baseSymbol.replace('</svg>', `  <g>${mark}</g>\n</svg>`);
+function symbolWithMark(mark, accent = '#E8A23A') {
+  // Re-tint the shared G family to the app accent (depth layers + crossbar).
+  return baseSymbol
+    .replaceAll('#1E6B4F', accent)
+    .replaceAll('#E8A23A', accent)
+    .replaceAll('#F2C063', accent)
+    .replaceAll('#B97A1F', accent)
+    .replace('</svg>', `  <g>${mark}</g>\n</svg>`);
 }
-function wordmarkSvg(name, width = 760) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 104" role="img" aria-label="${name} wordmark">
-  <title>${name}</title>
-  <text x="8" y="76" font-family="${FONT}" font-size="72" font-weight="800" letter-spacing="6" fill="#F5F1E8">${name}</text>
+function wordmarkSvg(app, width = 760) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 104" role="img" aria-label="${app.name} wordmark">
+  <title>${app.name}</title>
+  <text x="8" y="76" font-family="${FONT}" font-size="72" font-weight="800" letter-spacing="6" fill="${app.ink}">${app.name}</text>
 </svg>`;
 }
 function lockupSvg(app) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 300" role="img" aria-label="${app.name} lockup">
   <title>${app.name}</title>
-  <g transform="translate(20 20) scale(0.52)">${symbolWithMark(app.mark).replace(/<\?xml[^>]*\?>/, '').replace(/<svg[^>]*>|<\/svg>/g, '')}</g>
-  <text x="330" y="180" font-family="${FONT}" font-size="92" font-weight="800" letter-spacing="8" fill="#F5F1E8">${app.name}</text>
+  <g transform="translate(20 20) scale(0.52)">${symbolWithMark(app.mark, app.accent).replace(/<\?xml[^>]*\?>/, '').replace(/<svg[^>]*>|<\/svg>/g, '')}</g>
+  <text x="330" y="180" font-family="${FONT}" font-size="92" font-weight="800" letter-spacing="8" fill="${app.ink}">${app.name}</text>
 </svg>`;
 }
 function iconSvg(app) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="${app.name} app icon">
   <title>${app.name}</title>
-  <rect width="512" height="512" rx="112" fill="#14161A"/>
-  <g transform="translate(56 56) scale(0.78)">${symbolWithMark(app.mark).replace(/<\?xml[^>]*\?>/, '').replace(/<svg[^>]*>|<\/svg>/g, '')}</g>
+  <rect width="512" height="512" rx="112" fill="${app.soft}"/>
+  <g transform="translate(56 56) scale(0.78)">${symbolWithMark(app.mark, app.accent).replace(/<\?xml[^>]*\?>/, '').replace(/<svg[^>]*>|<\/svg>/g, '')}</g>
 </svg>`;
 }
 function splashSvg(app) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-label="${app.name} splash">
   <title>${app.name} splash</title>
-  <rect width="1080" height="1080" fill="#0D0F12"/>
-  <circle cx="540" cy="470" r="330" fill="none" stroke="#C9A86A" stroke-opacity="0.25" stroke-width="2"/>
-  <circle cx="540" cy="470" r="250" fill="none" stroke="#C9A86A" stroke-opacity="0.18" stroke-width="2"/>
-  <g transform="translate(290 220) scale(1.0)">${symbolWithMark(app.mark).replace(/<\?xml[^>]*\?>/, '').replace(/<svg[^>]*>|<\/svg>/g, '')}</g>
-  <text x="540" y="920" text-anchor="middle" font-family="${FONT}" font-size="64" font-weight="800" letter-spacing="14" fill="#F5F1E8">${app.name}</text>
+  <rect width="1080" height="1080" fill="${app.paper}"/>
+  <circle cx="540" cy="470" r="330" fill="none" stroke="${app.accent}" stroke-opacity="0.30" stroke-width="2"/>
+  <circle cx="540" cy="470" r="250" fill="none" stroke="${app.accent}" stroke-opacity="0.20" stroke-width="2"/>
+  <g transform="translate(290 220) scale(1.0)">${symbolWithMark(app.mark, app.accent).replace(/<\?xml[^>]*\?>/, '').replace(/<svg[^>]*>|<\/svg>/g, '')}</g>
+  <text x="540" y="920" text-anchor="middle" font-family="${FONT}" font-size="64" font-weight="800" letter-spacing="14" fill="${app.ink}">${app.name}</text>
 </svg>`;
 }
 
 for (const app of APPS) {
   const dir = join(root, app.dir, 'brand');
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'g-symbol.svg'), symbolWithMark(app.mark));
-  writeFileSync(join(dir, 'wordmark.svg'), wordmarkSvg(app.name));
+  writeFileSync(join(dir, 'g-symbol.svg'), symbolWithMark(app.mark, app.accent));
+  writeFileSync(join(dir, 'wordmark.svg'), wordmarkSvg(app));
   writeFileSync(join(dir, 'lockup.svg'), lockupSvg(app));
   writeFileSync(join(dir, 'icon.svg'), iconSvg(app));
   writeFileSync(join(dir, 'splash-logo.svg'), splashSvg(app));

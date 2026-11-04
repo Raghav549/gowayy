@@ -13,7 +13,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter><Root /></BrowserRouter>
+      <BrowserRouter><div className="app-explore" style={{ minHeight: '100vh' }}><Root /></div></BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,
 );

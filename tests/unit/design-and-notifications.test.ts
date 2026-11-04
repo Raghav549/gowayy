@@ -13,15 +13,26 @@ describe('brand identity and design system', () => {
     expect(brandTokens).toEqual(raw);
   });
 
-  it('provides both light and dark themes with balanced contrast tokens', () => {
+  it('is LIGHT-ONLY (v2): no dark surfaces anywhere, dark block mirrors light for compatibility', () => {
     expect(themes.light.text).toBeTruthy();
     expect(themes.dark.text).toBeTruthy();
-    expect(themes.light.bg).not.toBe(themes.dark.bg);
+    expect(themes.light.bg).toBe(themes.dark.bg); // v2 ships a single light system
+    // every surface/background token must be light (high luminance, no dark hex)
+    const lum = (hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    };
+    for (const key of ['bg', 'surface', 'surfaceAlt', 'raised'] as const) {
+      expect(lum(themes.light[key])).toBeGreaterThan(0.75);
+    }
     const light = cssVariables('light');
     const dark = cssVariables('dark');
-    expect(light['--gw-bg']).not.toBe(dark['--gw-bg']);
+    expect(light['--gw-bg']).toBe(dark['--gw-bg']);
     expect(light['--gw-champagne']).toBe(dark['--gw-champagne']);
     expect(Object.keys(cssVariables('dark')).length).toBeGreaterThan(20);
+    // per-app accents exist and are distinct
+    expect(brandTokens.colour.apps.customer.accent).not.toBe(brandTokens.colour.apps.partner.accent);
+    expect(brandTokens.colour.apps.partner.accent).not.toBe(brandTokens.colour.apps.explore.accent);
   });
 
   it('enforces the strict colour restrictions (no blue/cyan/neon palette)', () => {

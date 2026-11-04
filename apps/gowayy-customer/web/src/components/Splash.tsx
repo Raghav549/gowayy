@@ -35,9 +35,9 @@ export function Splash({ onDone }: { onDone: () => void }) {
 
     const layers: THREE.Mesh[] = [];
     const specs = [
-      { colour: 0x1B1E23, z: -0.55, depth: 0.20, x: 0.10, y: -0.10, metal: 0.25, rough: 0.75 },
-      { colour: 0xC9A86A, z: -0.28, depth: 0.18, x: 0.05, y: -0.05, metal: 0.85, rough: 0.30 },
-      { colour: 0xE9E1D0, z: 0.0, depth: 0.16, x: 0, y: 0, metal: 0.62, rough: 0.28 },
+      { colour: 0x1E6B4F, z: -0.55, depth: 0.20, x: 0.10, y: -0.10, metal: 0.25, rough: 0.75 },
+      { colour: 0xE8A23A, z: -0.28, depth: 0.18, x: 0.05, y: -0.05, metal: 0.85, rough: 0.30 },
+      { colour: 0xFFFDF8, z: 0.0, depth: 0.16, x: 0, y: 0, metal: 0.62, rough: 0.28 },
     ];
     for (const s of specs) {
       const geo = new THREE.ExtrudeGeometry(shape, { depth: s.depth, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.018, bevelSegments: 2, curveSegments: 2 });
@@ -48,9 +48,9 @@ export function Splash({ onDone }: { onDone: () => void }) {
       scene.add(mesh); layers.push(mesh);
     }
     const ambient = new THREE.AmbientLight(0xffffff, 0.55); scene.add(ambient);
-    const key = new THREE.DirectionalLight(0xFFF3DC, 2.1); key.position.set(-3, 4, 6); scene.add(key);
-    const sweep = new THREE.PointLight(0xD9BE86, 3.2, 14); sweep.position.set(3, 2, 4); scene.add(sweep);
-    const fill = new THREE.DirectionalLight(0x9AA1AA, 0.6); fill.position.set(3, -3, 2); scene.add(fill);
+    const key = new THREE.DirectionalLight(0xFBEED3, 2.1); key.position.set(-3, 4, 6); scene.add(key);
+    const sweep = new THREE.PointLight(0xF2C063, 3.2, 14); sweep.position.set(3, 2, 4); scene.add(sweep);
+    const fill = new THREE.DirectionalLight(0xC9BBA3, 0.6); fill.position.set(3, -3, 2); scene.add(fill);
 
     let raf = 0; const start = performance.now(); let finished = false;
     const finish = () => { if (finished) return; finished = true; onDone(); };
@@ -83,7 +83,7 @@ export function Splash({ onDone }: { onDone: () => void }) {
     <div className="splash" role="img" aria-label="GOWAYY loading animation">
       <div ref={mountRef} className="splash__canvas" />
       <div className="splash__content">
-        <img className={`splash__wordmark ${word ? 'show' : ''}`} src="/brand/wordmark.png" alt="GOWAYY" />
+        <img className={`splash__wordmark ${word ? 'show' : ''}`} src="/brand/wordmark.svg" alt="GOWAYY" />
         <div className={`splash__tag ${word ? 'show' : ''}`}>Connected journeys</div>
       </div>
       <button className="btn btn--ghost splash__skip" onClick={onDone}>Skip</button>

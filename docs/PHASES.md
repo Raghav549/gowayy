@@ -129,3 +129,22 @@ Verified in this workspace:
   channels, `docs/DEPLOYMENT.md`.
 - `npm run verify` green: 68 unit + 25 integration + 16 supabase + 5 edge tests, secret
   scan clean, all three web apps build.
+
+## Phase 9 — full visual redesign v2 + three Android apps (2026-11-04)
+
+- **Light-only redesign ("Himalayan Morning")**: new `brand-tokens.json` v2 (warm paper
+  #FAF4E9, espresso ink, honey gold; NO black/charcoal/grey/dark/neon/metallic anywhere —
+  enforced by unit tests), per-app accents (customer meadow #1E6B4F, partner clay #C2502A,
+  explore plum #6D3B5E), regenerated per-app SVG brand assets + Android PNG icons/splash
+  (pure-Node rasterizer, no new deps), splash/onboarding/map/placeholders re-themed.
+- **GOWAYY PARTNER Android app** (`apps/gowayy-partner/mobile`, `app.gowayy.partner`):
+  splash → 3-scene onboarding → OTP auth → pill-rail tabs (Home/Inbox/Manage/Earnings/
+  Profile) wired to the shared partner ops (claims, profile, inbox, earnings, settlements).
+- **GOWAYY EXPLORE Android app** (`apps/gowayy-explore/mobile`, `app.gowayy.explore`):
+  splash → onboarding → Discover/Gems/Search/Saved + destination detail with booking
+  handoff to GOWAYY (`?source=explore`).
+- **CI/CD repaired**: `denoland/setup-deno@v1` (the old slug did not exist), explicit
+  `permissions: contents: read`, mobile installs + typechecks for all three apps in CI,
+  three EAS build jobs in `mobile-build.yml`, permissions on `deploy-web.yml`.
+- `npm run verify` green incl. typecheck of all three Expo apps; 68 unit + 25 integration
+  + 16 supabase + 5 edge tests; all three web apps build.
