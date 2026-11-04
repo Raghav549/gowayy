@@ -115,12 +115,12 @@ jobs:
         with:
           packages: 'platform-tools'
           accept-android-sdk-licenses: true
-      - name: Install and verify React Native Android SDK components
-        run: |
-          sdkmanager --install 'platforms;android-37' 'build-tools;37.0.0' 'ndk;27.1.12297006'
-          test -d "$ANDROID_HOME/platforms/android-37"
-          test -d "$ANDROID_HOME/build-tools/37.0.0"
-          test -d "$ANDROID_HOME/ndk/27.1.12297006"
+      - name: Install Android API 37 platform
+        run: sdkmanager --install 'platforms;android-37' && test -d "$ANDROID_HOME/platforms/android-37"
+      - name: Install Android Build Tools 37.0.0
+        run: sdkmanager --install 'build-tools;37.0.0' && test -d "$ANDROID_HOME/build-tools/37.0.0"
+      - name: Install Android NDK 27.1.12297006
+        run: sdkmanager --install 'ndk;27.1.12297006' && test -d "$ANDROID_HOME/ndk/27.1.12297006"
 
       - name: Install repository dependencies
         run: npm ci --no-audit --no-fund
