@@ -22,13 +22,14 @@
       "@gowayy/validation": ["packages/validation/src/index.ts"],
       "@gowayy/shared-utils": ["packages/shared-utils/src/index.ts"],
       "@gowayy/design-system": ["packages/design-system/src/index.ts"],
-      "@gowayy/ui": ["packages/ui/src/index.ts"],
+      "@gowayy/ui": ["packages/ui/src/index.tsx"],
       "@gowayy/api-client": ["packages/api-client/src/index.ts"],
       "@gowayy/booking-engine": ["packages/booking-engine/src/index.ts"],
       "@gowayy/location-engine": ["packages/location-engine/src/index.ts"],
       "@gowayy/pricing-engine": ["packages/pricing-engine/src/index.ts"],
       "@gowayy/notification-engine": ["packages/notification-engine/src/index.ts"],
-      "@gowayy/catalog": ["packages/catalog/src/index.ts"]
+      "@gowayy/catalog": ["packages/catalog/src/index.ts"],
+      "@gowayy/commerce": ["packages/commerce/src/index.ts"]
     }
   }
 }

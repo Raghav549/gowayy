@@ -87,5 +87,5 @@ export function progressFor(status: BookingStatus): number {
 export const SERVICE_LABELS: Record<ServiceKind, string> = {
   cab: 'Cab', shared_taxi: 'Shared taxi', food: 'Food', grocery: 'Groceries',
   hotel: 'Hotel', homestay: 'Homestay', tourism: 'Tourism', experience: 'Experience',
-  package: 'Package', parcel: 'Parcel',
+  package: 'Package', parcel: 'Parcel', marketplace: 'Marketplace',
 };

@@ -32,6 +32,10 @@ import {
 } from '@gowayy/booking-engine';
 import { buildNotification, toNotification, deduplicate } from '@gowayy/notification-engine';
 import { makeId, randomToken, nowIso, nightsBetween, formatINR, slugify } from '@gowayy/shared-utils';
+import { createCommerceModule } from './commerce.mjs';
+import { createPartnerHub } from './partner-hub.mjs';
+import { quoteCheckout, assertVariantAvailable } from '@gowayy/commerce';
+import { getProduct } from '@gowayy/catalog';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const DATA_DIR = join(ROOT, 'apps/dev-api/data');
@@ -50,6 +54,9 @@ function emptyDb() {
     journeys: [], bookings: [], orders: [], payments: [], transactions: [],
     notifications: [], drivers: [], jobs: [], tickets: [], addresses: [], savedPlaces: [],
     reviews: [], inventory: {}, roomAvailability: {}, sharedSeats: {},
+    carts: {}, wishlist: {}, productStock: {}, productViews: {}, searchHistory: {},
+    partners: [], partnerProfiles: {}, partnerDocuments: {}, menus: {}, rooms: {}, tours: {},
+    settlements: [], wallet: {},
     coupons: [
       { code: 'GOWAYY100', kind: 'flat', valuePaise: 10000, minSubtotalPaise: 30000, active: true },
       { code: 'WELCOME10', kind: 'percent', valuePercent: 10, maxPaise: 20000, minSubtotalPaise: 20000, active: true },
@@ -173,7 +180,7 @@ function idempotency(req, fn) {
   return fn();
 }
 const actorFor = (user, service) => {
-  const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'] };
+  const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'], tour_operator: ['tourism', 'package', 'experience'] };
   const isPartner = user.roles.some((r) => (partnerServices[r] ?? []).includes(service));
   return isPartner ? 'partner' : 'customer';
 };
@@ -312,8 +319,55 @@ function verifyWebhook(rawBody, signature) {
   return { duplicate: false, payment };
 }
 
+// ------------------------------------------------- marketplace checkout ----
+/** Server-priced marketplace checkout from the customer's cart. */
+function placeOrderFromCart(user, body) {
+  const cart = db.carts[user.id] ?? { lines: [] };
+  const lines = cart.lines.length ? cart.lines : (Array.isArray(body.lines) ? body.lines : []);
+  if (!lines.length) bad('CART_EMPTY', 'Your cart is empty', 409);
+  const address = db.addresses.find((a) => a.id === body.addressId && a.userId === user.id);
+  if (!address) bad('ADDRESS_REQUIRED', 'Choose a delivery address', 422);
+  const method = String(body.paymentMethod ?? '');
+  const priced = lines.map((l) => {
+    const p = getProduct(l.productId);
+    const v = p?.variants.find((x) => x.id === l.variantId);
+    if (!p || !v) bad('ITEM_UNAVAILABLE', 'A cart item is no longer available', 409);
+    const stock = db.productStock[`${p.id}:${v.id}`] ?? v.stock;
+    assertVariantAvailable({ ...v, stock }, Number(l.quantity));
+    const plan = l.protectionPlanId ? p.protectionPlans.find((pl) => pl.id === l.protectionPlanId) : null;
+    if (l.protectionPlanId && !plan) bad('PLAN_NOT_FOUND', 'Protection plan no longer offered', 409);
+    return { id: p.id, variantId: v.id, name: p.name, variantLabel: v.label, quantity: Number(l.quantity), unitPricePaise: v.pricePaise, mrpPaise: v.mrpPaise, protectionPlanId: plan?.id ?? null, protectionPaise: plan ? plan.pricePaise * Number(l.quantity) : 0 };
+  });
+  const coupon = body.coupon ? (db.coupons ?? []).find((c) => c.code === String(body.coupon).trim().toUpperCase() && c.active) : null;
+  if (body.coupon && !coupon) bad('INVALID_COUPON', 'This coupon code is not valid');
+  const deliveryFeePaise = body.deliverySlot === 'express' ? 9900 : 0;
+  const allPlans = catalogue.marketplaceProducts.flatMap((p) => p.protectionPlans);
+  const quote = quoteCheckout({ lines: priced.map((l) => ({ unitPricePaise: l.unitPricePaise, quantity: l.quantity, protectionPlanId: l.protectionPlanId })), protectionPlans: allPlans, deliveryFeePaise, coupon });
+  const order = {
+    id: makeId('ord'), reference: reference('order'), userId: user.id, service: 'marketplace',
+    status: 'created', journeyId: body.journeyId ?? null, listingId: null,
+    items: priced.map((l) => ({ id: l.id, name: `${l.name} (${l.variantLabel})`, quantity: l.quantity, unitPricePaise: l.unitPricePaise, options: l.protectionPlanId ? [l.protectionPlanId] : [] })),
+    protection: priced.filter((l) => l.protectionPlanId).map((l) => ({ planId: l.protectionPlanId, paise: l.protectionPaise })),
+    price: { ...quote, lines: [{ label: 'Items', paise: quote.itemsPaise }, { label: 'Protection', paise: quote.protectionPaise }, { label: 'Delivery', paise: deliveryFeePaise }, { label: 'Discount', paise: -quote.discountPaise }, { label: `GST (5%)`, paise: quote.taxPaise }], totalPaise: quote.totalPaise },
+    deliveryAddress: address, instructions: String(body.instructions ?? ''), slot: body.deliverySlot ?? 'standard',
+    coupon: quote.appliedCoupon, paymentId: null, paymentMethod: method, createdAt: nowIso(), updatedAt: nowIso(),
+  };
+  for (const l of priced) db.productStock[`${l.id}:${l.variantId}`] = (db.productStock[`${l.id}:${l.variantId}`] ?? 0) - l.quantity;
+  db.orders.push(order);
+  db.carts[user.id] = { lines: [], updatedAt: nowIso() };
+  db.jobs.push({ id: makeId('job'), service: 'marketplace', bookingId: null, orderId: order.id, status: 'open', driverId: null, createdAt: nowIso() });
+  notify(user.id, { type: 'booking.created', reference: order.reference, service: 'marketplace' });
+  audit(user.id, 'order.created', { orderId: order.id, service: 'marketplace', totalPaise: quote.totalPaise });
+  return order;
+}
+
 // ------------------------------------------------------------------ routing -
 const ok = (res, body, status = 200) => { save(); send(res, status, body); };
+
+const commerce = createCommerceModule({
+  db: () => db, bad, auth, rateLimit, notify, audit, placeOrderFromCart,
+});
+const partnerHub = createPartnerHub({ db: () => db, bad, auth, rateLimit, notify, audit, formatINR });
 
 async function route(req, res, url) {
   const method = req.method ?? 'GET';
@@ -582,7 +636,7 @@ async function route(req, res, url) {
   }
   if (method === 'POST' && tail[0] === 'bookings' && tail[2] === 'transition') {
     const { user } = auth(req);
-    const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'] };
+    const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'], tour_operator: ['tourism', 'package', 'experience'] };
     const partnerOf = new Set(user.roles.flatMap((r) => partnerServices[r] ?? []));
     const b = db.bookings.find((x) => x.id === tail[1] && (x.userId === user.id || partnerOf.has(x.service)));
     if (!b) bad('NOT_FOUND', 'Booking not found', 404);
@@ -738,12 +792,12 @@ async function route(req, res, url) {
     const { user } = auth(req);
     const role = body.role;
     const valid = { restaurant: catalogue.restaurants, grocery: catalogue.groceryStores, property: catalogue.properties };
-    if (!valid[role]) bad('INVALID_ROLE', 'Choose restaurant, grocery or property partner role');
-    if (!valid[role].some((x) => x.id === body.listingId)) bad('LISTING_NOT_FOUND', 'Unknown partner listing', 404);
+    if (role !== 'tour_operator' && !valid[role]) bad('INVALID_ROLE', 'Choose restaurant, grocery, property or tour_operator partner role');
+    if (role !== 'tour_operator' && !valid[role].some((x) => x.id === body.listingId)) bad('LISTING_NOT_FOUND', 'Unknown partner listing', 404);
     if (!user.roles.includes(role)) user.roles.push(role);
     db.partners ??= [];
-    db.partners.push({ userId: user.id, role, listingId: body.listingId, claimedAt: nowIso(), demo: true });
-    audit(user.id, 'partner.claimed', { role, listingId: body.listingId });
+    db.partners.push({ userId: user.id, role, listingId: body.listingId ?? null, claimedAt: nowIso(), demo: true });
+    audit(user.id, 'partner.claimed', { role, listingId: body.listingId ?? null });
     return ok(res, { user: publicUser(user), demoNotice: 'Development partner claim — production requires document verification.' });
   }
   if (method === 'POST' && path === '/api/partners/drivers') {
@@ -779,7 +833,7 @@ async function route(req, res, url) {
   }
   if (method === 'GET' && path === '/api/partners/requests') {
     const { user } = auth(req);
-    const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'] };
+    const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'], tour_operator: ['tourism', 'package', 'experience'] };
     const services = new Set(user.roles.flatMap((r) => partnerServices[r] ?? []));
     return send(res, 200, {
       bookings: db.bookings.filter((b) => services.has(b.service) && ['requested', 'awaiting_payment', 'confirmed'].includes(b.status)),
@@ -810,6 +864,12 @@ async function route(req, res, url) {
     return ok(res, { job, driver });
   }
 
+  // ------- marketplace commerce + partner hub modules -------
+  await commerce.handle(req, res, method, tail, body, q, send, ok);
+  if (res.headersSent) return;
+  await partnerHub.handle(req, res, method, tail, body, q, send, ok);
+  if (res.headersSent) return;
+
   if (method === 'POST' && path === '/api/dev/reset' && DEMO_MODE) {
     db = emptyDb(); seedInventory(); audit('dev', 'db.reset', {});
     return ok(res, { reset: true, notice: 'Development database cleared.' });
@@ -826,8 +886,9 @@ const server = http.createServer(async (req, res) => {
   try {
     await route(req, res, url);
   } catch (e) {
-    if (e instanceof HttpError) send(res, e.status, { error: e.code, message: e.message, ...(e.details ? { details: e.details } : {}) });
-    else { console.error('[dev-api] unhandled error', e); send(res, 500, { error: 'INTERNAL_ERROR', message: 'An unexpected server error occurred' }); }
+    if (e instanceof HttpError || (e && typeof e === 'object' && typeof e.status === 'number')) {
+      send(res, e.status, { error: e.code, message: e.message, ...(e.details ? { details: e.details } : {}) });
+    } else { console.error('[dev-api] unhandled error', e); send(res, 500, { error: 'INTERNAL_ERROR', message: 'An unexpected server error occurred' }); }
   }
 });
 server.listen(PORT, '0.0.0.0', () => console.log(`[dev-api] listening on 0.0.0.0:${PORT} (${DEMO_MODE ? 'DEVELOPMENT' : 'production'} mode, demo OTP: ${OTP_PROVIDER})`));

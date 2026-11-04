@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeAll, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { Onboarding } from '../../apps/web/src/components/Onboarding';
+import { Onboarding } from '../../apps/gowayy-customer/web/src/components/Onboarding';
 
 const user = {
   id: 'usr_1', firstName: 'Aarav', lastName: 'Sharma', email: 'aarav@example.com',
@@ -27,10 +27,10 @@ const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
   return { ok: true, status: 200, json: async () => payload } as unknown as Response;
 });
 
-let RegisterFlow: typeof import('../../apps/web/src/components/AuthScreens').RegisterFlow;
+let RegisterFlow: typeof import('../../apps/gowayy-customer/web/src/components/AuthScreens').RegisterFlow;
 beforeAll(async () => {
   vi.stubGlobal('fetch', fetchMock);
-  ({ RegisterFlow } = await import('../../apps/web/src/components/AuthScreens'));
+  ({ RegisterFlow } = await import('../../apps/gowayy-customer/web/src/components/AuthScreens'));
 });
 afterEach(() => { cleanup(); fetchMock.mockClear(); window.localStorage.clear(); });
 

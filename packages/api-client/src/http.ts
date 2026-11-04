@@ -3,6 +3,7 @@ import type {
   Place, SearchHit, Session, SupportTicket, Transaction, User, VehicleClass, SharedTaxiRoute,
   Property, Restaurant, GroceryStore, TourPackage, Experience, Attraction, HiddenGem,
 } from '@gowayy/types';
+import type { PaymentMethodOption } from '@gowayy/commerce';
 
 export interface TokenStore {
   get(): string | null;
@@ -113,6 +114,49 @@ export interface GowayyClient {
   jobs(): Promise<{ items: DispatchJob[]; driver: DriverProfile | null }>;
   acceptJob(id: string): Promise<{ job: DispatchJob; driver: DriverProfile }>;
   resetDev(): Promise<void>;
+  // ---- marketplace commerce ----
+  commerceCategories(): Promise<{ items: Array<{ name: string; count: number }> }>;
+  commerceProducts(filter?: { category?: string; storeId?: string; q?: string }): Promise<{ items: unknown[] }>;
+  productDetail(slug: string): Promise<{ product: unknown }>;
+  recommendedStores(): Promise<{ items: unknown[] }>;
+  recentlyViewedProducts(): Promise<{ items: unknown[] }>;
+  recordProductView(slug: string): Promise<void>;
+  cart(): Promise<{ lines: unknown[]; itemCount: number }>;
+  addToCart(input: { productId: string; variantId: string; quantity: number; protectionPlanId?: string | null }): Promise<{ lines: unknown[] }>;
+  updateCartLine(id: string, input: { quantity?: number; protectionPlanId?: string | null }): Promise<{ lines: unknown[] }>;
+  removeCartLine(id: string): Promise<{ lines: unknown[] }>;
+  clearCart(): Promise<void>;
+  cartQuote(input: { deliverySlot?: string; coupon?: string }): Promise<unknown>;
+  wishlist(): Promise<{ items: unknown[] }>;
+  addToWishlist(productId: string): Promise<void>;
+  removeFromWishlist(productId: string): Promise<void>;
+  recentSearches(): Promise<{ items: string[] }>;
+  recordSearch(q: string): Promise<void>;
+  paymentMethods(totalPaise: number): Promise<{ items: PaymentMethodOption[]; note: string }>;
+  checkout(input: unknown, idempotencyKey: string): Promise<Order>;
+  // ---- GOWAYY PARTNER hub ----
+  partnerOverview(): Promise<Record<string, unknown>>;
+  partnerProfile(): Promise<{ profile: unknown }>;
+  updatePartnerProfile(input: unknown): Promise<{ profile: unknown }>;
+  partnerVerification(): Promise<Record<string, unknown>>;
+  uploadPartnerDocument(input: { type: string; number: string }): Promise<Record<string, unknown>>;
+  partnerInventory(): Promise<{ items: unknown[] }>;
+  adjustInventory(input: { listingId: string; productId: string; delta: number }): Promise<Record<string, unknown>>;
+  partnerMenu(): Promise<{ items: unknown[] }>;
+  addMenuItem(input: unknown): Promise<{ item: unknown }>;
+  updateMenuItem(id: string, input: unknown): Promise<{ item: unknown }>;
+  deleteMenuItem(id: string): Promise<void>;
+  partnerRooms(): Promise<{ items: unknown[] }>;
+  addRoom(input: unknown): Promise<{ room: unknown }>;
+  updateRoom(id: string, input: unknown): Promise<{ room: unknown }>;
+  setAvailability(input: { roomId: string; date: string; delta: number }): Promise<Record<string, unknown>>;
+  partnerTours(): Promise<{ items: unknown[] }>;
+  addTour(input: unknown): Promise<{ tour: unknown }>;
+  updateTour(id: string, input: unknown): Promise<{ tour: unknown }>;
+  partnerEarnings(): Promise<Record<string, unknown>>;
+  partnerSettlements(): Promise<{ items: unknown[] }>;
+  requestSettlement(): Promise<{ settlement: unknown }>;
+  partnerInbox(): Promise<Record<string, unknown>>;
 }
 
 type FetchImpl = typeof fetch;
@@ -221,5 +265,52 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     jobs: () => get('/partners/jobs'),
     acceptJob: (id) => post(`/partners/jobs/${id}/accept`, {}),
     resetDev: async () => { await post('/dev/reset', {}); },
+    commerceCategories: () => get('/commerce/categories'),
+    commerceProducts: async (filter) => {
+      const qs = new URLSearchParams();
+      if (filter?.category) qs.set('category', filter.category);
+      if (filter?.storeId) qs.set('storeId', filter.storeId);
+      if (filter?.q) qs.set('q', filter.q);
+      return get(`/commerce/products${qs.size ? `?${qs}` : ''}`);
+    },
+    productDetail: (slug) => get(`/commerce/products/${encodeURIComponent(slug)}`),
+    recommendedStores: () => get('/commerce/stores'),
+    recentlyViewedProducts: () => get('/products/recently-viewed'),
+    recordProductView: async (slug) => { await post(`/products/${encodeURIComponent(slug)}/view`, {}); },
+    cart: () => get('/cart'),
+    addToCart: (input) => post('/cart/items', input),
+    updateCartLine: (id, input) => patch(`/cart/items/${encodeURIComponent(id)}`, input),
+    removeCartLine: async (id) => (await request<{ lines: unknown[] }>(`/cart/items/${encodeURIComponent(id)}`, { method: 'DELETE' })).lines as never as { lines: unknown[] } as never,
+    clearCart: async () => { await post('/cart/clear', {}); },
+    cartQuote: (input) => post('/cart/quote', input),
+    wishlist: () => get('/wishlist'),
+    addToWishlist: async (productId) => { await post('/wishlist', { productId }); },
+    removeFromWishlist: async (productId) => { await request(`/wishlist/${encodeURIComponent(productId)}`, { method: 'DELETE' }); },
+    recentSearches: () => get('/search/recent'),
+    recordSearch: async (q) => { await post('/search/recent', { q }); },
+    paymentMethods: (totalPaise) => get(`/checkout/payment-methods?totalPaise=${Math.max(0, Math.round(totalPaise))}`),
+    checkout: async (input, key) => (await post<{ order: Order }>('/checkout', input, key)).order,
+    partnerOverview: () => get('/partner/overview'),
+    partnerProfile: () => get('/partner/profile'),
+    updatePartnerProfile: (input) => patch('/partner/profile', input),
+    partnerVerification: () => get('/partner/verification'),
+    uploadPartnerDocument: (input) => post('/partner/documents', input),
+    partnerInventory: () => get('/partner/inventory'),
+    adjustInventory: (input) => post('/partner/inventory', input),
+    partnerMenu: () => get('/partner/menu'),
+    addMenuItem: (input) => post('/partner/menu', input),
+    updateMenuItem: (id, input) => patch(`/partner/menu/${encodeURIComponent(id)}`, input),
+    deleteMenuItem: async (id) => { await request(`/partner/menu/${encodeURIComponent(id)}`, { method: 'DELETE' }); },
+    partnerRooms: () => get('/partner/rooms'),
+    addRoom: (input) => post('/partner/rooms', input),
+    updateRoom: (id, input) => patch(`/partner/rooms/${encodeURIComponent(id)}`, input),
+    setAvailability: (input) => post('/partner/availability', input),
+    partnerTours: () => get('/partner/tours'),
+    addTour: (input) => post('/partner/tours', input),
+    updateTour: (id, input) => patch(`/partner/tours/${encodeURIComponent(id)}`, input),
+    partnerEarnings: () => get('/partner/earnings'),
+    partnerSettlements: () => get('/partner/settlements'),
+    requestSettlement: () => post('/partner/settlements/request', {}),
+    partnerInbox: () => get('/partner/inbox'),
   };
 }

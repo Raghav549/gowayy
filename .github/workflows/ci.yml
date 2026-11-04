@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'arena/**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Typecheck · unit · integration · supabase · edge · secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install workspace dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install mobile (Expo) dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: apps/gowayy-customer/mobile
+
+      - name: Typecheck (web + shared packages)
+        run: npm run typecheck
+
+      - name: Typecheck (Expo mobile)
+        run: npm run typecheck:mobile
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Integration tests (dev-api over HTTP)
+        run: npm run test:integration
+
+      - name: Supabase schema + seed tests (PGlite)
+        run: npm run test:supabase
+
+      - name: Edge function tests (Deno)
+        run: npm run test:edge
+
+      - name: Secret scan
+        run: npm run scan:secrets
+
+      - name: Build all three web apps
+        run: npm run build:all

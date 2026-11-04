@@ -3,7 +3,7 @@ import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(root, 'assets/images/destinations');
-const dst = join(root, 'apps/web/public/images/destinations');
+const dst = join(root, 'apps/gowayy-customer/web/public/images/destinations');
 mkdirSync(dst, { recursive: true });
 let count = 0;
 function walk(dir) {
@@ -18,4 +18,4 @@ function walk(dir) {
   }
 }
 walk(src);
-console.log(`synced ${count} optimized destination images into apps/web/public/images/destinations`);
+console.log(`synced ${count} optimized destination images into apps/gowayy-customer/web/public/images/destinations`);

@@ -8,7 +8,7 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const roots = [
-  'apps/web/src', 'apps/mobile/app', 'apps/mobile/src', 'apps/dev-api/src',
+  'apps/gowayy-customer/web/src', 'apps/gowayy-customer/mobile/app', 'apps/gowayy-customer/mobile/src', 'apps/dev-api/src',
   'packages', 'supabase/functions', 'supabase/migrations', 'supabase/seed', 'scripts',
 ];
 const skipDirs = new Set(['node_modules', 'dist', 'build', '.expo', '.git', 'coverage', '__pycache__']);

@@ -1,0 +1,12 @@
+{
+  "name": "GOWAYY EXPLORE",
+  "short_name": "Explore",
+  "description": "Destination discovery and tourism content for the Darjeeling Himalaya.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0F12",
+  "theme_color": "#0D0F12",
+  "icons": [
+    { "src": "/brand/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
