@@ -64,7 +64,7 @@ describe('brand identity and design system', () => {
       'assets/brand/android-icon-foreground.svg', 'assets/brand/android-icon-background.svg',
       'assets/brand/android-monochrome-icon.svg',
       'apps/gowayy-customer/mobile/assets/branding/app-icon.png', 'apps/gowayy-customer/mobile/assets/branding/icon-foreground.png',
-      'apps/gowayy-customer/mobile/assets/branding/icon-monochrome.png', 'apps/gowayy-customer/mobile/assets/branding/splash-logo.png',
+      'apps/gowayy-customer/mobile/assets/branding/icon-monochrome.png', 'apps/gowayy-customer/mobile/assets/branding/g-symbol.png',
     ]) {
       const stat = readFileSync(join(root, file));
       expect(stat.length).toBeGreaterThan(100);

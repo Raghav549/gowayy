@@ -5,13 +5,13 @@ apps/
   gowayy-customer/
     web/       React + Vite PWA (port 5173); splash, 4-scene onboarding, auth+OTP,
                home, services, marketplace (products/cart/checkout), journey, profile
-    mobile/    Expo SDK 58 + Expo Router Android (EAS build + OTA); same flows
+    mobile/    Expo SDK 57 + Expo Router Android (native Gradle APKs in GitHub Actions); same flows
   gowayy-partner/
     web/       React + Vite partner app (port 5174)
-    mobile/    Expo Android app `app.gowayy.partner` (own EAS project + OTA channel)
+    mobile/    Expo Android app `app.gowayy.partner` (independent signed APK and release)
   gowayy-explore/
     web/       React + Vite explore PWA (port 5175): offline shell, booking handoff
-    mobile/    Expo Android app `app.gowayy.explore` (own EAS project + OTA channel)
+    mobile/    Expo Android app `app.gowayy.explore` (independent signed APK and release)
   dev-api/     Node HTTP development API (real persistence, pricing, auth, dispatch,
                commerce, partner hub)
 packages/
@@ -25,7 +25,7 @@ tests/
   unit/ integration/ supabase/  + Deno tests under supabase/functions/tests/
 assets/ brand/ mascot/ images/ (brand assets, 12-pose mascot, verified photos + manifest)
 docs/   this documentation set
-.github/workflows/  ci.yml, deploy-web.yml (3 Vercel projects), mobile-build.yml (EAS)
+.github/workflows/  CI + per-app Vercel deployments + direct native Gradle APK builds/releases
 ```
 
 ## Three apps, one contract

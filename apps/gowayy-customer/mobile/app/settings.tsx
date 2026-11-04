@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { client, apiBaseUrl, assetBaseUrl } from '../src/lib/client';
@@ -8,6 +9,7 @@ import { useTheme, font, spacing } from '../src/theme';
 import { expoLocationProvider } from '../src/lib/location';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { c } = useTheme();
   const qc = useQueryClient();
   const showToast = useUI((s) => s.showToast);
@@ -36,6 +38,7 @@ export default function SettingsScreen() {
   return (
     <Screen>
       <SectionTitle eyebrow="Configuration" title="App & connection" />
+      <Card><Text style={{ color: c.text, fontWeight: '600' }}>App updates</Text><Text style={{ color: c.textMuted, fontSize: font.sizes.xs }}>Check and install the latest Customer app release.</Text><Button title="Check for updates" variant="secondary" onPress={() => router.push('/update')} /></Card>
       <Card>
         <Text style={{ color: c.text, fontWeight: '600' }}>Backend</Text>
         <Text style={{ color: c.textMuted, fontSize: font.sizes.xs }}>{apiBaseUrl}</Text>

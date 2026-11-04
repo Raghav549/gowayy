@@ -1,128 +1,267 @@
-name: Android APK builds (Customer, Partner, Explore)
-
-# Native Android builds are EAS-only. Every push/PR runs Expo prebuild,
-# typechecks and Android JS exports; main pushes and manual dispatches additionally
-# build preview-profile APKs in EAS, download them, and upload GitHub artifacts.
+name: Android APK builds
 
 on:
   push:
     branches: [main, 'arena/**']
     paths:
-      - 'apps/gowayy-customer/mobile/**'
-      - 'apps/gowayy-partner/mobile/**'
-      - 'apps/gowayy-explore/mobile/**'
+      - 'apps/gowayy-customer/**'
+      - 'apps/gowayy-explore/**'
+      - 'apps/gowayy-partner/**'
+      - 'apps/dev-api/**'
       - 'packages/**'
+      - 'assets/brand/**'
+      - 'supabase/functions/**'
+      - 'supabase/migrations/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.base.json'
       - '.github/workflows/mobile-build.yml'
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  native-check:
-    name: 'Expo check · ${{ matrix.app }}'
+  detect:
+    name: Detect affected Android apps
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        app:
-          - customer
-          - partner
-          - explore
+    outputs:
+      customer: ${{ steps.filter.outputs.customer }}
+      explore: ${{ steps.filter.outputs.explore }}
+      partner: ${{ steps.filter.outputs.partner }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
-      - name: Install monorepo workspace dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Install mobile dependencies
-        run: npm ci --no-audit --no-fund
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Typecheck app
-        run: npm run typecheck:${{ matrix.app == 'customer' && 'mobile' || matrix.app == 'partner' && 'partner-mobile' || 'explore-mobile' }}
-      - name: Generate native Android project (Expo prebuild)
-        run: npx expo prebuild --platform android --no-install
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Verify Android application id / build config
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
-        run: |
-          grep -E '"package"|"versionCode"' app.json | head -4
-          test -f android/app/build.gradle
-      - name: Production JS bundle for Android
-        run: npx expo export --platform android --output-dir dist-android
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Upload Expo Android bundle
-        uses: actions/upload-artifact@v4
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        if: github.event_name != 'workflow_dispatch'
+        id: filter
         with:
-          name: gowayy-${{ matrix.app }}-android-js-bundle
-          path: apps/gowayy-${{ matrix.app }}/mobile/dist-android
-          if-no-files-found: error
-          retention-days: 14
+          filters: |
+            customer:
+              - 'apps/gowayy-customer/**'
+              - 'apps/dev-api/**'
+              - 'packages/**'
+              - 'assets/brand/**'
+              - 'supabase/functions/**'
+              - 'supabase/migrations/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig.base.json'
+              - '.github/workflows/mobile-build.yml'
+            explore:
+              - 'apps/gowayy-explore/**'
+              - 'apps/dev-api/**'
+              - 'packages/**'
+              - 'assets/brand/**'
+              - 'supabase/functions/**'
+              - 'supabase/migrations/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig.base.json'
+              - '.github/workflows/mobile-build.yml'
+            partner:
+              - 'apps/gowayy-partner/**'
+              - 'apps/dev-api/**'
+              - 'packages/**'
+              - 'assets/brand/**'
+              - 'supabase/functions/**'
+              - 'supabase/migrations/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig.base.json'
+              - '.github/workflows/mobile-build.yml'
 
-  eas-apk:
-    name: 'EAS internal APK · ${{ matrix.app }}'
-    needs: native-check
-    # Production branch pushes and explicit workflow_dispatch runs create APKs;
-    # PRs still get the native prebuild and production-bundle check above.
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+  build:
+    permissions:
+      contents: write
+    name: Build ${{ matrix.app }} APK
+    needs: detect
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        app:
-          - customer
-          - partner
-          - explore
+        include:
+          - app: customer
+            package: app.gowayy.customer
+          - app: explore
+            package: app.gowayy.explore
+          - app: partner
+            package: app.gowayy.partner
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Verify EXPO_TOKEN is configured
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::EXPO_TOKEN repository secret is required for EAS APK builds."
-            echo "Configure it in GitHub repo Settings → Secrets and variables → Actions; see docs/DEPLOYMENT.md §3."
-            exit 1
-          fi
-      - name: Install monorepo workspace dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Install mobile dependencies
-        run: npm ci --no-audit --no-fund
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
-      - name: Verify this app is linked to a real EAS project
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
-        run: |
-          node -e 'const c=require("./app.json").expo; const id=c.extra?.eas?.projectId; if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "")) { console.error("::error::Set expo.extra.eas.projectId to this app’s real EAS project UUID in app.json."); process.exit(1); }'
-      - uses: expo/expo-github-action@v8
+          cache-dependency-path: |
+            package-lock.json
+            apps/gowayy-${{ matrix.app }}/mobile/package-lock.json
+      - uses: actions/setup-java@v5
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build and wait for APK on EAS
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+          accept-android-sdk-licenses: true
+      - name: Install Android API 36 platform
+        run: sdkmanager --install 'platforms;android-36' && test -d "$ANDROID_HOME/platforms/android-36"
+      - name: Install Android Build Tools 36.0.0
+        run: sdkmanager --install 'build-tools;36.0.0' && test -d "$ANDROID_HOME/build-tools/36.0.0"
+      - name: Install Android NDK 27.1.12297006
+        run: sdkmanager --install 'ndk;27.1.12297006' && test -d "$ANDROID_HOME/ndk/27.1.12297006"
+
+      - name: Install repository dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install app dependencies from its lockfile
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
-        run: eas build --platform android --profile preview --non-interactive --wait --json > eas-build-result.json
-      - name: Download completed APK from EAS
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck app
         run: |
-          build_id="$(node -e 'const r=require("./eas-build-result.json"); const b=Array.isArray(r)?r[0]:r; if (!b?.id || b.status !== "FINISHED") throw Error("EAS build did not finish successfully"); process.stdout.write(b.id)')"
-          eas build:download --build-id "$build_id" --json > eas-download-result.json
-          download_path="$(node -e 'const r=require("./eas-download-result.json"); if (!r?.path) throw Error("EAS did not return a downloaded artifact path"); process.stdout.write(r.path)')"
+          case '${{ matrix.app }}' in
+            customer) npm run typecheck:mobile ;;
+            explore) npm run typecheck:explore-mobile ;;
+            partner) npm run typecheck:partner-mobile ;;
+          esac
+      - id: version
+        name: Set unique Android version for this build
+        env:
+          APP: ${{ matrix.app }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          version_code="$((100000 + RUN_NUMBER))"
+          base_version="$(node -p "require('./apps/gowayy-${APP}/mobile/app.json').expo.version")"
+          version_name="${base_version}+build.${RUN_NUMBER}"
+          node scripts/set-mobile-version.mjs "$APP" "$version_name" "$version_code"
+          echo "code=$version_code" >> "$GITHUB_OUTPUT"
+          echo "name=$version_name" >> "$GITHUB_OUTPUT"
+      - name: Generate clean native Android project
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Configure Gradle to use the protected release signing key
+        run: node scripts/configure-android-signing.mjs "apps/gowayy-${{ matrix.app }}/mobile/android/app/build.gradle"
+
+      - name: Validate and install Android signing secrets
+        if: github.ref == 'refs/heads/main'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required GitHub Actions secret: $name. Release APKs must use a persistent signing identity to update existing installations. See docs/DEPLOYMENT.md § Android signing."
+              exit 1
+            fi
+          done
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/gowayy-release.keystore"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          test -s "$ANDROID_KEYSTORE_PATH"
+          keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass:env ANDROID_KEYSTORE_PASSWORD -keypass:env ANDROID_KEY_PASSWORD -alias "$ANDROID_KEY_ALIAS" >/dev/null
+          echo "ANDROID_KEYSTORE_PATH=$ANDROID_KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+          unset ANDROID_KEYSTORE_BASE64
+
+      - name: Build signed release APK
+        if: github.ref == 'refs/heads/main'
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile/android
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon --stacktrace assembleRelease 2>&1 | tee "$RUNNER_TEMP/gradle-build.log"
+      - name: Build installable debug APK (non-production branches)
+        if: github.ref != 'refs/heads/main'
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile/android
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon --stacktrace assembleDebug 2>&1 | tee "$RUNNER_TEMP/gradle-build.log"
+      - name: Surface Gradle failure diagnostics
+        if: failure()
+        run: |
+          if [ -f "$RUNNER_TEMP/gradle-build.log" ]; then
+            awk '/^\* What went wrong:/{show=1; count=0} show && count++ < 45 {print}' "$RUNNER_TEMP/gradle-build.log" | while IFS= read -r line; do echo "::error::$line"; done
+            grep -E '^(FAILURE:|BUILD FAILED|.*Execution failed for task|.*Caused by:|.*error:)' "$RUNNER_TEMP/gradle-build.log" | tail -n 12 | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+
+      - name: Inspect APK package, version, signature and archive
+        env:
+          APP: ${{ matrix.app }}
+          EXPECTED_PACKAGE: ${{ matrix.package }}
+          RUN_NUMBER: ${{ github.run_number }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+        run: |
+          if [ "$GITHUB_REF" = 'refs/heads/main' ]; then
+            built="apps/gowayy-${APP}/mobile/android/app/build/outputs/apk/release/app-release.apk"
+            variant=release
+          else
+            built="apps/gowayy-${APP}/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+            variant=debug
+          fi
+          test -s "$built"
           mkdir -p artifacts
-          cp "$download_path" "artifacts/gowayy-${{ matrix.app }}.apk"
-          test -s "artifacts/gowayy-${{ matrix.app }}.apk"
-          unzip -t "artifacts/gowayy-${{ matrix.app }}.apk" >/dev/null
-          sha256sum "artifacts/gowayy-${{ matrix.app }}.apk"
-          echo "Verified APK artifact for ${{ matrix.app }} ($(du -h "artifacts/gowayy-${{ matrix.app }}.apk" | cut -f1))."
-      - name: Upload installable APK
+          apk="artifacts/gowayy-${APP}.apk"
+          cp "$built" "$apk"
+          apkanalyzer="$(find "$ANDROID_HOME" -type f -name apkanalyzer | head -n 1)"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$apkanalyzer"
+          test -x "$apksigner"
+          actual_package="$($apkanalyzer manifest application-id "$apk")"
+          actual_code="$($apkanalyzer manifest version-code "$apk")"
+          actual_name="$($apkanalyzer manifest version-name "$apk")"
+          test "$actual_package" = "$EXPECTED_PACKAGE"
+          test "$actual_code" = "$((100000 + RUN_NUMBER))"
+          test "$actual_name" = "$VERSION_NAME"
+          "$apksigner" verify --verbose --print-certs "$apk"
+          unzip -t "$apk" >/dev/null
+          sha256sum "$apk"
+          echo "Verified $APP $variant APK: $actual_package $actual_name ($actual_code), $(du -h "$apk" | cut -f1)."
+
+      - name: Create per-app update metadata
+        if: github.ref == 'refs/heads/main'
+        env:
+          APP: ${{ matrix.app }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          node scripts/create-android-update-manifest.mjs "$APP" "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.code }}" "artifacts/gowayy-${APP}.apk" "android-${APP}-build-${RUN_NUMBER}"
+      - name: Upload independently downloadable APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: gowayy-${{ matrix.app }}-android-apk
-          path: apps/gowayy-${{ matrix.app }}/mobile/artifacts/gowayy-${{ matrix.app }}.apk
+          path: artifacts/gowayy-${{ matrix.app }}.apk
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
+      - name: Publish this app's independently versioned release
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || needs.detect.outputs[matrix.app] == 'true')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-${{ matrix.app }}-build-${{ github.run_number }}
+          name: GOWAYY ${{ matrix.app }} Android ${{ steps.version.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            Independent Android release for the **${{ matrix.app }}** app.
+
+            Version: `${{ steps.version.outputs.name }}`
+            Android version code: `${{ steps.version.outputs.code }}`
+            Package: `${{ matrix.package }}`
+            Commit: `${{ github.sha }}`
+
+            Installation is user-approved by Android's package installer. Existing app data is preserved when the package signature matches.
+          files: |
+            artifacts/gowayy-${{ matrix.app }}.apk
+            artifacts/gowayy-${{ matrix.app }}-update.json
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          make_latest: false

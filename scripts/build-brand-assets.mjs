@@ -21,22 +21,22 @@ function render(name, out, size) {
 }
 
 const svgs = ['g-symbol.svg','g-shape.svg','g-mono.svg','g-mono-inverse.svg','wordmark.svg','splash-logo.svg','android-icon-background.svg','android-icon-foreground.svg','android-monochrome-icon.svg','lockup-horizontal.svg'];
-for (const s of svgs) { copyFileSync(join(brand, s), join(web, s)); copyFileSync(join(brand, s), join(mobile, s)); }
+for (const s of svgs) {
+  copyFileSync(join(brand, s), join(web, s));
+  if (s !== 'splash-logo.svg') copyFileSync(join(brand, s), join(mobile, s));
+}
 
 render('g-symbol.svg', join(web, 'g-symbol.png'), 1024);
 render('g-symbol.svg', join(web, 'g-symbol-small.png'), 256);
 render('g-mono.svg', join(web, 'g-mono.png'), 512);
 render('g-mono-inverse.svg', join(web, 'g-mono-inverse.png'), 512);
 render('wordmark.svg', join(web, 'wordmark.png'), 984);
-render('splash-logo.svg', join(web, 'splash-logo.png'), 1080);
-render('splash-logo.svg', join(mobile, 'splash-logo.png'), 1080);
 render('android-icon-background.svg', join(web, 'icon-bg.png'), 1024);
 render('android-icon-background.svg', join(mobile, 'icon-background.png'), 1024);
 render('android-icon-foreground.svg', join(web, 'icon-fg.png'), 1024);
 render('android-icon-foreground.svg', join(mobile, 'icon-foreground.png'), 1024);
 render('android-monochrome-icon.svg', join(mobile, 'icon-monochrome.png'), 1024);
 render('g-symbol.svg', join(images, 'g-symbol.png'), 1024);
-render('splash-logo.svg', join(images, 'splash-logo.png'), 1080);
 render('g-mono.svg', join(web, 'favicon.png'), 64);
 
 // Compose the standard Android launcher icon from adaptive layers.

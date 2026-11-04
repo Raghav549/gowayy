@@ -12,18 +12,17 @@ const SCENES=[
   {title:'Know every settlement',body:'Follow requests, captured payments and transparent partner earnings in one place.',icon:'wallet-outline' as const,color:'#C28A48',label:'ORDERS · EARNINGS · PAYOUTS'},
 ];
 export default function Index(){
-  const router=useRouter();const user=useSession(s=>s.user);const{width}=useWindowDimensions();const[phase,setPhase]=useState<'splash'|'onboarding'|'done'>('splash');const[scene,setScene]=useState(0);const[reduced,setReduced]=useState(false);const reveal=useRef(new Animated.Value(0)).current;const accentReveal=useRef(new Animated.Value(0)).current;const wordReveal=useRef(new Animated.Value(0)).current;
+  const router=useRouter();const user=useSession(s=>s.user);const{width}=useWindowDimensions();const[phase,setPhase]=useState<'splash'|'onboarding'|'done'>('splash');const[scene,setScene]=useState(0);const[reduced,setReduced]=useState(false);const reveal=useRef(new Animated.Value(0)).current;
   useEffect(()=>{let alive=true;AccessibilityInfo.isReduceMotionEnabled().then(v=>{if(alive)setReduced(v)}).catch(()=>undefined);return()=>{alive=false}},[]);
-  useEffect(()=>{if(phase!=='splash')return;reveal.setValue(0);accentReveal.setValue(0);wordReveal.setValue(0);Animated.timing(reveal,{toValue:1,duration:reduced?1:650,easing:Easing.out(Easing.cubic),useNativeDriver:true}).start();const accentTimer=setTimeout(()=>Animated.timing(accentReveal,{toValue:1,duration:reduced?1:580,easing:Easing.out(Easing.cubic),useNativeDriver:true}).start(),reduced?0:260);const wordTimer=setTimeout(()=>Animated.timing(wordReveal,{toValue:1,duration:reduced?1:600,easing:Easing.out(Easing.cubic),useNativeDriver:true}).start(),reduced?0:420);const timer=setTimeout(()=>setPhase(user?'done':'onboarding'),reduced?180:1480);return()=>{clearTimeout(accentTimer);clearTimeout(wordTimer);clearTimeout(timer)}},[phase,reduced,reveal,accentReveal,wordReveal,user]);
+  useEffect(()=>{if(phase!=='splash')return;reveal.setValue(0);Animated.timing(reveal,{toValue:1,duration:reduced?1:1050,easing:Easing.out(Easing.cubic),useNativeDriver:true}).start();const timer=setTimeout(()=>setPhase(user?'done':'onboarding'),reduced?180:1500);return()=>clearTimeout(timer)},[phase,reduced,reveal,user]);
   const advance=()=>scene<SCENES.length-1?setScene(scene+1):setPhase('done');
   if(phase==='splash'){
-    const size=Math.min(width*.52,236);const lift=(v:Animated.Value)=>v.interpolate({inputRange:[0,1],outputRange:[8,0]});
-    return <Pressable onPress={()=>setPhase(user?'done':'onboarding')} accessibilityRole="button" accessibilityLabel="Skip GOWAYY Partner splash" style={{flex:1,backgroundColor:colors.bg,alignItems:'center',justifyContent:'center',gap:6}}>
-      <View style={{width:size,height:size}}>
-        <Animated.View style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:reveal,transform:[{translateY:lift(reveal)}]}}><Image source={require('../assets/branding/g-purple.png')} style={{width:'100%',height:'100%'}} contentFit="contain" accessibilityLabel=""/></Animated.View>
-        <Animated.View style={{position:'absolute',left:0,top:0,right:0,bottom:0,opacity:accentReveal,transform:[{translateY:lift(accentReveal)}]}}><Image source={require('../assets/branding/g-orange.png')} style={{width:'100%',height:'100%'}} contentFit="contain" accessibilityLabel=""/></Animated.View>
-      </View>
-      <Animated.Text accessibilityLiveRegion="polite" style={{opacity:wordReveal,transform:[{translateY:lift(wordReveal)}],color:'#17131B',fontSize:28,lineHeight:34,fontWeight:'800',letterSpacing:2.1}}>GOWAYY PARTNER</Animated.Text>
+    const size=Math.min(width*.52,236);
+    const scale=reveal.interpolate({inputRange:[0,1],outputRange:[.82,1]});
+    return <Pressable onPress={()=>setPhase(user?'done':'onboarding')} accessibilityRole="button" accessibilityLabel="Skip animation" style={{flex:1,backgroundColor:colors.bg,alignItems:'center',justifyContent:'center'}}>
+      <Animated.View style={{width:size,height:size,opacity:reveal,transform:[{scale}]}}>
+        <Image source={require('../assets/branding/g-symbol.png')} style={{width:'100%',height:'100%'}} contentFit="contain" accessibilityLabel="" />
+      </Animated.View>
     </Pressable>;
   }
   if(phase==='onboarding'){

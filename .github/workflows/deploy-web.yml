@@ -1,52 +1,43 @@
 name: Deploy web apps to Vercel
 
-# Build each app in GitHub Actions, verify its dist/index.html, then assemble
-# Vercel's prebuilt static-output contract. This avoids Vercel's remote
-# STATIC_BUILD_NO_OUT_DIR detector for nested monorepo build outputs.
-
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: vercel-production-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   preflight:
-    name: Check deployment configuration
+    name: Validate Vercel credentials and project mapping
     runs-on: ubuntu-latest
-    outputs:
-      vercel: ${{ steps.check.outputs.vercel }}
-      missing: ${{ steps.check.outputs.missing }}
     steps:
-      - id: check
-        run: |
-          missing=""
-          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
-          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
-          for p in VERCEL_PROJECT_CUSTOMER VERCEL_PROJECT_PARTNER VERCEL_PROJECT_EXPLORE; do
-            [ -z "${!p}" ] && missing="$missing $p"
-          done
-          if [ -z "$missing" ]; then
-            echo "vercel=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "vercel=false" >> "$GITHUB_OUTPUT"
-            echo "missing=$missing" >> "$GITHUB_OUTPUT"
-            echo "SKIPPED (visible): missing secrets:$missing — see docs/DEPLOYMENT.md §2"
-          fi
+      - name: Fail visibly if production deployment credentials are absent
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_CUSTOMER: ${{ secrets.VERCEL_PROJECT_CUSTOMER }}
-          VERCEL_PROJECT_PARTNER: ${{ secrets.VERCEL_PROJECT_PARTNER }}
           VERCEL_PROJECT_EXPLORE: ${{ secrets.VERCEL_PROJECT_EXPLORE }}
+          VERCEL_PROJECT_PARTNER: ${{ secrets.VERCEL_PROJECT_PARTNER }}
+        run: |
+          missing=()
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_CUSTOMER VERCEL_PROJECT_EXPLORE VERCEL_PROJECT_PARTNER; do
+            if [ -z "${!name}" ]; then missing+=("$name"); fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Production deploy blocked; configure repository Actions secrets: ${missing[*]}. No deployment was silently skipped."
+            exit 1
+          fi
+          echo "All three app-specific Vercel project IDs and the organization/token are present."
 
   deploy:
-    name: 'Deploy ${{ matrix.app }} web'
+    name: Deploy and smoke-test ${{ matrix.app }} Vercel project
     needs: preflight
-    if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -56,23 +47,27 @@ jobs:
             project: VERCEL_PROJECT_CUSTOMER
             workspace: '@gowayy/customer-web'
             dir: apps/gowayy-customer/web
-          - app: partner
-            project: VERCEL_PROJECT_PARTNER
-            workspace: '@gowayy/partner-web'
-            dir: apps/gowayy-partner/web
+            title: 'GOWAYY — Connected Journeys'
           - app: explore
             project: VERCEL_PROJECT_EXPLORE
             workspace: '@gowayy/explore-web'
             dir: apps/gowayy-explore/web
+            title: 'GOWAYY EXPLORE — Discover the Himalaya'
+          - app: partner
+            project: VERCEL_PROJECT_PARTNER
+            workspace: '@gowayy/partner-web'
+            dir: apps/gowayy-partner/web
+            title: 'GOWAYY PARTNER — Grow your business'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Install monorepo dependencies
+          cache-dependency-path: package-lock.json
+      - name: Install clean monorepo dependencies
         run: npm ci --no-audit --no-fund
-      - name: Link Vercel project and pull production environment
+      - name: Link exactly this Vercel project and pull its production environment
         working-directory: ${{ matrix.dir }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -83,29 +78,53 @@ jobs:
           node -e 'require("node:fs").writeFileSync(".vercel/project.json", JSON.stringify({orgId: process.env.VERCEL_ORG_ID, projectId: process.env.VERCEL_PROJECT_ID}, null, 2))'
           npx --yes vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
           npx --yes vercel@latest env pull .env.production.local --environment=production --yes --token "$VERCEL_TOKEN"
-      - name: Build app with Vercel production environment and assert Vite output exists
+          test -s .env.production.local
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const values = Object.fromEntries(fs.readFileSync('.env.production.local', 'utf8').split(/\r?\n/).filter((line) => line && !line.startsWith('#')).map((line) => { const i=line.indexOf('='); return [line.slice(0,i), line.slice(i+1).trim().replace(/^["']|["']$/g,'')]; }));
+          for (const name of ['VITE_GOWAYY_BACKEND','VITE_SUPABASE_URL','VITE_SUPABASE_ANON_KEY']) if (!values[name]) throw Error(`Missing production Vercel env ${name}`);
+          if (values.VITE_GOWAYY_BACKEND !== 'supabase') throw Error('VITE_GOWAYY_BACKEND must be supabase in production');
+          NODE
+      - name: Build and verify this app's local Vite output
+        env:
+          APP: ${{ matrix.app }}
         run: |
           npm run build -w '${{ matrix.workspace }}'
-          test -s '${{ matrix.dir }}/dist/index.html'
-          echo 'Verified ${{ matrix.dir }}/dist/index.html'
-      - name: Prepare Vercel static output
+          node scripts/verify-web-output.mjs "$APP"
+      - name: Assemble Vercel Build Output API payload for this app only
         run: node scripts/prepare-vercel-output.mjs '${{ matrix.app }}'
-      - name: Deploy prebuilt output
+      - name: Deploy prebuilt app to its own production project
+        id: deploy
         working-directory: ${{ matrix.dir }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx --yes vercel@latest deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN"
+        run: |
+          npx --yes vercel@latest deploy --prebuilt --prod --yes --verify --token "$VERCEL_TOKEN" --json > deployment.json
+          url="$(node -e 'const d=JSON.parse(require("node:fs").readFileSync("deployment.json","utf8")); const u=d.url || d.alias?.[0]; if (!u) throw Error("Vercel returned no deployment URL"); process.stdout.write(u.startsWith("http")?u:`https://${u}`)')"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed ${{ matrix.app }} to $url"
+          curl --fail --silent --show-error "$url/" -o deployed-index.html
+          grep -F '<title>${{ matrix.title }}</title>' deployed-index.html
+          curl --fail --silent --show-error "$url/_vercel_spa_probe/${{ matrix.app }}" -o deep-link.html
+          grep -F '<title>${{ matrix.title }}</title>' deep-link.html
+      - name: Record independently deployed application URL
+        run: |
+          echo "${{ matrix.app }} production URL: ${{ steps.deploy.outputs.url }}"
 
   report:
-    name: Deployment report
+    name: Verify every Vercel deployment completed
     if: always()
     needs: [preflight, deploy]
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          if [ "${{ needs.preflight.outputs.vercel }}" = "true" ]; then
-            echo "Vercel prebuilt production deploys ran for all three apps."
-          else
-            echo "Vercel deploys SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (docs/DEPLOYMENT.md §2)."
+      - name: Fail if credentials, build, deployment, or smoke test failed
+        env:
+          PREFLIGHT: ${{ needs.preflight.result }}
+          DEPLOYMENT: ${{ needs.deploy.result }}
+        run: |
+          echo "Vercel credential preflight: $PREFLIGHT"
+          echo "Three independent Vite deploy and URL smoke tests: $DEPLOYMENT"
+          if [ "$PREFLIGHT" != success ] || [ "$DEPLOYMENT" != success ]; then
+            echo "::error::At least one production deployment failed or was not run."
+            exit 1
           fi
-          echo "deploy results: ${{ toJSON(needs.deploy.results) }}"

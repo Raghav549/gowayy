@@ -22,7 +22,6 @@ for (const app of apps) {
   render(svg('icon.svg'), web('favicon.png'), 192);
   render(svg('icon.svg'), web('app-icon.png'), 1024);
   render(svg('icon.svg'), mobile('app-icon.png'), 1024);
-  render(svg('splash-logo.svg'), mobile('splash-logo.png'), 1080);
   render(svg('g-purple.svg'), mobile('g-purple.png'), 512);
   render(svg('g-orange.svg'), mobile('g-orange.png'), 512);
   render(svg('android-icon-foreground.svg'), mobile('icon-foreground.png'), 432);
@@ -36,5 +35,4 @@ const base = join(root, 'assets/brand');
 const customer = join(root, apps[0].web);
 for (const file of ['g-symbol.svg','g-shape.svg','wordmark.svg','lockup.svg','lockup-horizontal.svg','splash-logo.svg','g-mono.svg','g-mono-inverse.svg','android-icon-foreground.svg','android-icon-background.svg','android-monochrome-icon.svg']) copyFileSync(join(customer,file),join(base,file));
 render(join(base,'g-symbol.svg'),join(root,'assets/images/branding/g-symbol.png'),1024);
-render(join(base,'splash-logo.svg'),join(root,'assets/images/branding/splash-logo.png'),1080);
 console.log('shared and per-app raster assets complete');

@@ -1,9 +1,9 @@
 {
   "name": "gowayy-explore-web",
-  "installCommand": "cd ../.. && npm ci --no-audit --no-fund",
-  "buildCommand": "cd ../.. && npm run build -w @gowayy/explore-web && test -d apps/gowayy-explore/web/dist && echo 'OK: apps/gowayy-explore/web/dist present'",
+  "installCommand": "cd ../../.. && npm ci --no-audit --no-fund",
+  "buildCommand": "cd ../../.. && npm run build -w @gowayy/explore-web && test -s apps/gowayy-explore/web/dist/index.html && echo 'OK: apps/gowayy-explore/web/dist/index.html present'",
   "outputDirectory": "dist",
-  "framework": null,
+  "framework": "vite",
   "rewrites": [
     {
       "source": "/(.*)",

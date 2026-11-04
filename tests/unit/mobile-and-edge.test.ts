@@ -19,7 +19,7 @@ function walk(dir: string): string[] {
 describe('Expo Android application', () => {
   it('has every required route file', () => {
     const routes = [
-      'app/_layout.tsx', 'app/index.tsx', 'app/splash.tsx', 'app/onboarding.tsx',
+      'app/_layout.tsx', 'app/index.tsx', 'app/onboarding.tsx', 'app/update.tsx',
       'app/auth/_layout.tsx', 'app/auth/login.tsx', 'app/auth/register.tsx', 'app/auth/forgot.tsx',
       'app/(tabs)/_layout.tsx', 'app/(tabs)/home.tsx', 'app/(tabs)/explore.tsx',
       'app/(tabs)/bookings.tsx', 'app/(tabs)/orders.tsx', 'app/(tabs)/profile.tsx',
@@ -44,51 +44,110 @@ describe('Expo Android application', () => {
     }
   });
 
-  it('configures Android delivery: package, icons, permissions, deep links and EAS profiles', () => {
-    const app = json<Record<string, any>>('apps/gowayy-customer/mobile/app.json');
-    expect(app.expo.name).toBe('GOWAYY');
-    expect(app.expo.scheme).toBe('gowayy');
-    expect(app.expo.android.package).toBe('app.gowayy.customer');
-    expect(app.expo.android.adaptiveIcon.foregroundImage).toBeTruthy();
-    expect(app.expo.android.adaptiveIcon.monochromeImage).toBeTruthy();
-    expect(app.expo.android.permissions).toContain('ACCESS_FINE_LOCATION');
-    expect(app.expo.android.permissions).toContain('POST_NOTIFICATIONS');
-    expect(JSON.stringify(app.expo.android.intentFilters)).toContain('gowayy.app');
-    for (const asset of ['app-icon.png', 'icon-foreground.png', 'icon-background.png', 'icon-monochrome.png', 'splash-logo.png', 'g-symbol.png', 'g-purple.png', 'g-orange.png']) {
-      expect(existsSync(join(root, 'apps/gowayy-customer/mobile/assets/branding', asset)), asset).toBe(true);
+  it('configures three isolated Android packages and native per-app update flows', () => {
+    const apps = [
+      ['customer', 'app.gowayy.customer', 'GOWAYY'],
+      ['explore', 'app.gowayy.explore', 'GOWAYY EXPLORE'],
+      ['partner', 'app.gowayy.partner', 'GOWAYY PARTNER'],
+    ] as const;
+    const packageIds = new Set<string>();
+    for (const [slug, packageId, name] of apps) {
+      const root = `apps/gowayy-${slug}/mobile`;
+      const app = json<Record<string, any>>(`${root}/app.json`);
+      expect(app.expo.name).toBe(name);
+      expect(app.expo.android.package).toBe(packageId);
+      expect(packageIds.has(packageId)).toBe(false);
+      packageIds.add(packageId);
+      expect(app.expo.android.versionCode).toBeGreaterThan(0);
+      expect(app.expo.splash.image).toBe('./assets/branding/g-symbol.png');
+      expect(app.expo.android.permissions).toContain('REQUEST_INSTALL_PACKAGES');
+      expect(existsSync(join(root, 'assets/branding/g-symbol.png'))).toBe(true);
+      expect(existsSync(join(root, 'assets/branding/splash-logo.png'))).toBe(false);
+      expect(existsSync(join(root, 'assets/branding/splash-logo.svg'))).toBe(false);
+      expect(existsSync(join(root, 'app/update.tsx'))).toBe(true);
+      const updater = read(`${root}/src/lib/app-updates.ts`);
+      expect(updater).toContain(`RELEASE_TAG_PREFIX = 'android-${slug}-'`);
+      expect(updater).toContain(packageId);
+      expect(updater).toContain('getInfoAsync(result.uri, { md5: true })');
+      expect(updater).toContain('MANAGE_UNKNOWN_APP_SOURCES');
+      expect(updater).toContain('application/vnd.android.package-archive');
+      const updateScreen = read(`${root}/app/update.tsx`);
+      expect(updateScreen).toContain('Release notes');
+      expect(updateScreen).toContain('Install update');
+      expect(updateScreen).toContain('never silent');
+      expect(read(`${root}/app/_layout.tsx`)).toContain('checkForStartupUpdate');
     }
-    for (const asset of ['groceries.webp', 'local-cab.webp', 'hotel-stay.webp', 'himalayan-discovery.webp', 'local-experience.webp',
-      'groceries-animated.webp', 'local-cab-animated.webp', 'hotel-stay-animated.webp', 'himalayan-discovery-animated.webp', 'local-experience-animated.webp']) {
-      expect(existsSync(join(root, 'assets/onboarding', asset)), asset).toBe(true);
-      expect(existsSync(join(root, 'apps/gowayy-customer/mobile/assets/onboarding', asset)), asset).toBe(true);
-      expect(existsSync(join(root, 'apps/gowayy-customer/web/public/images/onboarding', asset)), asset).toBe(true);
-    }
+    expect(packageIds.size).toBe(3);
+    const customer = json<Record<string, any>>('apps/gowayy-customer/mobile/app.json');
+    expect(customer.expo.scheme).toBe('gowayy');
+    expect(customer.expo.android.permissions).toContain('ACCESS_FINE_LOCATION');
+    expect(customer.expo.android.permissions).toContain('POST_NOTIFICATIONS');
+    expect(JSON.stringify(customer.expo.android.intentFilters)).toContain('gowayy.app');
+
     const androidWorkflow = read('.github/workflows/mobile-build.yml');
-    expect(androidWorkflow).toContain('--profile preview');
-    expect(androidWorkflow).toContain('Verify this app is linked to a real EAS project');
-    expect(androidWorkflow).toContain('eas build:download --build-id');
-    expect(androidWorkflow).toContain('gowayy-${{ matrix.app }}-android-apk');
+    expect(androidWorkflow).toContain('assembleRelease');
+    expect(androidWorkflow).toContain('assembleDebug');
+    expect(androidWorkflow).toContain('ANDROID_KEYSTORE_BASE64');
     expect(androidWorkflow).toContain('actions/upload-artifact@v4');
-    const eas = json<Record<string, any>>('apps/gowayy-customer/mobile/eas.json');
-    expect(eas.build.development.android.buildType).toBe('apk');
-    expect(eas.build.preview.android.buildType).toBe('apk');
-    expect(eas.build.production.android.buildType).toBe('app-bundle');
+    expect(androidWorkflow).toContain('softprops/action-gh-release@v2');
+    expect(androidWorkflow).not.toContain('eas build');
+    expect(androidWorkflow).not.toContain('EXPO_TOKEN');
+    expect(read('scripts/configure-android-signing.mjs')).toContain('signingConfigs.release');
+  });
+
+  it('only displays the approved symbol during each animated mobile splash', () => {
+    for (const app of ['customer', 'explore', 'partner']) {
+      const root = `apps/gowayy-${app}/mobile`;
+      const config = json<Record<string, any>>(`${root}/app.json`);
+      expect(config.expo.splash.image).toBe('./assets/branding/g-symbol.png');
+      const screen = app === 'customer' ? read(`${root}/app/_layout.tsx`) : read(`${root}/app/index.tsx`);
+      const splash = app === 'customer' ? screen.slice(screen.indexOf('export default function RootLayout'), screen.indexOf('const styles =')) : screen.slice(screen.indexOf("if(phase==='splash')"), screen.indexOf("if(phase==='onboarding')"));
+      expect(splash).toContain("require('../assets/branding/g-symbol.png')");
+      expect(splash).not.toMatch(/<Animated\.Text|<Text/);
+      expect(splash).not.toMatch(/GOWAYY/);
+      expect(splash).toContain('Animated');
+    }
+  });
+
+  it('keeps browser splash fallbacks logo-only as well as native splash screens', () => {
+    const customer = read('apps/gowayy-customer/web/src/components/Splash.tsx');
+    const ui = read('packages/ui/src/index.tsx');
+    const shared = ui.slice(ui.indexOf('export function SplashScreen'), ui.indexOf('export function Mascot'));
+    expect(customer).toContain('/brand/g-symbol.svg');
+    expect(shared).toContain('/brand/g-symbol.svg');
+    for (const source of [customer, shared]) {
+      expect(source).not.toMatch(/wordmark|caption|Skip intro|appName/);
+    }
+    expect(read('apps/gowayy-customer/web/src/App.tsx')).not.toContain('brand-splash__wordmark');
+    expect(read('scripts/build-brand-assets.mjs')).not.toContain("join(images, 'splash-logo.png')");
+    expect(read('scripts/rasterize-brand.mjs')).not.toContain("'assets/images/branding/splash-logo.png'");
   });
 
   it('uses a compatible, complete Expo dependency set', () => {
-    const pkg = json<Record<string, any>>('apps/gowayy-customer/mobile/package.json');
-    const d = pkg.dependencies;
-    expect(d['expo']).toMatch(/^~58\./);
+    for (const app of ['customer', 'explore', 'partner']) {
+      const pkg = json<Record<string, any>>(`apps/gowayy-${app}/mobile/package.json`);
+      const d = pkg.dependencies;
+      expect(d.expo).toMatch(/^~57\./);
+      expect(d['react-native']).toBe('0.86.3');
+      for (const [name, version] of Object.entries(d)) {
+        if (name.startsWith('expo-')) expect(version, `${app} ${name}`).toMatch(/^~57\./);
+      }
+    }
+    const d = json<Record<string, any>>('apps/gowayy-customer/mobile/package.json').dependencies;
     for (const lib of ['expo-router', 'react-native-reanimated', 'react-native-gesture-handler', 'react-native-worklets',
       'expo-secure-store', 'expo-location', 'expo-notifications', 'expo-image',
       'zustand', '@tanstack/react-query', 'react-hook-form', 'zod']) expect(d[lib]).toBeTruthy();
     expect(d['expo-gl']).toBeUndefined();
     expect(d.three).toBeUndefined();
-    // Reanimated 4.7.1 requires worklets 0.13.x (an earlier pin of 0.7.1 broke npm resolution).
-    expect(d['react-native-reanimated']).toBe('4.7.1');
-    expect(d['react-native-worklets']).toMatch(/^0\.13\./);
+    // Expo SDK 57 bundles a compatible Reanimated/worklets pair and stays on Android API 36.
+    expect(d['react-native-reanimated']).toBe('4.5.1');
+    expect(d['react-native-worklets']).toBe('0.10.1');
     expect(read('apps/gowayy-customer/mobile/tsconfig.json')).toContain('"strict": true');
     expect(read('apps/gowayy-customer/mobile/metro.config.js')).toContain('watchFolders');
+    const workflow = read('.github/workflows/mobile-build.yml');
+    expect(workflow).toContain("platforms;android-36");
+    expect(workflow).toContain("build-tools;36.0.0");
+    expect(workflow).toContain("ndk;27.1.12297006");
   });
 
   it('never embeds a service-role key or admin interface in client code', () => {
@@ -110,14 +169,19 @@ describe('Vercel static deployment', () => {
   it('prepares Build Output API payloads instead of relying on nested Vite dist discovery', () => {
     const deploy = read('.github/workflows/deploy-web.yml');
     expect(deploy).toContain('vercel@latest deploy --prebuilt --prod');
-    expect(deploy).toContain('dist/index.html');
+    expect(deploy).toContain('scripts/verify-web-output.mjs');
+    expect(deploy).toContain('index.html');
     const prep = read('scripts/prepare-vercel-output.mjs');
     expect(prep).toContain("version: 3");
     expect(prep).toContain("handle: 'filesystem'");
     for (const app of ['customer', 'partner', 'explore']) {
       const config = json<Record<string, any>>(`apps/gowayy-${app}/web/vercel.json`);
       expect(config.outputDirectory).toBe('dist');
+      expect(config.framework).toBe('vite');
+      expect(config.installCommand).toContain('cd ../../.. && npm ci');
+      expect(config.buildCommand).toContain(`cd ../../.. && npm run build -w @gowayy/${app}-web`);
       expect(config.buildCommand).toContain(`apps/gowayy-${app}/web/dist`);
+      expect(read('scripts/verify-web-output.mjs')).toContain('SPA fallback is configured');
     }
   });
 });

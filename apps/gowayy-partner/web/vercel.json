@@ -1,9 +1,9 @@
 {
   "name": "gowayy-partner-web",
-  "installCommand": "cd ../.. && npm ci --no-audit --no-fund",
-  "buildCommand": "cd ../.. && npm run build -w @gowayy/partner-web && test -d apps/gowayy-partner/web/dist && echo 'OK: apps/gowayy-partner/web/dist present'",
+  "installCommand": "cd ../../.. && npm ci --no-audit --no-fund",
+  "buildCommand": "cd ../../.. && npm run build -w @gowayy/partner-web && test -s apps/gowayy-partner/web/dist/index.html && echo 'OK: apps/gowayy-partner/web/dist/index.html present'",
   "outputDirectory": "dist",
-  "framework": null,
+  "framework": "vite",
   "rewrites": [
     {
       "source": "/(.*)",
