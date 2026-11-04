@@ -9,9 +9,9 @@
     "newArchEnabled": true,
     "icon": "./assets/branding/app-icon.png",
     "splash": {
-      "image": "./assets/branding/g-symbol.png",
+      "image": "./assets/branding/splash-mark.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FAF4E9"
+      "backgroundColor": "#421080"
     },
     "android": {
       "package": "app.gowayy.customer",
@@ -65,13 +65,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/branding/g-symbol.png",
+          "image": "./assets/branding/splash-mark.png",
           "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#FAF4E9",
+          "backgroundColor": "#421080",
           "dark": {
             "image": "./assets/branding/g-symbol.png",
-            "backgroundColor": "#FAF4E9"
+            "backgroundColor": "#421080"
           }
         }
       ]

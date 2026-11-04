@@ -15,7 +15,15 @@ export function Login() {
   const showToast = useUI((s) => s.showToast);
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [show, setShow] = useState(false);
   const login = useMutation({
-    mutationFn: () => client.login(email, password),
+    mutationFn: async () => {
+      const r = await client.login(email, password);
+      const roles = (r.user.roles ?? []) as string[];
+      const partnerRoles = ['restaurant', 'grocery', 'seller', 'property', 'tour_operator', 'driver', 'admin'];
+      if (!roles.some((role) => partnerRoles.includes(role))) {
+        throw new Error('This account has no partner access. Use a partner or the shared demo account.');
+      }
+      return r;
+    },
     onSuccess: (r) => { setAuth(r.user, r.session.token); nav('/'); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });

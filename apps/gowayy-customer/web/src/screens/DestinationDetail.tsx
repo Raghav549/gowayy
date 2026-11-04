@@ -11,11 +11,13 @@ import { ImageFrame, SectionHead, EmptyState } from '../components/ui';
 import { MapView } from '../components/MapView';
 import { useJourney } from '../store/useJourney';
 import { useUI } from '../store/useUI';
+import { ConnectedRecommendations, useDestinations } from './shared';
 
 export function DestinationDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const destination = catalogue.destinations.find((d) => d.slug === slug);
+  const destinations = useDestinations();
+  const destination = destinations.find((d) => d.slug === slug);
   const patch = useJourney((s) => s.patch);
   const showToast = useUI((s) => s.showToast);
   usePageMeta(destination ? `${destination.name} — stays, food & transport` : 'Destination', destination?.description);
@@ -33,7 +35,7 @@ export function DestinationDetail() {
   const siliguri = catalogue.places.find((p) => p.id === 'plc_siliguri');
   const km = (place?: { lat: number; lng: number }) => place ? Math.round(haversineKm(place, destination.coords) * 1.35) : null;
   const cabRoutes = catalogue.sharedTaxiRoutes.filter((r) => nearPlaces.some((p) => p.id === r.fromId || p.id === r.toId));
-  const nearbyDestinations = catalogue.destinations.filter((d) => d.id !== destination.id && !d.hiddenGem && haversineKm(d.coords, destination.coords) < 45).slice(0, 4);
+  const nearbyDestinations = destinations.filter((d) => d.id !== destination.id && !d.hiddenGem && haversineKm(d.coords, destination.coords) < 45).slice(0, 4);
 
   const connect = async (href: string, label: string) => {
     try { await patch({ destinationId: destination.id, dropoff: nearPlaces[0]?.id ?? null, title: `My ${destination.name} trip` }); }

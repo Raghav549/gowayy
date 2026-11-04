@@ -10,26 +10,21 @@ import type { User } from '@gowayy/types';
 import { admin, client, errorText } from './lib/client';
 import { useSession, useUI } from './store';
 import { Badge, Card, DataTable, Field, Modal, Stat, ToastHost, type Column } from './components/ui';
+import { Posters, ServiceAreas, Destinations } from './sections/content';
 import './styles.css';
 
-type SectionId = 'overview' | 'customers' | 'partners' | 'catalog' | 'tourism' | 'orders' | 'bookings' | 'finance' | 'promotions' | 'support' | 'analytics' | 'audit' | 'roles' | 'settings';
+type SectionId = 'overview' | 'customers' | 'partners' | 'catalog' | 'tourism' | 'posters' | 'coverage' | 'orders' | 'bookings' | 'finance' | 'promotions' | 'support' | 'analytics' | 'audit' | 'roles' | 'settings';
 
 const NAV: Array<{ id: SectionId; label: string; icon: typeof LayoutDashboard; group: string }> = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Control centre' },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, group: 'Control centre' },
-  { id: 'customers', label: 'Customers', icon: Users, group: 'People' },
-  { id: 'partners', label: 'Partners', icon: BadgeCheck, group: 'People' },
-  { id: 'catalog', label: 'Catalog', icon: Store, group: 'Operations' },
-  { id: 'tourism', label: 'Tourism', icon: MapPin, group: 'Operations' },
-  { id: 'orders', label: 'Orders', icon: ShoppingBag, group: 'Operations' },
-  { id: 'bookings', label: 'Bookings', icon: CalendarDays, group: 'Operations' },
-  { id: 'finance', label: 'Finance', icon: Wallet, group: 'Money' },
-  { id: 'promotions', label: 'Promotions', icon: Percent, group: 'Money' },
-  { id: 'support', label: 'Support', icon: LifeBuoy, group: 'Service' },
+  { id: 'tourism', label: 'Destinations', icon: MapPin, group: 'Content' },
+  { id: 'posters', label: 'Posters', icon: ImageIcon, group: 'Content' },
+  { id: 'coverage', label: 'Cities & service areas', icon: MapPin, group: 'Serviceability' },
   { id: 'audit', label: 'Audit log', icon: ScrollText, group: 'Governance' },
-  { id: 'roles', label: 'Roles', icon: ShieldCheck, group: 'Governance' },
-  { id: 'settings', label: 'Settings', icon: Settings2, group: 'Governance' },
 ];
+
+// The console is deliberately scoped to content, posters and serviceability.
+// Legacy sections remain in the codebase for API compatibility but are not routable.
+const ADMIN_SECTIONS = new Set<SectionId>(['tourism', 'posters', 'coverage', 'audit']);
 
 const statusTone = (status?: string) => status === 'active' || status === 'captured' || status === 'paid' || status === 'delivered' || status === 'verified' ? 'good' : status === 'suspended' || status === 'refunded' || status === 'cancelled' || status === 'rejected' ? 'bad' : status === 'pending' || status === 'requires_action' ? 'warn' : 'neutral';
 
@@ -343,32 +338,6 @@ function Catalog() {
   );
 }
 
-function Tourism() {
-  const q = useQuery({ queryKey: ['admin', 'destinations'], queryFn: () => admin<{ items: Array<{ id: string; name: string; slug: string; region: string; featured: boolean; imagesVerified: number; images: Array<{ url: string; status: string }>; listings: number; hidden?: boolean }> }>('/destinations') });
-  const qc = useQueryClient();
-  const showToast = useUI((s) => s.showToast);
-  const toggle = async (id: string, featured: boolean) => {
-    try { await admin(`/destinations/${id}`, { method: 'PATCH', body: { featured } }); await qc.invalidateQueries({ queryKey: ['admin'] }); showToast('Destination updated', 'success'); }
-    catch (e) { showToast(errorText(e), 'error'); }
-  };
-  return (
-    <div className="stack-lg">
-      <div className="stat-grid">
-        <Stat label="Destinations" value={q.data?.items.length ?? '—'} hint="verified tourism catalogue" tone="gold" />
-        <Stat label="Featured" value={q.data?.items.filter((d) => d.featured).length ?? '—'} hint="shown on the customer home" />
-        <Stat label="Verified images" value={q.data?.items.reduce((n, d) => n + d.imagesVerified, 0) ?? '—'} hint="rights-recorded photographs" tone="dark" />
-      </div>
-      <Card><DataTable rows={q.data?.items ?? []} loading={q.isLoading} columns={[
-        { key: 'name', header: 'Destination', render: (d) => <div className="row">{d.images?.[0] ? <img className="thumb" src={d.images[0].url} alt="" /> : <span className="thumb thumb--empty" />}<div><strong>{d.name}</strong><div className="tiny muted">{d.region}</div></div></div> },
-        { key: 'images', header: 'Images', render: (d) => <span className="tiny">{d.imagesVerified} verified / {d.images.length}</span> },
-        { key: 'listings', header: 'Listings', render: (d) => d.listings },
-        { key: 'featured', header: 'Featured', render: (d) => <button role="switch" aria-checked={d.featured} className={`switch ${d.featured ? 'is-on' : ''}`} onClick={() => void toggle(d.id, !d.featured)}><span /></button> },
-      ]} /></Card>
-      <p className="tiny muted">Unverified hidden gems stay out of the featured feed until their photographs and operator details are verified.</p>
-    </div>
-  );
-}
-
 function Orders() {
   const [service, setService] = useState('');
   const q = useQuery({ queryKey: ['admin', 'orders', service], queryFn: () => admin<{ items: Array<Record<string, never>> }>(`/orders?service=${service}`) });
@@ -656,7 +625,7 @@ function Settings() {
 }
 
 const SECTIONS: Record<SectionId, ComponentType> = {
-  overview: Overview, customers: Customers, partners: Partners, catalog: Catalog, tourism: Tourism,
+  overview: Overview, customers: Customers, partners: Partners, catalog: Catalog, tourism: Destinations, posters: Posters, coverage: ServiceAreas,
   orders: Orders, bookings: Bookings, finance: Finance, promotions: Promotions, support: Support,
   analytics: Analytics, audit: AuditLog, roles: Roles, settings: Settings,
 };
@@ -665,13 +634,13 @@ export default function App() {
   const { user, loading, hydrate } = useSession();
   const toast = useUI((s) => s.toast);
   const clearToast = useUI((s) => s.clearToast);
-  const [section, setSection] = useState<SectionId>(() => (window.location.hash.slice(1) as SectionId) || 'overview');
-  const Section = SECTIONS[section] ?? Overview;
+  const [section, setSection] = useState<SectionId>(() => { const h = window.location.hash.slice(1) as SectionId; return ADMIN_SECTIONS.has(h) ? h : 'tourism'; });
+  const Section = ADMIN_SECTIONS.has(section) ? SECTIONS[section] : Destinations;
 
   useEffect(() => { void hydrate(); }, [hydrate]);
   useEffect(() => { window.location.hash = section; }, [section]);
   useEffect(() => {
-    const onHash = () => setSection((window.location.hash.slice(1) as SectionId) || 'overview');
+    const onHash = () => { const h = window.location.hash.slice(1) as SectionId; setSection(ADMIN_SECTIONS.has(h) ? h : 'tourism'); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);

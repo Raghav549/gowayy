@@ -18,6 +18,13 @@ const output = join(webDir, '.vercel/output');
 rmSync(output, { recursive: true, force: true });
 mkdirSync(join(output, 'static'), { recursive: true });
 cpSync(dist, join(output, 'static'), { recursive: true });
+// Admin and partner previews reference the shared customer-owned image library.
+if (app !== 'customer') {
+  const sharedImages = resolve('apps/gowayy-customer/web/public/images');
+  if (statSync(sharedImages, { throwIfNoEntry: false })?.isDirectory()) {
+    cpSync(sharedImages, join(output, 'static/images'), { recursive: true });
+  }
+}
 writeFileSync(join(output, 'config.json'), `${JSON.stringify({
   version: 3,
   routes: [

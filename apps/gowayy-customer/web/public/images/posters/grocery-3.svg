@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500" role="img" aria-label="DAILY NEEDS">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8B5A2B"/><stop offset="1" stop-color="#3E2A18"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".28"/><stop offset="1" stop-color="#ffffff" stop-opacity=".04"/></linearGradient></defs>
+<rect width="1200" height="500" fill="url(#bg)"/>
+<circle cx="1010" cy="90" r="200" fill="#ffffff" opacity=".08"/><circle cx="1100" cy="430" r="150" fill="#ffffff" opacity=".06"/>
+<g transform="translate(760 60)">
+<ellipse cx="190" cy="360" rx="180" ry="28" fill="#17131B" opacity=".18"/>
+<rect x="80" y="190" width="220" height="160" rx="20" fill="#F4E7CF"/>
+<path d="M80 230h220" stroke="#C6A15B" stroke-width="10"/>
+<circle cx="130" cy="160" r="42" fill="#E4572E"/><circle cx="205" cy="145" r="48" fill="#F2C14E"/><circle cx="275" cy="165" r="38" fill="#6E9B72"/>
+<path d="M95 120c20-45 100-45 120 0" fill="none" stroke="#8B5A2B" stroke-width="12" stroke-linecap="round"/>
+<rect x="120" y="270" width="60" height="60" rx="8" fill="#FFFFFF" opacity=".9"/><rect x="200" y="270" width="60" height="60" rx="8" fill="#FFFFFF" opacity=".75"/>
+</g>
+<rect x="64" y="88" width="560" height="324" rx="28" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".22"/>
+<text x="104" y="150" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#FFFFFF" opacity=".85">Snacks, dairy and breakfast staples</text>
+<text x="104" y="228" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="58" font-weight="800" fill="#FFFFFF">DAILY NEEDS</text>
+<text x="104" y="280" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" fill="#FFFFFF" opacity=".9">Buy 2 get 1</text>
+<rect x="104" y="322" width="290" height="58" rx="29" fill="#17131B"/>
+<text x="132" y="359" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#FFFFFF">Shop all →</text>
+<text x="104" y="404" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" fill="#FFFFFF" opacity=".7">/categories</text>
+</svg>

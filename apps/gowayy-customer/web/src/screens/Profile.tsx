@@ -75,7 +75,7 @@ export function Profile() {
           <div className="card">
             <h3>Preferences</h3>
             <div className="stack" style={{ marginTop: 14 }}>
-              <div className="between"><span className="row small"><span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg,#E2C892,#8B6830)' }} /> Appearance</span><span className="badge badge--accent">GOWAYY identity</span></div>
+              <div className="between"><span className="row small"><span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg,#EDE3F7,#421080)' }} /> Appearance</span><span className="badge badge--accent">Lavender identity</span></div>
               <div className="between"><span className="row small"><Bell size={16} /> Notifications</span><button className="btn btn--secondary btn--sm" onClick={() => navigate('/profile')}>{notifications.data?.unreadCount ?? 0} unread</button></div>
               <div className="between"><span className="row small"><CreditCard size={16} /> Payment records</span><span className="badge">{payments.data?.length ?? 0}</span></div>
             </div>

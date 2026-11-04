@@ -11,7 +11,7 @@ file and restarting the server. It is development data only.
 Use the platform's scheduled backups / point-in-time recovery for the project. In
 addition, keep these reproducible artifacts in Git:
 
-- `supabase/migrations/202611040001…010` — full schema, RLS, functions, policies.
+- `supabase/migrations/202611040001…012` — full schema, RLS, functions, policies.
 - `supabase/seed/0001_catalog.sql` — generated from `packages/catalog/src/data/*.json`
   and `assets/images/IMAGE_SOURCES.json` via `npm run seed:supabase`.
 - `assets/images/*` — verified originals and optimized derivatives with the manifest.

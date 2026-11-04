@@ -59,8 +59,8 @@ describe('Expo Android application', () => {
       expect(packageIds.has(packageId)).toBe(false);
       packageIds.add(packageId);
       expect(app.expo.android.versionCode).toBeGreaterThan(0);
-      expect(app.expo.splash.image).toBe('./assets/branding/g-symbol.png');
-      expect(existsSync(join(root, 'assets/branding/g-symbol.png'))).toBe(true);
+      expect(app.expo.splash.image).toBe('./assets/branding/splash-mark.png');
+      expect(existsSync(join(root, 'assets/branding/splash-mark.png'))).toBe(true);
       expect(existsSync(join(root, 'assets/branding/splash-logo.png'))).toBe(false);
       expect(existsSync(join(root, 'assets/branding/splash-logo.svg'))).toBe(false);
       if (slug === 'admin') {
@@ -109,10 +109,10 @@ describe('Expo Android application', () => {
     for (const app of ['customer', 'partner']) {
       const root = `apps/gowayy-${app}/mobile`;
       const config = json<Record<string, any>>(`${root}/app.json`);
-      expect(config.expo.splash.image).toBe('./assets/branding/g-symbol.png');
+      expect(config.expo.splash.image).toBe('./assets/branding/splash-mark.png');
       const screen = app === 'customer' ? read(`${root}/app/_layout.tsx`) : read(`${root}/app/index.tsx`);
       const splash = app === 'customer' ? screen.slice(screen.indexOf('export default function RootLayout'), screen.indexOf('const styles =')) : screen.slice(screen.indexOf("if(phase==='splash')"), screen.indexOf("if(phase==='onboarding')"));
-      expect(splash).toContain("require('../assets/branding/g-symbol.png')");
+      expect(splash).toContain("require('../assets/branding/splash-mark.png')");
       expect(splash).not.toMatch(/<Animated\.Text|<Text/);
       expect(splash).not.toMatch(/GOWAYY/);
       expect(splash).toContain('Animated');
@@ -123,7 +123,7 @@ describe('Expo Android application', () => {
     const customer = read('apps/gowayy-customer/web/src/components/Splash.tsx');
     const ui = read('packages/ui/src/index.tsx');
     const shared = ui.slice(ui.indexOf('export function SplashScreen'), ui.indexOf('export function Mascot'));
-    expect(customer).toContain('/brand/g-symbol.svg');
+    expect(customer).toMatch(/\/brand\/g-(symbol|mono-inverse)\.svg/);
     expect(shared).toContain('/brand/g-symbol.svg');
     for (const source of [customer, shared]) {
       expect(source).not.toMatch(/wordmark|caption|Skip intro|appName/);

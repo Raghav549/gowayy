@@ -70,7 +70,7 @@ export function createCommerceModule(ctx) {
       return send(res, 200, { items: items.map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'stores') {
-      return send(res, 200, { items: (db().stores ?? []).filter((s) => s.status === 'active').map((s) => ({ id: s.id, name: s.name, categoryName: s.categoryName, destinationId: s.destinationId, productCount: allProducts().filter((p) => p.storeId === s.id).length, deliveryCoverageKm: s.deliveryCoverageKm, image: s.image, slots: s.slots, openingHours: s.openingHours, openingHoursVerified: s.openingHoursVerified, verified: s.verified, address: s.address })) });
+      return send(res, 200, { items: (db().stores ?? []).filter((s) => s.status === 'active').map((s) => ({ id: s.id, name: s.name, categoryName: s.categoryName, destinationId: s.destinationId, productCount: allProducts().filter((p) => p.storeId === s.id).length, deliveryCoverageKm: s.deliveryCoverageKm, image: s.image, slots: s.slots, openingHours: s.openingHours, openingHoursVerified: s.openingHoursVerified, verified: s.verified, address: s.address, logo: s.logo ?? null, banner: s.banner ?? null })) });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'products' && tail[2] && tail.length === 3) {
       const p = getProduct(tail[2]);

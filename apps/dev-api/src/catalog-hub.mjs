@@ -161,6 +161,8 @@ export function createCatalogHub(ctx) {
     const view = {
       ...store,
       productCount: products.length + groceryItems.length,
+      logo: store.logo ?? null,
+      banner: store.banner ?? null,
       products: withProducts ? products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, pricePaise: p.variants?.[0]?.pricePaise ?? 0, mrpPaise: p.variants?.[0]?.mrpPaise, stock: p.variants?.[0]?.stock ?? 0, images: p.images, category: p.category })) : undefined,
       groceryItems: withProducts ? groceryItems.map((p) => ({ id: p.id, name: p.name, pricePaise: p.pricePaise, unit: p.unit, stock: db().inventory[`${store.id}:${p.id}`] ?? p.stock, category: p.category })) : undefined,
       offers: (db().offers ?? []).filter((o) => o.active && (o.scope === 'platform' || o.productIds.some((pid) => products.some((p) => p.id === pid)))),
@@ -182,11 +184,58 @@ export function createCatalogHub(ctx) {
         featuredProducts: products.filter((p) => p.featured).slice(0, 8),
         newProducts: products.slice(-6).reverse(),
         offers: (db().offers ?? []).filter((o) => o.active),
+        posters: {
+          grocery: (db().posters ?? []).filter((p) => p.kind === 'grocery' && p.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+          food: (db().posters ?? []).filter((p) => p.kind === 'food' && p.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+        },
         services: db().settings?.services ?? {},
         appConfig: db().settings?.appConfig ?? {},
       });
     }
     if (method === 'GET' && tail[0] === 'banners') return send(res, 200, { items: liveBanners() });
+
+    // ------------------------------------------------- promotional posters
+    if (method === 'GET' && tail[0] === 'posters') {
+      const kind = q.get('kind');
+      const now = nowIso();
+      const items = (db().posters ?? [])
+        .filter((p) => p.active !== false)
+        .filter((p) => !p.startAt || p.startAt <= now)
+        .filter((p) => !p.endAt || p.endAt >= now)
+        .filter((p) => !kind || p.kind === kind)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      return send(res, 200, { items, grocery: items.filter((p) => p.kind === 'grocery'), food: items.filter((p) => p.kind === 'food') });
+    }
+
+    // ----------------------------------------------------- service coverage
+    if (method === 'GET' && tail[0] === 'service-areas') {
+      const areas = (db().serviceAreas ?? []).filter((a) => a.active !== false);
+      const pincode = String(q.get('pincode') ?? '').trim();
+      const service = String(q.get('service') ?? '');
+      if (/^\d{6}$/.test(pincode)) {
+        const matches = (list) => areas.filter((a) => (list(a) ?? []).includes(pincode));
+        return send(res, 200, {
+          pincode,
+          food: { supported: matches((a) => a.foodPincodes).length > 0, cities: matches((a) => a.foodPincodes).map((a) => a.city) },
+          grocery: { supported: matches((a) => a.groceryPincodes).length > 0, cities: matches((a) => a.groceryPincodes).map((a) => a.city) },
+          areas: areas.map((a) => ({ id: a.id, city: a.city, state: a.state })),
+        });
+      }
+      return send(res, 200, {
+        items: areas,
+        services: service ? { supported: areas.some((a) => (service === 'food' ? a.foodPincodes : a.groceryPincodes).includes(pincode)) } : undefined,
+      });
+    }
+
+    // --------------------------------------------------- destination content
+    if (method === 'GET' && tail[0] === 'destinations' && tail.length === 1) {
+      return send(res, 200, { items: (db().destinations ?? []).filter((d) => d.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) });
+    }
+    if (method === 'GET' && tail[0] === 'destinations' && tail[1]) {
+      const destination = (db().destinations ?? []).find((d) => d.slug === tail[1] || d.id === tail[1]);
+      if (!destination || destination.active === false) bad('DESTINATION_NOT_FOUND', 'Destination not found', 404);
+      return send(res, 200, { destination });
+    }
     if (method === 'GET' && tail[0] === 'categories') return send(res, 200, { items: (db().categories ?? []).filter((c) => c.active) });
 
     if (method === 'GET' && tail[0] === 'stores' && tail.length === 1) {
@@ -295,6 +344,8 @@ export function createCatalogHub(ctx) {
       }
       if (body.deliveryCoverageKm !== undefined) store.deliveryCoverageKm = Math.max(0, Number(body.deliveryCoverageKm));
       if (body.image) store.image = sanitiseImages([body.image])[0] ?? store.image;
+      if (body.logo !== undefined) store.logo = sanitiseImages([body.logo])[0] ?? null;
+      if (body.banner !== undefined) store.banner = sanitiseImages([body.banner])[0] ?? null;
       if (body.status && ['active', 'paused'].includes(body.status)) store.status = body.status;
       store.updatedAt = nowIso();
       audit(user.id, 'partner.store.updated', { storeId: store.id });

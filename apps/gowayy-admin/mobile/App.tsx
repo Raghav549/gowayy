@@ -18,25 +18,25 @@ const ADMIN_URL = (process.env.EXPO_PUBLIC_ADMIN_URL ?? '').trim();
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FAF7F2' },
+  root: { flex: 1, backgroundColor: '#F8F3FB' },
   fill: { flex: 1 },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, backgroundColor: '#FAF7F2' },
-  loadingText: { color: '#6B6660', fontSize: 13 },
-  setup: { flex: 1, justifyContent: 'center', padding: 24, gap: 14, backgroundColor: '#FAF7F2' },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, backgroundColor: '#F8F3FB' },
+  loadingText: { color: '#6F6876', fontSize: 13 },
+  setup: { flex: 1, justifyContent: 'center', padding: 24, gap: 14, backgroundColor: '#F8F3FB' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  brandMark: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#1C1B19', alignItems: 'center', justifyContent: 'center' },
-  brandMarkText: { color: '#E2C892', fontWeight: '800', fontSize: 18 },
-  brandWord: { fontWeight: '800', letterSpacing: 3, color: '#1C1B19' },
-  brandTag: { fontSize: 10, letterSpacing: 2, color: '#8B6830', marginTop: 2 },
-  title: { fontSize: 24, fontWeight: '700', color: '#1C1B19', marginTop: 8 },
-  body: { fontSize: 14, lineHeight: 21, color: '#6B6660' },
-  code: { fontFamily: Platform.select({ android: 'monospace', ios: 'Menlo', default: 'monospace' }), fontSize: 12, color: '#1C1B19', backgroundColor: '#F4EFE6', padding: 10, borderRadius: 8 },
-  error: { borderWidth: 1, borderColor: '#E7E0D5', backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, gap: 8 },
-  errorTitle: { fontWeight: '700', color: '#A8453F' },
-  retry: { backgroundColor: '#1C1B19', borderRadius: 999, paddingVertical: 12, alignItems: 'center' },
-  retryText: { color: '#FDFBF7', fontWeight: '700', fontSize: 14 },
-  back: { position: 'absolute', left: 12, bottom: 18, backgroundColor: 'rgba(28,27,25,.82)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
-  backText: { color: '#FDFBF7', fontSize: 12, fontWeight: '600' },
+  brandMark: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#421080', alignItems: 'center', justifyContent: 'center' },
+  brandMarkText: { color: '#FFFFFF', fontWeight: '800', fontSize: 18 },
+  brandWord: { fontWeight: '800', letterSpacing: 3, color: '#17131B' },
+  brandTag: { fontSize: 10, letterSpacing: 2, color: '#421080', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '700', color: '#17131B', marginTop: 8 },
+  body: { fontSize: 14, lineHeight: 21, color: '#6F6876' },
+  code: { fontFamily: Platform.select({ android: 'monospace', ios: 'Menlo', default: 'monospace' }), fontSize: 12, color: '#17131B', backgroundColor: '#F1EAF8', padding: 10, borderRadius: 8 },
+  error: { borderWidth: 1, borderColor: '#E9E0F0', backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, gap: 8 },
+  errorTitle: { fontWeight: '700', color: '#B94D59' },
+  retry: { backgroundColor: '#421080', borderRadius: 999, paddingVertical: 12, alignItems: 'center' },
+  retryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  back: { position: 'absolute', left: 12, bottom: 18, backgroundColor: 'rgba(66,16,128,.86)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
+  backText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
 });
 
 export default function App() {
@@ -135,7 +135,7 @@ export default function App() {
               onNavigationStateChange={onNavigation}
               startInLoadingState={false}
             />
-            {loading && <View style={styles.loading} pointerEvents="none"><ActivityIndicator color="#C6A15B" /><Text style={styles.loadingText}>Loading the admin console…</Text></View>}
+            {loading && <View style={styles.loading} pointerEvents="none"><ActivityIndicator color="#421080" /><Text style={styles.loadingText}>Loading the admin console…</Text></View>}
             {canGoBack && <Pressable style={styles.back} onPress={() => webRef.current?.goBack()} accessibilityLabel="Go back"><Text style={styles.backText}>‹ Back</Text></Pressable>}
           </View>
         )}

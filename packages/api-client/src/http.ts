@@ -179,6 +179,28 @@ export interface GowayyClient {
   partnerDeliveries?(): Promise<{ items: unknown[] }>;
   verifyDelivery?(orderId: string, code: string): Promise<Record<string, unknown>>;
   updateAddress?(id: string, input: unknown): Promise<{ address: unknown }>;
+  // ---- content managed by the admin console ----
+  posters?(kind?: 'food' | 'grocery'): Promise<{ items: unknown[]; food: unknown[]; grocery: unknown[] }>;
+  destinations?(): Promise<{ items: unknown[] }>;
+  destination?(slug: string): Promise<Record<string, unknown>>;
+  serviceAreas?(): Promise<{ items: unknown[] }>;
+  serviceAreaCheck?(pincode: string): Promise<{ pincode: string; food: { supported: boolean; cities: string[] }; grocery: { supported: boolean; cities: string[] } }>;
+  adminPosters?(): Promise<{ items: unknown[] }>;
+  createPoster?(input: unknown): Promise<Record<string, unknown>>;
+  updatePoster?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  deletePoster?(id: string): Promise<void>;
+  reorderPosters?(ids: string[]): Promise<Record<string, unknown>>;
+  adminServiceAreas?(): Promise<{ items: unknown[] }>;
+  createServiceArea?(input: unknown): Promise<Record<string, unknown>>;
+  updateServiceArea?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  deleteServiceArea?(id: string): Promise<void>;
+  adminDestinations?(): Promise<{ items: unknown[] }>;
+  createDestination?(input: unknown): Promise<Record<string, unknown>>;
+  updateDestination?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  deleteDestination?(id: string): Promise<void>;
+  addDestinationImage?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  updateDestinationImage?(id: string, imageId: string, input: unknown): Promise<Record<string, unknown>>;
+  deleteDestinationImage?(id: string, imageId: string): Promise<Record<string, unknown>>;
 }
 
 type FetchImpl = typeof fetch;
@@ -354,5 +376,26 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     partnerDeliveries: () => get('/partner/deliveries'),
     verifyDelivery: (orderId, code) => post(`/partner/deliveries/${encodeURIComponent(orderId)}/verify`, { code }),
     updateAddress: (id, input) => patch(`/addresses/${encodeURIComponent(id)}`, input),
+    posters: (kind) => get(`/posters${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
+    destinations: () => get('/destinations'),
+    destination: (slug) => get(`/destinations/${encodeURIComponent(slug)}`),
+    serviceAreas: () => get('/service-areas'),
+    serviceAreaCheck: (pincode) => get(`/service-areas?pincode=${encodeURIComponent(pincode)}`),
+    adminPosters: () => get('/admin/posters'),
+    createPoster: (input) => post('/admin/posters', input),
+    updatePoster: (id, input) => patch(`/admin/posters/${encodeURIComponent(id)}`, input),
+    deletePoster: (id) => request(`/admin/posters/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    reorderPosters: (ids) => post('/admin/posters/reorder', { ids }),
+    adminServiceAreas: () => get('/admin/service-areas'),
+    createServiceArea: (input) => post('/admin/service-areas', input),
+    updateServiceArea: (id, input) => patch(`/admin/service-areas/${encodeURIComponent(id)}`, input),
+    deleteServiceArea: (id) => request(`/admin/service-areas/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    adminDestinations: () => get('/admin/destinations'),
+    createDestination: (input) => post('/admin/destinations', input),
+    updateDestination: (id, input) => patch(`/admin/destinations/${encodeURIComponent(id)}`, input),
+    deleteDestination: (id) => request(`/admin/destinations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    addDestinationImage: (id, input) => post(`/admin/destinations/${encodeURIComponent(id)}/images`, input),
+    updateDestinationImage: (id, imageId, input) => patch(`/admin/destinations/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}`, input),
+    deleteDestinationImage: (id, imageId) => request(`/admin/destinations/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}`, { method: 'DELETE' }),
   };
 }

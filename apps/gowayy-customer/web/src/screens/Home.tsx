@@ -14,20 +14,22 @@ import { usePageMeta } from '../lib/guards';
 import { ImageFrame, SectionHead, Spinner } from '../components/ui';
 import { CategoryArt, CATEGORY_ART } from '../components/CategoryArt';
 import { DestinationCard } from './shared';
+import { PosterCarousel, type Poster } from '../components/PosterCarousel';
 
 interface StorefrontBanner { id: string; title: string; subtitle?: string; href: string; image?: { assetPath?: string; thumbPath?: string; alt?: string } | null }
 interface StorefrontProduct { id: string; slug: string; name: string; brand?: string; category?: string; storeId?: string; images?: Array<{ status: string; path?: string; alt: string; assetPath?: string }>; variants?: Array<{ pricePaise: number; mrpPaise?: number }> }
-interface StorefrontStore { id: string; name: string; categoryName?: string; address?: string; deliveryCoverageKm?: number; openingHours?: string; openingHoursVerified?: boolean; image?: { status: string; assetPath?: string; alt: string } | null; productCount?: number }
+interface StorefrontStore { id: string; name: string; categoryName?: string; address?: string; deliveryCoverageKm?: number; openingHours?: string; openingHoursVerified?: boolean; image?: { status: string; assetPath?: string; alt: string; path?: string } | null; logo?: { path?: string; alt?: string } | null; banner?: { path?: string; alt?: string } | null; productCount?: number }
 interface StorefrontOffer { id: string; title: string; kind: string; value: number; code?: string | null; minOrderPaise?: number }
 interface Storefront {
   banners: StorefrontBanner[]; categories: Array<{ id: string; name: string; slug: string }>;
   stores: StorefrontStore[]; featuredProducts: StorefrontProduct[]; newProducts: StorefrontProduct[];
   offers: StorefrontOffer[];
+  posters?: { grocery?: Poster[]; food?: Poster[] };
 }
 
 const FALLBACK: Storefront = {
   banners: catalogue.destinations.filter((d) => d.images[0]).slice(0, 3).map((d) => ({ id: d.id, title: d.name, subtitle: d.bestSeason ?? '', href: `/destinations/${d.slug}`, image: d.images[0] })),
-  categories: [], stores: [], featuredProducts: [], newProducts: [], offers: [],
+  categories: [], stores: [], featuredProducts: [], newProducts: [], offers: [], posters: { grocery: [], food: [] },
 };
 
 export function Home() {
@@ -51,6 +53,16 @@ export function Home() {
     placeholderData: FALLBACK,
   });
   const storefront = storefrontQuery.data ?? FALLBACK;
+  const posters = useQuery({
+    queryKey: ['home-posters'],
+    queryFn: async () => ((await client.posters?.()) ?? { items: [], food: [], grocery: [] }) as unknown as { food: Poster[]; grocery: Poster[] },
+    staleTime: 30_000,
+  });
+  const allProducts = useQuery({
+    queryKey: ['home-products'],
+    queryFn: async () => (await client.commerceProducts()).items as Array<{ id: string; slug: string; name: string; brand: string; category: string; storeId: string; images?: Array<{ status: string; path?: string; assetPath?: string; alt: string }>; variants: Array<{ pricePaise: number; stock: number; mrpPaise?: number }> }>,
+    staleTime: 60_000,
+  });
   const hits = useQuery({ queryKey: ['home-search', query], queryFn: () => client.search(query), enabled: query.trim().length > 1 });
   const recentSearches = useQuery({ queryKey: ['recent-searches'], queryFn: () => client.recentSearches(), enabled: Boolean(user) });
 
@@ -72,7 +84,16 @@ export function Home() {
   const destinations = catalogue.destinations.filter((d) => !d.hiddenGem).slice(0, 8);
   const experiences = catalogue.experiences.filter((e) => inDestination(e.destinationId)).slice(0, 3);
   const packages = catalogue.tourPackages.filter((p) => inDestination(p.destinationId)).slice(0, 3);
-  const popularFood = useMemo(() => nearbyRestaurants.flatMap((r) => r.menu.slice(0, 2).map((m) => ({ ...m, restaurant: r }))).slice(0, 4), [nearbyRestaurants]);
+  const productList = allProducts.data ?? [];
+  const shopStores: StorefrontStore[] = (storefront.stores.length
+    ? storefront.stores
+    : nearbyStores.map((s) => ({ id: s.id, name: s.name, categoryName: 'Grocery', address: undefined, deliveryCoverageKm: s.deliveryCoverageKm, openingHoursVerified: false, image: s.image, productCount: s.products.length })))
+    .filter((s) => (s.productCount ?? 0) > 0)
+    .slice(0, 4);
+  const foodProducts = useMemo(() => productList.filter((p) => ['local foods', 'snacks & beverages', 'dairy & eggs', 'local himalayan'].some((c) => p.category.toLowerCase().includes(c)) && p.images?.some((i) => i.status !== 'unavailable' && (i.path || i.assetPath))).slice(0, 8), [productList]);
+  const popularFood = useMemo(() => [...foodProducts].sort((a, b) => (a.variants?.[0]?.pricePaise ?? 0) - (b.variants?.[0]?.pricePaise ?? 0)).slice(0, 6), [foodProducts]);
+  const groceryPosters = posters.data?.grocery?.length ? posters.data.grocery : (storefront.posters?.grocery ?? []);
+  const foodPosters = posters.data?.food?.length ? posters.data.food : (storefront.posters?.food ?? []);
   const submitSearch = () => {
     const term = query.trim();
     if (!term) { inputRef.current?.focus(); return; }
@@ -162,17 +183,11 @@ export function Home() {
         </div>
       </section>
 
-      {storefront.offers.length > 0 && (
-        <section className="section">
-          <SectionHead eyebrow="Offers" title="Running offers" action={<Link className="link" to="/categories">Shop all →</Link>} />
-          <div className="offer-strip">
-            {storefront.offers.slice(0, 4).map((o) => (
-              <div className="offer-chip" key={o.id}>
-                <BadgePercent size={16} aria-hidden="true" />
-                <div><strong>{o.title}</strong><span>{o.code ? `Code ${o.code}` : o.kind === 'percent' ? `${o.value}% off` : `₹${o.value} off`}{o.minOrderPaise ? ` · min ${formatINR(o.minOrderPaise)}` : ''}</span></div>
-              </div>
-            ))}
-          </div>
+      {(groceryPosters.length > 0 || foodPosters.length > 0) && (
+        <section className="section offers-duo" aria-labelledby="offers-heading">
+          <h2 id="offers-heading" className="visually-hidden">Running offers</h2>
+          <PosterCarousel title="Grocery offers" posters={groceryPosters} ctaTo="/groceries" ctaLabel="Shop all" />
+          <PosterCarousel title="Food offers" posters={foodPosters} ctaTo="/food" ctaLabel="See all" />
         </section>
       )}
 
@@ -199,15 +214,24 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Eat local" title="Restaurants near you" action={<Link className="link" to="/food">All restaurants →</Link>} />
+        <SectionHead eyebrow="Local kitchens" title="Food from hill stores" action={<Link className="link" to="/food">All food →</Link>} />
         <div className="grid-3">
-          {nearbyRestaurants.map((r) => (
-            <Link key={r.id} to={`/food/${r.id}`} className="card card--hover">
-              <div className="between"><strong>{r.name}</strong><span className="badge">{r.prepMinutes} min</span></div>
-              <p className="small muted" style={{ marginTop: 6 }}>{r.cuisines.join(' · ')} · {r.openingHours}</p>
-              <div className="mini-dishes">{r.menu.slice(0, 3).map((m) => <span key={m.id}>{m.name} · {formatINR(m.pricePaise)}</span>)}</div>
-            </Link>
-          ))}
+          {foodProducts.slice(0, 3).map((p) => {
+            const img = p.images?.find((i) => i.status !== 'unavailable' && (i.path || i.assetPath));
+            return (
+              <Link key={p.id} to={`/products/${p.slug}`} className="media-card">
+                <div className="media-card__media">
+                  {img ? <img src={img.path ?? `/${String(img.assetPath ?? '').replace(/^\//, '')}`} alt={img.alt || p.name} loading="lazy" decoding="async" /> : <div className="media-card__fallback">Photo coming soon</div>}
+                </div>
+                <div className="media-card__body">
+                  <strong className="media-card__title">{p.name}</strong>
+                  <span className="tiny muted">{p.brand} · {p.category}</span>
+                  <span className="media-card__price">{formatINR(p.variants?.[0]?.pricePaise ?? 0)}</span>
+                </div>
+              </Link>
+            );
+          })}
+          {foodProducts.length === 0 && <p className="small muted">Local kitchens have not published dishes yet.</p>}
         </div>
       </section>
 
@@ -227,37 +251,52 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Shop" title={storefront.stores.length ? 'Shops & their products' : 'Local shops'} subtitle="Browse a store and add its actual products to your cart." action={<Link className="link" to="/categories">Open Shop →</Link>} />
+        <SectionHead eyebrow="Shop" title={shopStores.length ? 'Shops & their products' : 'Local shops'} subtitle="Browse a store and add its actual products to your cart." action={<Link className="link" to="/categories">Open Shop →</Link>} />
         {storefrontQuery.isLoading && <Spinner label="Loading shops…" />}
-        <div className="grid-2">
-          {(storefront.stores.length ? storefront.stores : nearbyStores.map((s) => ({ id: s.id, name: s.name, categoryName: 'Grocery', address: undefined, deliveryCoverageKm: s.deliveryCoverageKm, openingHoursVerified: false, image: s.image, productCount: s.products.length })) as StorefrontStore[]).slice(0, 4).map((s) => {
-            const products = storefront.featuredProducts.filter((p) => p.storeId === s.id).slice(0, 3);
+        <div className="grid-2 store-grid">
+          {shopStores.map((s) => {
+            const products = productList.filter((p) => p.storeId === s.id).slice(0, 3);
             const fallbackProducts = catalogue.marketplaceProducts.filter((p) => p.storeId === s.id).slice(0, 3);
-            const list = products.length ? products : fallbackProducts;
+            const list = products.length ? products : fallbackProducts.map((p) => ({ ...p, category: p.category, brand: p.brand, storeId: s.id }));
             return (
-              <div className="card store-card" key={s.id}>
-                <div className="between row--wrap">
-                  <div className="row" style={{ gap: 12, minWidth: 0 }}>
-                    <span className="store-avatar" aria-hidden="true"><Store size={20} /></span>
-                    <div style={{ minWidth: 0 }}><strong>{s.name}</strong><div className="tiny muted">{s.categoryName}{s.address ? ` · ${s.address}` : ''}</div></div>
+              <article className="card store-card store-card--brand" key={s.id}>
+                <div className="store-card__banner">
+                  {s.banner?.path ? <img src={s.banner.path} alt={s.banner.alt ?? `${s.name} shopfront`} loading="lazy" decoding="async" /> : <div className="store-card__banner-fallback" aria-hidden="true" />}
+                </div>
+                <div className="store-card__identity">
+                  <span className="store-card__logo" aria-hidden="true">
+                    {s.logo?.path ? <img src={s.logo.path} alt="" loading="lazy" decoding="async" /> : <Store size={20} />}
+                  </span>
+                  <div className="store-card__titles">
+                    <strong>{s.name}</strong>
+                    <span className="tiny muted">{s.categoryName}{s.address ? ` · ${s.address}` : ''}</span>
                   </div>
-                  <Link className="btn btn--secondary btn--sm" to={`/groceries/${s.id}`}>Visit store</Link>
+                  <Link className="btn btn--secondary btn--sm store-card__visit" to={`/categories?store=${encodeURIComponent(s.id)}`}>Visit store</Link>
+                </div>
+                <div className="store-card__meta tiny muted">
+                  <span className="row" style={{ gap: 4 }}><MapPin size={11} /> Delivers within {s.deliveryCoverageKm ?? 0} km</span>
+                  <span>{s.openingHoursVerified && s.openingHours ? s.openingHours : 'Opening hours not verified'}</span>
+                  <span>{s.productCount ?? list.length} products</span>
                 </div>
                 {list.length > 0 && (
-                  <div className="store-products">
-                    {list.map((p) => (
-                      <Link key={p.id} className="store-product" to={`/products/${p.slug}`}>
-                        <span className="store-product__name">{p.name}</span>
-                        <span className="store-product__price">{formatINR(p.variants?.[0]?.pricePaise ?? 0)}</span>
-                      </Link>
-                    ))}
+                  <div className="store-products store-products--images">
+                    {list.map((p) => {
+                      const img = ((p.images ?? []) as Array<{ status?: string; path?: string; assetPath?: string }>).find((i) => i.status !== 'unavailable' && (i.path || i.assetPath));
+                      return (
+                        <Link key={p.id} className="store-product" to={`/products/${p.slug}`}>
+                          <span className="store-product__thumb">
+                            {img ? <img src={img.path ?? `/${String(img.assetPath ?? '').replace(/^\//, '')}`} alt="" loading="lazy" decoding="async" /> : <Store size={16} aria-hidden="true" />}
+                          </span>
+                          <span className="store-product__body">
+                            <span className="store-product__name">{p.name}</span>
+                            <span className="store-product__price">{formatINR(p.variants?.[0]?.pricePaise ?? 0)}</span>
+                          </span>
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
-                <div className="row tiny muted" style={{ gap: 10, marginTop: 10 }}>
-                  <span className="row" style={{ gap: 4 }}><MapPin size={11} /> {s.deliveryCoverageKm ?? 0} km delivery</span>
-                  {s.openingHoursVerified && s.openingHours ? <span>{s.openingHours}</span> : <span>Opening hours not verified</span>}
-                </div>
-              </div>
+              </article>
             );
           })}
         </div>
@@ -265,27 +304,46 @@ export function Home() {
 
       <section className="section">
         <SectionHead eyebrow="Most ordered" title="Popular food items" action={<Link className="link" to="/food">Order food →</Link>} />
-        <div className="food-strip">
-          {popularFood.map((m) => (
-            <Link key={m.id} to={`/food/${m.restaurant.id}`} className="food-pill">
-              <UtensilsCrossed size={16} aria-hidden="true" />
-              <div><strong>{m.name}</strong><span>{m.restaurant.name} · {formatINR(m.pricePaise)}</span></div>
-            </Link>
-          ))}
+        <div className="food-grid">
+          {popularFood.map((p) => {
+            const img = p.images?.find((i) => i.status !== 'unavailable' && (i.path || i.assetPath));
+            return (
+              <Link key={p.id} to={`/products/${p.slug}`} className="food-card">
+                <div className="food-card__media">
+                  {img ? <img src={img.path ?? `/${String(img.assetPath ?? '').replace(/^\//, '')}`} alt={img.alt || p.name} loading="lazy" decoding="async" /> : <div className="food-card__fallback"><UtensilsCrossed size={22} aria-hidden="true" /><span>Photo coming soon</span></div>}
+                </div>
+                <div className="food-card__body">
+                  <strong className="food-card__name">{p.name}</strong>
+                  <span className="tiny muted food-card__store">{storefront.stores.find((s) => s.id === p.storeId)?.name ?? p.brand}</span>
+                  <span className="food-card__price">{formatINR(p.variants?.[0]?.pricePaise ?? 0)}</span>
+                </div>
+              </Link>
+            );
+          })}
+          {popularFood.length === 0 && <p className="small muted">No food listings yet. Partner kitchens publish dishes from the Partner app.</p>}
         </div>
       </section>
 
       <section className="section grid-2 home-two-col">
         <div>
           <SectionHead eyebrow="Do something local" title="Local experiences" action={<Link className="link" to="/experiences">All →</Link>} />
-          <div className="list">
-            {experiences.map((e) => (
-              <Link key={e.id} to={`/experiences?offering=${e.id}`} className="list-row">
-                <Sparkles size={17} style={{ color: 'var(--gw-champagne)' }} aria-hidden="true" />
-                <span className="list-row__body"><span className="list-row__title">{e.name}</span><span className="list-row__sub">{e.durationMinutes} min · {formatINR(e.pricePaise)}</span></span>
-                <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            ))}
+          <div className="experience-grid">
+            {experiences.map((e) => {
+              const dest = catalogue.destinations.find((d) => d.id === e.destinationId);
+              const img = dest?.images.find((i) => i.status === 'verified');
+              return (
+                <Link key={e.id} to={`/experiences?offering=${e.id}`} className="experience-card">
+                  <div className="experience-card__media">
+                    {img ? <img src={`/${String(img.assetPath ?? '').replace(/^\//, '')}`} alt={img.alt} loading="lazy" decoding="async" /> : <div className="experience-card__fallback"><Sparkles size={22} aria-hidden="true" /></div>}
+                  </div>
+                  <div className="experience-card__body">
+                    <strong>{e.name}</strong>
+                    <span className="tiny muted">{dest?.name ?? 'Darjeeling'} · {e.durationMinutes} min</span>
+                    <span className="small">{formatINR(e.pricePaise)}</span>
+                  </div>
+                </Link>
+              );
+            })}
             {experiences.length === 0 && <p className="small muted">No experiences listed here yet.</p>}
           </div>
         </div>

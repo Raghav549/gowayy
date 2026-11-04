@@ -10,7 +10,8 @@ import { formatINR } from '@gowayy/shared-utils';
 
 type Tab = 'store' | 'catalog' | 'orders' | 'offers' | 'rooms' | 'tours';
 
-interface Store { id: string; name: string; description: string; address: string; phone: string; openingHours: string; deliveryCoverageKm: number; status: string; verified: boolean; image: string | null }
+type StoreImage = { path?: string; alt?: string } | string | null;
+interface Store { id: string; name: string; description: string; address: string; phone: string; openingHours: string; deliveryCoverageKm: number; status: string; verified: boolean; image: StoreImage; logo: StoreImage; banner: StoreImage }
 interface Category { id: string; name: string; image?: string | null }
 interface Variant { id?: string; label: string; pricePaise: number; mrpPaise: number; stock: number }
 interface Product { id: string; name: string; description: string; category: string; categoryId: string; images: string[]; variants: Variant[]; tags: string[]; published: boolean; active: boolean; couponEligible: boolean }
@@ -55,7 +56,8 @@ function StorePanel() {
   const qc = useQueryClient();
   const showToast = useUI((s) => s.showToast);
   const stores = useQuery({ queryKey: ['partner-stores'], queryFn: () => client.partnerStores?.() as unknown as Promise<{ items: Store[] }> });
-  const store = stores.data?.items[0];
+  const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
+  const store = stores.data?.items.find((s) => s.id === activeStoreId) ?? stores.data?.items[0];
   const [draft, setDraft] = useState<Partial<Store> | null>(null);
   const [uploading, setUploading] = useState(false);
   const save = useMutation({
@@ -63,12 +65,13 @@ function StorePanel() {
     onSuccess: async () => { showToast('Store updated — customers see the change now', 'success'); setDraft(null); await qc.invalidateQueries({ queryKey: ['partner-stores'] }); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
-  const upload = async (file: File) => {
+  const imagePath = (value: StoreImage | undefined) => (typeof value === 'string' ? value : value?.path ?? '');
+  const upload = async (file: File, field: 'logo' | 'banner' | 'image') => {
     setUploading(true);
     try {
       const url = await uploadImageFile(file);
-      setDraft((d) => ({ ...d, image: url }));
-      showToast('Image uploaded', 'success');
+      setDraft((d) => ({ ...d, [field]: url }));
+      showToast(field === 'logo' ? 'Store logo uploaded — save to publish' : 'Store banner uploaded — save to publish', 'success');
     } catch (e) { showToast(e instanceof Error ? e.message : 'Upload failed', 'error'); }
     finally { setUploading(false); }
   };
@@ -78,8 +81,25 @@ function StorePanel() {
   return (
     <div className="grid-2">
       <div className="card stack">
+        {(stores.data?.items.length ?? 0) > 1 && (
+          <div className="stack" style={{ gap: 6 }}>
+            <span className="label">Your stores</span>
+            <div className="chips" role="tablist" aria-label="Select a store">
+              {stores.data!.items.map((s) => (
+                <button key={s.id} role="tab" aria-selected={s.id === store.id} className={`chip ${s.id === store.id ? 'chip--active' : ''}`} onClick={() => { setActiveStoreId(s.id); setDraft(null); }}>{s.name}</button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="row between"><h3 style={{ fontSize: 16 }}>Store profile</h3><Badge tone={store.verified ? 'success' : 'warning'}>{store.verified ? 'verified' : 'verification pending'}</Badge></div>
-        {value.image && <img src={value.image} alt="Store cover" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 14 }} />}
+        <div className="store-brand-preview">
+          <div className="store-brand-preview__banner">
+            {imagePath(value.banner) || imagePath(value.image) ? <img src={imagePath(value.banner) || imagePath(value.image)} alt="Store banner preview" /> : <span className="tiny muted">No banner yet — customers see a neutral lavender cover</span>}
+          </div>
+          <div className="store-brand-preview__logo">
+            {imagePath(value.logo) ? <img src={imagePath(value.logo)} alt="Store logo preview" /> : <ImagePlus size={18} aria-hidden="true" />}
+          </div>
+        </div>
         <Field label="Store name"><input className="input" value={value.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Field>
         <Field label="Description"><textarea className="input" rows={3} value={value.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></Field>
         <Field label="Address"><input className="input" value={value.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} /></Field>
@@ -89,10 +109,25 @@ function StorePanel() {
           <Field label="Service area (km)"><input className="input" type="number" min={1} max={40} value={value.deliveryCoverageKm} onChange={(e) => setDraft({ ...draft, deliveryCoverageKm: Number(e.target.value) })} /></Field>
           <Field label="Status"><select className="input" value={value.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}><option value="active">Open</option><option value="paused">Paused</option></select></Field>
         </div>
-        <label className="btn btn--secondary btn--sm" style={{ alignSelf: 'start', cursor: 'pointer' }}>
-          <ImagePlus size={15} /> {uploading ? 'Uploading…' : 'Upload cover image'}
-          <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); }} />
-        </label>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <label className="btn btn--secondary btn--sm" style={{ cursor: 'pointer' }}>
+            <ImagePlus size={15} /> {uploading ? 'Uploading…' : 'Upload logo'}
+            <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f, 'logo'); }} />
+          </label>
+          <label className="btn btn--secondary btn--sm" style={{ cursor: 'pointer' }}>
+            <ImagePlus size={15} /> Upload banner
+            <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f, 'banner'); }} />
+          </label>
+          <label className="btn btn--ghost btn--sm" style={{ cursor: 'pointer' }}>
+            Legacy cover
+            <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f, 'image'); }} />
+          </label>
+        </div>
+        <div className="grid-2" style={{ gap: 10 }}>
+          <Field label="Logo URL" hint="Or paste an existing /images or /uploads path."><input className="input" value={imagePath(value.logo)} onChange={(e) => setDraft({ ...draft, logo: e.target.value })} placeholder="/uploads/… or https://…" /></Field>
+          <Field label="Banner URL" hint="Wide cover used on the customer store card."><input className="input" value={imagePath(value.banner)} onChange={(e) => setDraft({ ...draft, banner: e.target.value })} placeholder="/uploads/… or https://…" /></Field>
+        </div>
+        <p className="tiny muted">Logo appears as a small square; banner is the wide cover on store cards. Anything you upload or paste is saved to the store record and shown in the customer app after you save.</p>
         <button className="btn btn--primary" disabled={!draft || save.isPending} onClick={() => draft && save.mutate({ ...draft, id: undefined })}>{save.isPending ? 'Saving…' : 'Save store'}</button>
       </div>
       <div className="card stack">

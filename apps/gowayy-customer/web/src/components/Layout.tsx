@@ -46,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const patchJourney = useJourney((s) => s.patch);
 
   useEffect(() => { if (toast) { const t = window.setTimeout(clearToast, 3800); return () => window.clearTimeout(t); } }, [toast, clearToast]);
-  useEffect(() => { document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#FBF8F5'); }, []);
+  useEffect(() => { document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#F8F3FB'); }, []);
 
   const choosePlace = async (id: string, name: string) => {
     setLocationLabel(name); setLocationOpen(false);

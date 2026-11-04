@@ -4,7 +4,7 @@ import { Search, Compass, MapPin, Mountain, Route as RouteIcon, ShieldAlert, Ext
 import { catalogue } from '@gowayy/catalog';
 import { usePageMeta } from '../lib/guards';
 import { SectionHead, ImageFrame } from '../components/ui';
-import { DestinationCard } from './shared';
+import { DestinationCard, useDestinations } from './shared';
 import { MapView } from '../components/MapView';
 
 type Tab = 'all' | 'gems' | 'verified';
@@ -14,13 +14,14 @@ export function Explore() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<Tab>('all');
+  const destinations = useDestinations();
 
   const matches = useMemo(() => {
     const term = query.trim().toLowerCase();
-    return catalogue.destinations
+    return destinations
       .filter((d) => (tab === 'gems' ? d.hiddenGem : tab === 'verified' ? d.images.some((i) => i.status === 'verified') : true))
       .filter((d) => !term || `${d.name} ${d.region} ${d.description} ${d.activities.join(' ')}`.toLowerCase().includes(term));
-  }, [query, tab]);
+  }, [query, tab, destinations]);
 
   return (
     <div className="explore-page">

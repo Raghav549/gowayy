@@ -123,7 +123,7 @@ export default function RootLayout() {
   return (
     <View style={[styles.boot, { backgroundColor: c.bg }]}>
       <Animated.View style={{ width: size, height: size, opacity: reveal, transform: [{ scale }] }}>
-        <Image source={require('../assets/branding/g-symbol.png')} style={styles.mark} contentFit="contain" accessibilityLabel="" />
+        <Image source={require('../assets/branding/splash-mark.png')} style={styles.mark} contentFit="contain" accessibilityLabel="" />
       </Animated.View>
     </View>
   );

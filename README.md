@@ -51,14 +51,16 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | `.github/workflows` | CI (typecheck+tests+secrets+per-app web builds), independent Vercel deploys, native Gradle Android APK builds and releases |
 | `docs` | Architecture, setup, deployment, API, security, licensing, image research, backup, testing, phases, screenshot analysis |
 
-## Design rules (v4 — charcoal, ivory and champagne)
+## Design rules (lavender fields — purple and champagne)
 
-Light-only system: warm white `#FDFBF7`, soft ivory `#F4EFE6`, charcoal ink `#1C1B19`,
-graphite text, muted silver and restrained champagne-gold accents `#C6A15B`. The original
-purple-and-gold G logo remains unchanged; **no neon, electric blue, cyan or blue gradients**
-are used in any app. Customer and Partner share one component language with charcoal primary
-actions; Admin uses the same tokens with a gold accent. Reduced-motion support, verified
-photographs with honest unavailable states, and no fabricated ratings, prices or availability.
+Light-only system restored to the original brand: page gradient `#FBF8FD → #F4ECFA → #FFF9F2`,
+purple accent `#421080`, lilac/lavender surfaces `#DCC7F2`/`#EDE3F7`, border `#E9E0F0`,
+ink `#17131B`, and restrained champagne highlights `#FFA500`/`#FFC44D`. The purple-and-gold
+G logo is unchanged, and the Android splash is the inverse mark on `#421080`. Customer,
+Partner and Admin share the same tokens and purple primary actions. **No cream page
+background, no neon, electric blue or cyan** is used in any app. Reduced-motion support,
+verified photographs with honest unavailable states, and no fabricated ratings, prices or
+availability.
 
 ## Integrity rules
 

@@ -7,7 +7,7 @@
  */
 import { catalogue } from '@gowayy/catalog';
 import { makeId, nowIso } from '@gowayy/shared-utils';
-import { createCategoryRecord } from './catalog-hub.mjs';
+import { createCategoryRecord, sanitiseImages } from './catalog-hub.mjs';
 
 const PARTNER_ROLES = ['restaurant', 'grocery', 'seller', 'property', 'tour_operator', 'driver'];
 const CSV_DATE = (iso) => String(iso ?? '').slice(0, 10);
@@ -317,23 +317,205 @@ export function createAdminHub(ctx) {
     }
 
     if (resource === 'destinations') {
+      db().destinations ??= [];
       if (method === 'GET') {
         return send(res, 200, {
-          items: catalogue.destinations.map((d) => ({
-            ...d, featured: (db().featuredDestinations ?? []).includes(d.id),
-            imagesVerified: d.images.filter((i) => i.status === 'verified').length,
+          items: db().destinations.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((d) => ({
+            ...d,
+            featured: (db().featuredDestinations ?? []).includes(d.id) || Boolean(d.featured),
+            images: [...(d.images ?? [])].sort((a, b) => Number(Boolean(b.primary)) - Number(Boolean(a.primary)) || Number(a.order ?? 0) - Number(b.order ?? 0)),
+            imagesVerified: (d.images ?? []).filter((i) => i.status === 'verified').length,
             listings: catalogue.properties.filter((p) => p.destinationId === d.id).length + catalogue.restaurants.filter((r) => r.destinationId === d.id).length + catalogue.groceryStores.filter((s) => s.destinationId === d.id).length,
           })),
         });
       }
-      if (method === 'PATCH' && tail[2]) {
-        db().featuredDestinations ??= [];
-        const destination = catalogue.destinations.find((d) => d.id === tail[2]);
+      if (method === 'POST' && tail.length === 2) {
+        const name = String(body.name ?? '').trim().slice(0, 80);
+        if (name.length < 2) bad('VALIDATION_FAILED', 'Destination name is required', 422);
+        const slug = String(body.slug ?? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')).slice(0, 80);
+        if (db().destinations.some((d) => d.slug === slug)) bad('DESTINATION_EXISTS', 'A destination with this slug already exists', 409);
+        const images = sanitiseImages(body.images ?? []).map((i, n) => ({ ...i, id: makeId('dimg'), primary: n === 0, thumbPath: i.path }));
+        const destination = {
+          id: makeId('dst'), slug, name, region: String(body.region ?? 'Darjeeling Himalaya').slice(0, 80),
+          summary: String(body.summary ?? '').slice(0, 240), description: String(body.description ?? '').slice(0, 4000),
+          coords: body.coords && Number.isFinite(Number(body.coords.lat)) ? { lat: Number(body.coords.lat), lng: Number(body.coords.lng) } : null,
+          images, active: body.active !== false, featured: Boolean(body.featured),
+          order: Number(body.order ?? (db().destinations.length + 1)), source: 'admin',
+          createdAt: nowIso(), updatedAt: nowIso(),
+        };
+        db().destinations.push(destination);
+        if (destination.featured) db().featuredDestinations = [...new Set([...(db().featuredDestinations ?? []), destination.id])];
+        audit(user.id, 'admin.destination.created', { destinationId: destination.id });
+        return ok(res, { destination }, 201);
+      }
+      if (method === 'PATCH' && tail[2] && tail[3] !== 'images') {
+        const destination = db().destinations.find((d) => d.id === tail[2] || d.slug === tail[2]);
         if (!destination) bad('DESTINATION_NOT_FOUND', 'Destination not found', 404);
-        if (body.featured === true && !db().featuredDestinations.includes(destination.id)) db().featuredDestinations.push(destination.id);
-        if (body.featured === false) db().featuredDestinations = db().featuredDestinations.filter((id) => id !== destination.id);
-        audit(user.id, 'admin.destination.featured', { destinationId: destination.id, featured: body.featured });
-        return ok(res, { destinationId: destination.id, featured: Boolean(body.featured) });
+        for (const key of ['name', 'region', 'summary', 'description']) if (body[key] !== undefined) destination[key] = String(body[key]).slice(0, key === 'description' ? 4000 : 240);
+        if (body.coords !== undefined) destination.coords = body.coords && Number.isFinite(Number(body.coords.lat)) ? { lat: Number(body.coords.lat), lng: Number(body.coords.lng) } : null;
+        if (body.active !== undefined) destination.active = Boolean(body.active);
+        if (body.order !== undefined) destination.order = Number(body.order);
+        if (body.featured !== undefined) {
+          destination.featured = Boolean(body.featured);
+          const featured = new Set(db().featuredDestinations ?? []);
+          if (destination.featured) featured.add(destination.id); else featured.delete(destination.id);
+          db().featuredDestinations = [...featured];
+        }
+        if (body.images !== undefined) {
+          const incoming = sanitiseImages(body.images).map((i, n) => ({ ...i, id: `dimg_${makeId('x')}`, primary: n === 0, thumbPath: i.path }));
+          destination.images = incoming;
+        }
+        destination.updatedAt = nowIso();
+        audit(user.id, 'admin.destination.updated', { destinationId: destination.id });
+        return ok(res, { destination });
+      }
+      if (method === 'DELETE' && tail[2] && tail[3] !== 'images') {
+        const destination = db().destinations.find((d) => d.id === tail[2]);
+        if (!destination) bad('DESTINATION_NOT_FOUND', 'Destination not found', 404);
+        // Soft delete keeps existing bookings and links intact.
+        destination.active = false; destination.updatedAt = nowIso();
+        audit(user.id, 'admin.destination.deactivated', { destinationId: destination.id });
+        return ok(res, { deactivated: true });
+      }
+      // Image gallery operations: append, replace, set primary, remove.
+      if (tail[2] && tail[3] === 'images') {
+        const destination = db().destinations.find((d) => d.id === tail[2]);
+        if (!destination) bad('DESTINATION_NOT_FOUND', 'Destination not found', 404);
+        destination.images ??= [];
+        if (method === 'POST') {
+          const images = sanitiseImages([body.image ?? body]);
+          if (!images.length) bad('VALIDATION_FAILED', 'Provide an image path or HTTPS URL', 422);
+          const image = { ...images[0], id: makeId('dimg'), primary: destination.images.length === 0, order: destination.images.length + 1, thumbPath: images[0].path };
+          destination.images.push(image);
+          destination.updatedAt = nowIso();
+          audit(user.id, 'admin.destination.image.added', { destinationId: destination.id, imageId: image.id });
+          return ok(res, { image, destination }, 201);
+        }
+        if (method === 'PATCH' && tail[4]) {
+          const image = destination.images.find((i) => i.id === tail[4]);
+          if (!image) bad('IMAGE_NOT_FOUND', 'Image not found on this destination', 404);
+          if (body.primary) destination.images.forEach((i) => { i.primary = false; });
+          if (body.alt !== undefined) image.alt = String(body.alt).slice(0, 160);
+          if (body.path) { const next = sanitiseImages([{ ...image, path: body.path }])[0]; if (next) Object.assign(image, next, { id: image.id, primary: image.primary }); }
+          if (body.order !== undefined) {
+            // Reorder within the gallery. Order is 1-based; out-of-range values clamp.
+            const ordered = destination.images.slice().sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+            const from = ordered.findIndex((i) => i.id === image.id);
+            const to = Math.max(0, Math.min(ordered.length - 1, Math.round(Number(body.order)) - 1));
+            if (from !== -1 && from !== to) { const [moved] = ordered.splice(from, 1); ordered.splice(to, 0, moved); }
+            ordered.forEach((i, n) => { i.order = n + 1; });
+            destination.images = ordered;
+          }
+          if (body.primary) image.primary = true;
+          if (!destination.images.some((i) => i.primary) && destination.images[0]) destination.images[0].primary = true;
+          destination.updatedAt = nowIso();
+          audit(user.id, 'admin.destination.image.updated', { destinationId: destination.id, imageId: image.id });
+          return ok(res, { image, destination });
+        }
+        if (method === 'DELETE' && tail[4]) {
+          const before = destination.images.length;
+          destination.images = destination.images.filter((i) => i.id !== tail[4]);
+          if (destination.images.length === before) bad('IMAGE_NOT_FOUND', 'Image not found', 404);
+          if (!destination.images.some((i) => i.primary) && destination.images[0]) destination.images[0].primary = true;
+          destination.updatedAt = nowIso();
+          audit(user.id, 'admin.destination.image.deleted', { destinationId: destination.id, imageId: tail[4] });
+          return ok(res, { destination });
+        }
+      }
+    }
+
+    if (resource === 'posters') {
+      db().posters ??= [];
+      if (method === 'GET') {
+        return send(res, 200, { items: db().posters.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) });
+      }
+      if (method === 'POST') {
+        const kind = body.kind === 'food' ? 'food' : 'grocery';
+        const title = String(body.title ?? '').trim().slice(0, 100);
+        if (!title) bad('VALIDATION_FAILED', 'Poster title is required', 422);
+        const images = sanitiseImages([body.image ?? {}]);
+        if (!images.length) bad('POSTER_IMAGE_REQUIRED', 'Upload a poster image or provide an HTTPS image URL', 422);
+        const poster = {
+          id: makeId('pst'), slug: String(body.slug ?? title.toLowerCase().replace(/[^a-z0-9]+/g, '-')).slice(0, 80),
+          kind, title, subtitle: String(body.subtitle ?? '').slice(0, 160), cta: String(body.cta ?? 'See all').slice(0, 40),
+          href: String(body.href ?? (kind === 'food' ? '/food' : '/groceries')).slice(0, 200),
+          image: images[0], order: Number(body.order ?? (db().posters.filter((p) => p.kind === kind).length + 1)),
+          active: body.active !== false, startAt: body.startAt ?? null, endAt: body.endAt ?? null,
+          createdAt: nowIso(), updatedAt: nowIso(),
+        };
+        db().posters.push(poster);
+        audit(user.id, 'admin.poster.created', { posterId: poster.id, kind });
+        return ok(res, { poster }, 201);
+      }
+      if (method === 'PATCH' && tail[2]) {
+        const poster = db().posters.find((p) => p.id === tail[2]);
+        if (!poster) bad('POSTER_NOT_FOUND', 'Poster not found', 404);
+        for (const key of ['title', 'subtitle', 'cta', 'href', 'slug']) if (body[key] !== undefined) poster[key] = String(body[key]).slice(0, 200);
+        if (body.kind === 'food' || body.kind === 'grocery') poster.kind = body.kind;
+        if (body.order !== undefined) poster.order = Number(body.order);
+        if (body.active !== undefined) poster.active = Boolean(body.active);
+        for (const key of ['startAt', 'endAt']) if (body[key] !== undefined) poster[key] = body[key] || null;
+        if (body.image !== undefined) {
+          const images = sanitiseImages([body.image]);
+          if (!images.length) bad('POSTER_IMAGE_REQUIRED', 'Provide a valid image path or HTTPS URL', 422);
+          poster.image = images[0];
+        }
+        poster.updatedAt = nowIso();
+        audit(user.id, 'admin.poster.updated', { posterId: poster.id });
+        return ok(res, { poster });
+      }
+      if (method === 'DELETE' && tail[2]) {
+        const before = db().posters.length;
+        db().posters = db().posters.filter((p) => p.id !== tail[2]);
+        if (db().posters.length === before) bad('POSTER_NOT_FOUND', 'Poster not found', 404);
+        audit(user.id, 'admin.poster.deleted', { posterId: tail[2] });
+        return ok(res, { deleted: true });
+      }
+      if (method === 'POST' && tail[2] === 'reorder') {
+        const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
+        ids.forEach((id, index) => { const poster = db().posters.find((p) => p.id === id); if (poster) poster.order = index + 1; });
+        audit(user.id, 'admin.posters.reordered', { count: ids.length });
+        return ok(res, { items: db().posters.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) });
+      }
+    }
+
+    if (resource === 'service-areas') {
+      db().serviceAreas ??= [];
+      const cleanPins = (list) => [...new Set((Array.isArray(list) ? list : String(list ?? '').split(/[,\s]+/))
+        .map((p) => String(p).trim()).filter((p) => /^\d{6}$/.test(p)))].slice(0, 200);
+      if (method === 'GET') return send(res, 200, { items: db().serviceAreas });
+      if (method === 'POST') {
+        const city = String(body.city ?? '').trim().slice(0, 80);
+        if (city.length < 2) bad('VALIDATION_FAILED', 'City name is required', 422);
+        if (db().serviceAreas.some((a) => a.city.toLowerCase() === city.toLowerCase())) bad('SERVICE_AREA_EXISTS', 'This city already exists', 409);
+        const area = {
+          id: makeId('sva'), city, state: String(body.state ?? 'West Bengal').slice(0, 80),
+          active: body.active !== false, foodPincodes: cleanPins(body.foodPincodes), groceryPincodes: cleanPins(body.groceryPincodes),
+          deliveryNote: String(body.deliveryNote ?? '').slice(0, 240), createdAt: nowIso(), updatedAt: nowIso(),
+        };
+        db().serviceAreas.push(area);
+        audit(user.id, 'admin.serviceArea.created', { serviceAreaId: area.id, city });
+        return ok(res, { serviceArea: area }, 201);
+      }
+      if (method === 'PATCH' && tail[2]) {
+        const area = db().serviceAreas.find((a) => a.id === tail[2]);
+        if (!area) bad('SERVICE_AREA_NOT_FOUND', 'Service area not found', 404);
+        if (body.city !== undefined) area.city = String(body.city).slice(0, 80);
+        if (body.state !== undefined) area.state = String(body.state).slice(0, 80);
+        if (body.active !== undefined) area.active = Boolean(body.active);
+        if (body.foodPincodes !== undefined) area.foodPincodes = cleanPins(body.foodPincodes);
+        if (body.groceryPincodes !== undefined) area.groceryPincodes = cleanPins(body.groceryPincodes);
+        if (body.deliveryNote !== undefined) area.deliveryNote = String(body.deliveryNote).slice(0, 240);
+        area.updatedAt = nowIso();
+        audit(user.id, 'admin.serviceArea.updated', { serviceAreaId: area.id });
+        return ok(res, { serviceArea: area });
+      }
+      if (method === 'DELETE' && tail[2]) {
+        const before = db().serviceAreas.length;
+        db().serviceAreas = db().serviceAreas.filter((a) => a.id !== tail[2]);
+        if (db().serviceAreas.length === before) bad('SERVICE_AREA_NOT_FOUND', 'Service area not found', 404);
+        audit(user.id, 'admin.serviceArea.deleted', { serviceAreaId: tail[2] });
+        return ok(res, { deleted: true });
       }
     }
 

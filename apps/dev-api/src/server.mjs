@@ -354,6 +354,12 @@ function placeOrderFromCart(user, body) {
   const address = db.addresses.find((a) => a.id === body.addressId && a.userId === user.id);
   if (!address) bad('ADDRESS_REQUIRED', 'Choose a delivery address', 422);
   const method = String(body.paymentMethod ?? '');
+  const allowedMethods = ['upi', 'card', 'netbanking', 'cod', 'wallet'];
+  if (!allowedMethods.includes(method)) bad('PAYMENT_METHOD_REQUIRED', 'Choose a payment method', 422);
+  if (method === 'cod' && db.settings?.services?.cod === false) bad('COD_UNAVAILABLE', 'Cash on delivery is not available', 422);
+  if (['card', 'netbanking'].includes(method) && !process.env.GOWAYY_PAYMENT_GATEWAY_KEY) {
+    bad('GATEWAY_NOT_CONFIGURED', 'Card and net-banking payments need the payment gateway credentials. Use UPI or cash on delivery in this environment.', 503);
+  }
   const priced = lines.map((l) => {
     const p = db.catalogProducts.find((x) => x.id === l.productId || x.slug === l.productId) ?? getProduct(l.productId);
     const v = p?.variants.find((x) => x.id === l.variantId);
@@ -364,14 +370,28 @@ function placeOrderFromCart(user, body) {
     if (l.protectionPlanId && !plan) bad('PLAN_NOT_FOUND', 'Protection plan no longer offered', 409);
     return { id: p.id, variantId: v.id, name: p.name, variantLabel: v.label, quantity: Number(l.quantity), unitPricePaise: v.pricePaise, mrpPaise: v.mrpPaise, protectionPlanId: plan?.id ?? null, protectionPaise: plan ? plan.pricePaise * Number(l.quantity) : 0 };
   });
+  // Service coverage: food and grocery pins are configured independently by an
+  // administrator. The server, not the client, refuses out-of-area orders.
+  const areas = (db.serviceAreas ?? []).filter((a) => a.active !== false);
+  if (areas.length) {
+    const firstStore = db.stores.find((st) => st.id === (db.catalogProducts.find((p) => p.id === priced[0]?.id)?.storeId));
+    const category = String(db.catalogProducts.find((p) => p.id === priced[0]?.id)?.category ?? '').toLowerCase();
+    const foodNames = ['local foods', 'snacks & beverages', 'dairy & eggs'];
+    const kind = foodNames.some((name) => category.includes(name)) || /food|kitchen|restaurant|bakery/i.test(firstStore?.categoryName ?? '') ? 'food' : 'grocery';
+    const pins = areas.flatMap((a) => (kind === 'food' ? a.foodPincodes : a.groceryPincodes) ?? []);
+    if (!pins.includes(String(address.pincode))) bad('SERVICE_UNAVAILABLE', `We do not deliver ${kind} to ${address.pincode} yet.`, 422, { service: kind, pincode: address.pincode });
+  }
   const coupon = body.coupon ? (db.coupons ?? []).find((c) => c.code === String(body.coupon).trim().toUpperCase() && c.active) : null;
   if (body.coupon && !coupon) bad('INVALID_COUPON', 'This coupon code is not valid');
   const deliveryFeePaise = body.deliverySlot === 'express' ? 9900 : 0;
   const allPlans = catalogue.marketplaceProducts.flatMap((p) => p.protectionPlans);
   const quote = quoteCheckout({ lines: priced.map((l) => ({ unitPricePaise: l.unitPricePaise, quantity: l.quantity, protectionPlanId: l.protectionPlanId })), protectionPlans: allPlans, deliveryFeePaise, coupon });
+  if (method === 'cod' && quote.totalPaise > 1_000_000) bad('COD_LIMIT', 'Cash on delivery is unavailable above ₹10,000', 422);
+  const orderStoreId = db.catalogProducts.find((p) => p.id === priced[0]?.id)?.storeId ?? null;
   const order = {
     id: makeId('ord'), reference: reference('order'), userId: user.id, service: 'marketplace',
-    status: 'created', journeyId: body.journeyId ?? null, listingId: null,
+    status: 'created', journeyId: body.journeyId ?? null, listingId: orderStoreId,
+    paymentStatus: method === 'cod' ? 'cod_due' : 'unpaid',
     items: priced.map((l) => ({ id: l.id, name: `${l.name} (${l.variantLabel})`, quantity: l.quantity, unitPricePaise: l.unitPricePaise, options: l.protectionPlanId ? [l.protectionPlanId] : [] })),
     protection: priced.filter((l) => l.protectionPlanId).map((l) => ({ planId: l.protectionPlanId, paise: l.protectionPaise })),
     price: { ...quote, lines: [{ label: 'Items', paise: quote.itemsPaise }, { label: 'Protection', paise: quote.protectionPaise }, { label: 'Delivery', paise: deliveryFeePaise }, { label: 'Discount', paise: -quote.discountPaise }, { label: `GST (5%)`, paise: quote.taxPaise }], totalPaise: quote.totalPaise },
