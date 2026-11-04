@@ -1,13 +1,23 @@
-name: EAS builds (three Android apps)
+name: Android builds (three apps)
+
+# Two layers, both mandatory — nothing is ever silently skipped:
+#  1. native-check (every push/PR): per app, install deps, typecheck,
+#     `expo prebuild --platform android` (generates + validates the native
+#     android/ project from app.json/eas.json) and `expo export --platform
+#     android` (real Metro production bundle). Artifacts are uploaded.
+#  2. eas-build (push to main): per app, `eas build --platform android
+#     --profile production` (AAB). Requires the EXPO_TOKEN repo secret; if it
+#     is missing the job FAILS with the exact remediation instead of skipping.
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'arena/**']
     paths:
       - 'apps/gowayy-customer/mobile/**'
       - 'apps/gowayy-partner/mobile/**'
       - 'apps/gowayy-explore/mobile/**'
       - 'packages/**'
+      - '.github/workflows/mobile-build.yml'
   pull_request:
   workflow_dispatch:
 
@@ -15,105 +25,79 @@ permissions:
   contents: read
 
 jobs:
-  preflight:
-    name: Check EAS configuration
+  native-check:
+    name: 'Native check · ${{ matrix.app }}'
     runs-on: ubuntu-latest
-    outputs:
-      eas: ${{ steps.check.outputs.eas }}
-      missing: ${{ steps.check.outputs.missing }}
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - customer
+          - partner
+          - explore
     steps:
-      - id: check
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.json
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Generate native Android project (expo prebuild)
+        run: npx expo prebuild --platform android --no-install
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Verify Android applicationId / build config
+        run: |
+          grep -E '"package"|"versionCode"' app.json android/app/build.gradle | head -4
+          test -f android/app/build.gradle
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Production JS bundle for Android (expo export)
+        run: npx expo export --platform android --output-dir dist-android
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
+      - name: Upload Android bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gowayy-${{ matrix.app }}-android-bundle
+          path: apps/gowayy-${{ matrix.app }}/mobile/dist-android
+          retention-days: 14
+
+  eas-build:
+    name: 'EAS production AAB · ${{ matrix.app }}'
+    needs: native-check
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - customer
+          - partner
+          - explore
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify EXPO_TOKEN is configured (fail loudly, never skip)
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
-            echo "eas=false" >> "$GITHUB_OUTPUT"
-            echo "missing= EXPO_TOKEN" >> "$GITHUB_OUTPUT"
-            echo "SKIPPED (visible, not hidden): EXPO_TOKEN not set — add it in repo Settings → Secrets and variables → Actions (an Expo access token), see docs/DEPLOYMENT.md"
-          else
-            echo "eas=true" >> "$GITHUB_OUTPUT"
-            echo "EXPO_TOKEN is configured."
+            echo "::error::EXPO_TOKEN repository secret is missing. Android AAB builds cannot run without it."
+            echo "Add it at: GitHub repo → Settings → Secrets and variables → Actions → New repository secret → name EXPO_TOKEN, value = Expo access token (https://expo.dev/settings/access-tokens). See docs/DEPLOYMENT.md §3."
+            exit 1
           fi
+          echo "EXPO_TOKEN present — running real EAS build."
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-  build-customer:
-    name: Build GOWAYY (customer) AAB
-    needs: preflight
-    if: needs.preflight.outputs.eas == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: apps/gowayy-customer/mobile/package-lock.json
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-        working-directory: apps/gowayy-customer/mobile
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build production AAB
+      - name: Build production AAB (app.gowayy.${{ matrix.app }})
         run: eas build --platform android --profile production --non-interactive
-        working-directory: apps/gowayy-customer/mobile
-
-  build-partner:
-    name: Build GOWAYY PARTNER AAB
-    needs: preflight
-    if: needs.preflight.outputs.eas == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: apps/gowayy-partner/mobile/package-lock.json
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund
-        working-directory: apps/gowayy-partner/mobile
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build production AAB
-        run: eas build --platform android --profile production --non-interactive
-        working-directory: apps/gowayy-partner/mobile
-
-  build-explore:
-    name: Build GOWAYY EXPLORE AAB
-    needs: preflight
-    if: needs.preflight.outputs.eas == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: apps/gowayy-explore/mobile/package-lock.json
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund
-        working-directory: apps/gowayy-explore/mobile
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build production AAB
-        run: eas build --platform android --profile production --non-interactive
-        working-directory: apps/gowayy-explore/mobile
-
-  report:
-    name: Build report
-    if: always()
-    needs: [preflight, build-customer, build-partner, build-explore]
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          if [ "${{ needs.preflight.outputs.eas }}" = "true" ]; then
-            echo "EAS builds ran for all three Android apps."
-          else
-            echo "EAS builds SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (see docs/DEPLOYMENT.md). No build was attempted; nothing was hidden."
-          fi
-          echo "job results: customer=${{ needs.build-customer.result }} partner=${{ needs.build-partner.result }} explore=${{ needs.build-explore.result }}"
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile
