@@ -113,7 +113,7 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools, platforms;android-37, build-tools;37.0.0, ndk;27.1.12297006'
+          packages: 'platform-tools platforms;android-37 build-tools;37.0.0 ndk;27.1.12297006'
           accept-android-sdk-licenses: true
 
       - name: Install repository dependencies
