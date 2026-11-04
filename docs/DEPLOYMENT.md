@@ -98,3 +98,12 @@ dev API — no `localhost` references in browser code.
   or roll back the channel to a previous update group.
 - DB: migrations are append-only; roll back by restoring a Supabase backup
   (see `docs/BACKUP.md`).
+
+## CI behaviour when deploy secrets are absent
+
+`deploy-web.yml` and `mobile-build.yml` run a `preflight` job first. If any required
+secret (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_*`, `EXPO_TOKEN`) is missing,
+the deploy/build steps are skipped and a `report` step prints exactly which secrets are
+missing — the skip is loud and visible in the run log, never silent or disguised as
+success. The main `ci.yml` workflow (typecheck, 114 tests, secret scan, web builds) is
+unaffected and remains the strict gate on every PR.

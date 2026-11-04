@@ -4,7 +4,7 @@
     "slug": "gowayy",
     "version": "0.1.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "scheme": "gowayy",
     "newArchEnabled": true,
     "icon": "./assets/branding/app-icon.png",

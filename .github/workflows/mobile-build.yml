@@ -8,15 +8,37 @@ on:
       - 'apps/gowayy-partner/mobile/**'
       - 'apps/gowayy-explore/mobile/**'
       - 'packages/**'
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  preflight:
+    name: Check EAS configuration
+    runs-on: ubuntu-latest
+    outputs:
+      eas: ${{ steps.check.outputs.eas }}
+      missing: ${{ steps.check.outputs.missing }}
+    steps:
+      - id: check
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "eas=false" >> "$GITHUB_OUTPUT"
+            echo "missing= EXPO_TOKEN" >> "$GITHUB_OUTPUT"
+            echo "SKIPPED (visible, not hidden): EXPO_TOKEN not set — add it in repo Settings → Secrets and variables → Actions (an Expo access token), see docs/DEPLOYMENT.md"
+          else
+            echo "eas=true" >> "$GITHUB_OUTPUT"
+            echo "EXPO_TOKEN is configured."
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
   build-customer:
     name: Build GOWAYY (customer) AAB
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.eas == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +60,8 @@ jobs:
 
   build-partner:
     name: Build GOWAYY PARTNER AAB
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.eas == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +83,8 @@ jobs:
 
   build-explore:
     name: Build GOWAYY EXPLORE AAB
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.eas == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,3 +103,16 @@ jobs:
       - name: Build production AAB
         run: eas build --platform android --profile production --non-interactive
         working-directory: apps/gowayy-explore/mobile
+
+  report:
+    name: Build report
+    needs: [preflight, build-customer, build-partner, build-explore]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ needs.preflight.outputs.eas }}" = "true" ]; then
+            echo "EAS builds ran for all three Android apps."
+          else
+            echo "EAS builds SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (see docs/DEPLOYMENT.md). No build was attempted; nothing was hidden."
+          fi
+          echo "job results: customer=${{ needs.build-customer.result }} partner=${{ needs.build-partner.result }} explore=${{ needs.build-explore.result }}"

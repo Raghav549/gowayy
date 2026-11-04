@@ -6,7 +6,7 @@ export interface MapPin extends Coordinates { id: string; label: string; kind?: 
 
 const COLOURS: Record<string, string> = {
   airport: '#E8A23A', stand: '#C9BBA3', destination: '#1E6B4F', landmark: '#8A7460',
-  business: '#9AA1AA', address: '#F3EAD9', hotel: '#F2C063', restaurant: '#C08A4A', attraction: '#6F8F6B',
+  business: '#C9BBA3', address: '#F3EAD9', hotel: '#F2C063', restaurant: '#C07A2D', attraction: '#4E7D5B',
 };
 
 /** Dependency-free interactive schematic map. Real coordinates, offline fallback provider. */
@@ -38,7 +38,7 @@ export function MapView({ pins, route, onSelect, height = 320, showLabels = true
             <g key={pin.id} className="map__pin" onClick={() => onSelect?.(pin)} role={onSelect ? 'button' : undefined}>
               <circle cx={pt.x} cy={pt.y} r="13" fill={colour} opacity=".14" />
               <circle cx={pt.x} cy={pt.y} r="6" fill={colour} stroke="#33261B" strokeWidth="2" />
-              {showLabels && <text x={pt.x + 11} y={pt.y + 4} fill="var(--gw-text)" fontSize="13" fontFamily="system-ui" style={{ paintOrder: 'stroke', stroke: 'rgba(13,15,18,.85)', strokeWidth: 3 }}>{pin.label}</text>}
+              {showLabels && <text x={pt.x + 11} y={pt.y + 4} fill="var(--gw-text)" fontSize="13" fontFamily="system-ui" style={{ paintOrder: 'stroke', stroke: 'rgba(250,244,233,.9)', strokeWidth: 3 }}>{pin.label}</text>}
             </g>
           );
         })}

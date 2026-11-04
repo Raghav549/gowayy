@@ -3,15 +3,47 @@ name: Deploy web apps to Vercel
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  preflight:
+    name: Check deployment configuration
+    runs-on: ubuntu-latest
+    outputs:
+      vercel: ${{ steps.check.outputs.vercel }}
+      missing: ${{ steps.check.outputs.missing }}
+    steps:
+      - id: check
+        run: |
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
+          for p in VERCEL_PROJECT_CUSTOMER VERCEL_PROJECT_PARTNER VERCEL_PROJECT_EXPLORE; do
+            [ -z "${!p}" ] && missing="$missing $p"
+          done
+          if [ -z "$missing" ]; then
+            echo "vercel=true" >> "$GITHUB_OUTPUT"
+            echo "All Vercel secrets are configured." 
+          else
+            echo "vercel=false" >> "$GITHUB_OUTPUT"
+            echo "missing=$missing" >> "$GITHUB_OUTPUT"
+            echo "SKIPPED (visible, not hidden): missing secrets:$missing — add them in repo Settings → Secrets and variables → Actions, see docs/DEPLOYMENT.md"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_CUSTOMER: ${{ secrets.VERCEL_PROJECT_CUSTOMER }}
+          VERCEL_PROJECT_PARTNER: ${{ secrets.VERCEL_PROJECT_PARTNER }}
+          VERCEL_PROJECT_EXPLORE: ${{ secrets.VERCEL_PROJECT_EXPLORE }}
+
   deploy-customer:
     name: Deploy GOWAYY customer web
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +57,8 @@ jobs:
 
   deploy-partner:
     name: Deploy GOWAYY PARTNER web
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +72,8 @@ jobs:
 
   deploy-explore:
     name: Deploy GOWAYY EXPLORE web
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: needs.preflight.outputs.vercel == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,3 +84,16 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_EXPLORE }}
           working-directory: apps/gowayy-explore/web
           vercel-args: '--prod'
+
+  report:
+    name: Deployment report
+    needs: [preflight, deploy-customer, deploy-partner, deploy-explore]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ needs.preflight.outputs.vercel }}" = "true" ]; then
+            echo "Vercel deploys ran for all three apps."
+          else
+            echo "Vercel deploys SKIPPED — missing secrets:${{ needs.preflight.outputs.missing }} (see docs/DEPLOYMENT.md). No deploy was attempted; nothing was hidden."
+          fi
+          echo "job results: customer=${{ needs.deploy-customer.result }} partner=${{ needs.deploy-partner.result }} explore=${{ needs.deploy-explore.result }}"

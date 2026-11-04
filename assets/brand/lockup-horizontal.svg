@@ -1,15 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 160" width="1520" height="320" role="img" aria-label="GOWAYY logo">
-  <title>GOWAYY — symbol and wordmark lockup</title>
-  <defs><linearGradient id="lockFace" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3ECDF"/><stop offset="0.5" stop-color="#C9A86A"/><stop offset="1" stop-color="#3B4049"/></linearGradient></defs>
-  <g transform="translate(8 8) scale(0.28)">
-    <path fill="url(#lockFace)" fill-rule="evenodd" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="GOWAYY G symbol, layered 2.5D in espresso ink and honey gold on light">
+  <title>GOWAYY — layered 2.5D G (light edition)</title>
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFDF8"/>
+      <stop offset="0.55" stop-color="#F3EAD9"/>
+      <stop offset="1" stop-color="#E9DDC7"/>
+    </linearGradient>
+    <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="gclip"><path fill-rule="evenodd" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/></clipPath>
+  </defs>
+  <!-- extruded depth: stacked offset silhouettes in warm tints -->
+  <g>
+    <path fill="#E8A23A" fill-rule="evenodd" transform="translate(22 28)" opacity="0.28" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
+    <path fill="#E8A23A" fill-rule="evenodd" transform="translate(17 22)" opacity="0.38" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
+    <path fill="#1E6B4F" fill-rule="evenodd" transform="translate(12 16)" opacity="0.30" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
+    <path fill="#1E6B4F" fill-rule="evenodd" transform="translate(7 9)" opacity="0.45" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
+    <path fill="#33261B" fill-rule="evenodd" transform="translate(3 4)" opacity="0.9" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
   </g>
-  <g transform="translate(180 30) scale(1.0)" fill="none" stroke="#F5F1E8" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter">
-    <path d="M64 12 H18 L8 22 V78 L18 88 H64 V54 H38"/>
-    <path d="M102 12 H134 L144 22 V78 L134 88 H102 L92 78 V22 Z"/>
-    <path d="M176 12 L188 88 L208 34 L228 88 L240 12"/>
-    <path d="M260 88 L286 12 L312 88 M272 60 H300"/>
-    <path d="M344 12 L370 50 L396 12 M370 50 V88"/>
-    <path d="M428 12 L454 50 L480 12 M454 50 V88"/>
+  <!-- top face -->
+  <path fill="url(#face)" fill-rule="evenodd" stroke="#33261B" stroke-width="5" d="M176 48 H336 L432 144 V224 H268 V300 H432 V368 L336 464 H176 L80 368 V144 Z M196 132 H316 L372 188 V224 H268 V300 H372 V324 L316 380 H196 L140 324 V188 Z"/>
+  <!-- bevel highlight + soft shadow, clipped to the G -->
+  <g clip-path="url(#gclip)">
+    <path fill="url(#bevel)" d="M80 144 L176 48 L336 48 L432 144 L412 164 L330 82 L182 82 L100 164 Z"/>
+    <path fill="#33261B" opacity="0.10" d="M432 368 L336 464 L176 464 L80 368 L104 344 L190 430 L322 430 L408 344 Z"/>
+    <path fill="#E8A23A" d="M268 224 H432 V300 H268 Z"/>
+    <path fill="#F2C063" d="M268 224 H432 V240 H268 Z"/>
+    <path fill="#B97A1F" d="M268 288 H432 V300 H268 Z"/>
   </g>
+  <!-- connected-journey route: nodes and a directional arrow on the crossbar -->
+  <g fill="none" stroke="#33261B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M294 262 H398"/>
+    <path d="M380 244 L400 262 L380 280"/>
+  </g>
+  <circle cx="316" cy="262" r="6" fill="#33261B"/>
 </svg>
