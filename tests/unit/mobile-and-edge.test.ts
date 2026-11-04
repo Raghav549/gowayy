@@ -124,19 +124,30 @@ describe('Expo Android application', () => {
   });
 
   it('uses a compatible, complete Expo dependency set', () => {
-    const pkg = json<Record<string, any>>('apps/gowayy-customer/mobile/package.json');
-    const d = pkg.dependencies;
-    expect(d['expo']).toMatch(/^~58\./);
+    for (const app of ['customer', 'explore', 'partner']) {
+      const pkg = json<Record<string, any>>(`apps/gowayy-${app}/mobile/package.json`);
+      const d = pkg.dependencies;
+      expect(d.expo).toMatch(/^~57\./);
+      expect(d['react-native']).toBe('0.86.3');
+      for (const [name, version] of Object.entries(d)) {
+        if (name.startsWith('expo-')) expect(version, `${app} ${name}`).toMatch(/^~57\./);
+      }
+    }
+    const d = json<Record<string, any>>('apps/gowayy-customer/mobile/package.json').dependencies;
     for (const lib of ['expo-router', 'react-native-reanimated', 'react-native-gesture-handler', 'react-native-worklets',
       'expo-secure-store', 'expo-location', 'expo-notifications', 'expo-image',
       'zustand', '@tanstack/react-query', 'react-hook-form', 'zod']) expect(d[lib]).toBeTruthy();
     expect(d['expo-gl']).toBeUndefined();
     expect(d.three).toBeUndefined();
-    // Reanimated 4.7.1 requires worklets 0.13.x (an earlier pin of 0.7.1 broke npm resolution).
-    expect(d['react-native-reanimated']).toBe('4.7.1');
-    expect(d['react-native-worklets']).toMatch(/^0\.13\./);
+    // Expo SDK 57 bundles a compatible Reanimated/worklets pair and stays on Android API 36.
+    expect(d['react-native-reanimated']).toBe('4.5.1');
+    expect(d['react-native-worklets']).toBe('0.10.1');
     expect(read('apps/gowayy-customer/mobile/tsconfig.json')).toContain('"strict": true');
     expect(read('apps/gowayy-customer/mobile/metro.config.js')).toContain('watchFolders');
+    const workflow = read('.github/workflows/mobile-build.yml');
+    expect(workflow).toContain("platforms;android-36");
+    expect(workflow).toContain("build-tools;36.0.0");
+    expect(workflow).toContain("ndk;27.1.12297006");
   });
 
   it('never embeds a service-role key or admin interface in client code', () => {

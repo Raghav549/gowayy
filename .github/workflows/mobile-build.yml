@@ -149,12 +149,6 @@ jobs:
       - name: Generate clean native Android project
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
         run: npx expo prebuild --platform android --no-install
-      - name: Pin compile SDK to runner-available stable Android API
-        working-directory: apps/gowayy-${{ matrix.app }}/mobile/android
-        run: |
-          printf '\nandroid.compileSdkVersion=36\nandroid.buildToolsVersion=36.0.0\n' >> gradle.properties
-          grep -F 'android.compileSdkVersion=36' gradle.properties
-          grep -F 'android.buildToolsVersion=36.0.0' gradle.properties
       - name: Configure Gradle to use the protected release signing key
         run: node scripts/configure-android-signing.mjs "apps/gowayy-${{ matrix.app }}/mobile/android/app/build.gradle"
 

@@ -18,7 +18,7 @@ and never pretends demo verification is real verification. Password hashing, ses
 and rate limits run on the server. Payments are sandbox-only; capture requires a
 server-verified event, never a client-side success signal.
 
-## Android (Expo SDK 58 + native Gradle)
+## Android (Expo SDK 57 + native Gradle)
 
 ```bash
 npm ci --prefix apps/gowayy-customer/mobile

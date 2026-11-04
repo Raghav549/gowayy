@@ -95,7 +95,7 @@ node scripts/verify-web-output.mjs explore
 node scripts/verify-web-output.mjs partner
 ```
 
-The GitHub Android workflow is the native Gradle build pipeline. Local native builds need the Java 17 JDK, Android API 36 platform, Build Tools 36.0.0, and NDK 27.1.12297006. React Native 0.88 currently defaults to API 37 / Build Tools 37.0.0, but the hosted runner's SDK manager cannot install the API 37 platform; CI explicitly overrides only the compile SDK/build tools to the stable API 36 toolchain (the app target SDK remains 36). `npx expo prebuild --platform android --clean --no-install` regenerates ignored native sources; Gradle then runs `assembleDebug` or `assembleRelease`.
+The GitHub Android workflow is the native Gradle build pipeline. All three apps use Expo SDK 57 with React Native 0.86.3, which compiles against the stable Android API 36 / Build Tools 36.0.0 and NDK 27.1.12297006. This version pin is intentional: Expo SDK 58's Android dependencies require API 37, but the hosted runner's SDK manager cannot install the API 37 platform, and compiling those libraries against API 36 fails Android AAR metadata validation. `npx expo prebuild --platform android --clean --no-install` regenerates ignored native sources; Gradle then runs `assembleDebug` or `assembleRelease`.
 
 ## 4. Preview hosts
 

@@ -5,7 +5,7 @@ apps/
   gowayy-customer/
     web/       React + Vite PWA (port 5173); splash, 4-scene onboarding, auth+OTP,
                home, services, marketplace (products/cart/checkout), journey, profile
-    mobile/    Expo SDK 58 + Expo Router Android (native Gradle APKs in GitHub Actions); same flows
+    mobile/    Expo SDK 57 + Expo Router Android (native Gradle APKs in GitHub Actions); same flows
   gowayy-partner/
     web/       React + Vite partner app (port 5174)
     mobile/    Expo Android app `app.gowayy.partner` (independent signed APK and release)

@@ -34,7 +34,7 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | Path | Contents |
 | --- | --- |
 | `apps/gowayy-customer/web` | Customer React+Vite PWA (port 5173): splash, 4-scene onboarding, auth w/ OTP, home, services, marketplace (products/cart/checkout), journey dashboard, profile |
-| `apps/gowayy-customer/mobile` | GOWAYY Expo SDK 58 Android app (`app.gowayy.customer`), built as a native Gradle APK in GitHub Actions |
+| `apps/gowayy-customer/mobile` | GOWAYY Expo SDK 57 Android app (`app.gowayy.customer`), built as a native Gradle APK in GitHub Actions |
 | `apps/gowayy-partner/web` + `/mobile` | PARTNER web (5174) + Android (`app.gowayy.partner`): auth, onboarding, driver mode, manage, inbox, earnings, profile + verification |
 | `apps/gowayy-explore/web` + `/mobile` | EXPLORE PWA (5175) + Android (`app.gowayy.explore`): destinations, hidden gems, booking handoff, offline shell |
 | `apps/dev-api` | Real Node HTTP API with JSON persistence — auth, pricing, availability, bookings, orders, server-priced commerce, verified payments, refunds, dispatch, partner hub, audit |
