@@ -12,8 +12,8 @@ import { client, idemKey } from '../lib/client';
 import { usePageMeta, useRequireAuth } from '../lib/guards';
 import { useJourney } from '../store/useJourney';
 import { useUI } from '../store/useUI';
-import { Field, SectionHead, PriceLines, ImageFrame, EmptyState, StatusBadge } from '../components/ui';
-import { DestinationSelect, DemoListingBadge, ConnectedRecommendations, DataNotice } from './shared';
+import { Field, SectionHead, PriceLines, ImageFrame, EmptyState, StatusBadge, Stepper } from '../components/ui';
+import { DestinationSelect, ConnectedRecommendations } from './shared';
 import { MapView } from '../components/MapView';
 
 const today = new Date().toISOString().slice(0, 10);
@@ -34,7 +34,7 @@ export function Hotels() {
 
   return (
     <div>
-      <SectionHead eyebrow="Stays" title="Hotels, homestays & lodges" subtitle="Every property has independent seeded room inventory; availability is checked on the server for every night." />
+      <SectionHead eyebrow="Stays" title="Hotels, homestays & lodges" subtitle="Real room inventory — availability is checked for every night of your stay." />
       <div className="card card--flat grid-4" style={{ marginBottom: 20 }}>
         <DestinationSelect value={destination} onChange={setDestination} label="Destination" />
         <Field label="Property type"><select className="select" value={type} onChange={(e) => setType(e.target.value)}><option value="">All types</option>{['hotel','homestay','lodge','guesthouse','resort','hostel','camp'].map((t) => <option key={t} value={t}>{t}</option>)}</select></Field>
@@ -46,7 +46,7 @@ export function Hotels() {
           <Link key={p.id} to={`/hotels/${p.id}`} className="card card--pad0 card--hover" style={{ display: 'block' }}>
             {p.image && <ImageFrame asset={p.image} variant="16-9" />}
             <div style={{ padding: 16 }}>
-              <div className="between"><strong>{p.name}</strong><DemoListingBadge /></div>
+              <strong>{p.name}</strong>
               <div className="small muted" style={{ marginTop: 6 }}><BedDouble size={14} /> {p.propertyType} · {catalogue.destinations.find((d) => d.id === p.destinationId)?.name}</div>
               <div className="tag-list" style={{ marginTop: 10 }}>{p.amenities.slice(0, 3).map((a) => <span className="tag" key={a}>{a}</span>)}</div>
               <div className="between" style={{ marginTop: 14 }}><span className="small">from <strong>{formatINR(Math.min(...p.rooms.map((r) => r.nightlyRatePaise)))}</strong> / night</span><ArrowRight size={16} /></div>
@@ -55,9 +55,8 @@ export function Hotels() {
           </Link>
         ))}
       </div>
-      {list.length === 0 && <EmptyState title="No properties match" body="Adjust the filters to see seeded listings." />}
+      {list.length === 0 && <EmptyState title="No properties match" body="Try adjusting the filters or picking another destination." />}
       <ConnectedRecommendations destinationId={journey?.destinationId ?? destination ?? null} />
-      <DataNotice />
     </div>
   );
 }
@@ -72,6 +71,7 @@ export function PropertyDetail() {
   const showToast = useUI((s) => s.showToast);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
   usePageMeta(property?.name ?? 'Property');
 
   const reviews = useQuery({ queryKey: ['reviews', id], queryFn: () => client.reviews(id), enabled: Boolean(id) });
@@ -93,7 +93,7 @@ export function PropertyDetail() {
       const booking = await client.bookStay(d, idemKey());
       await qc.invalidateQueries({ queryKey: ['bookings'] });
       showToast('Reservation request created — awaiting property confirmation', 'success');
-      navigate(`/checkout?booking=${booking.id}`);
+      navigate(`/checkout/booking?booking=${booking.id}`);
     } catch (e) { setServerError(e instanceof Error ? e.message : 'Could not create reservation'); }
     finally { setSubmitting(false); }
   });
@@ -103,8 +103,7 @@ export function PropertyDetail() {
       <Link className="btn btn--ghost btn--sm" to="/hotels">← All stays</Link>
       <div style={{ marginTop: 12 }}>{property.image && <ImageFrame asset={property.image} variant="hero" />}</div>
       <div className="between row--wrap" style={{ marginTop: 20 }}>
-        <div><div className="eyebrow">{property.propertyType} · demo listing</div><h1 style={{ marginTop: 6 }}>{property.name}</h1><p className="muted small row" style={{ marginTop: 8 }}><MapPin size={14} /> {catalogue.destinations.find((d) => d.id === property.destinationId)?.name}</p></div>
-        <div className="row"><DemoListingBadge /></div>
+        <div><div className="eyebrow">{property.propertyType}</div><h1 style={{ marginTop: 6 }}>{property.name}</h1><p className="muted small row" style={{ marginTop: 8 }}><MapPin size={14} /> {catalogue.destinations.find((d) => d.id === property.destinationId)?.name}</p></div>
       </div>
 
       <div className="grid-2 section" style={{ marginTop: 26 }}>
@@ -119,7 +118,7 @@ export function PropertyDetail() {
             <div className="list" style={{ marginTop: 12 }}>
               {property.rooms.map((r) => (
                 <button key={r.id} className="list-row" style={{ width: '100%', textAlign: 'left', borderColor: values.roomId === r.id ? 'var(--gw-champagne)' : undefined }} onClick={() => form.setValue('roomId', r.id, { shouldValidate: true })}>
-                  <span className="list-row__body"><span className="list-row__title">{r.name}</span><span className="list-row__sub">{r.capacityAdults} adults · {r.capacityChildren} children · {r.totalRooms} units in seeded inventory</span></span>
+                  <span className="list-row__body"><span className="list-row__title">{r.name}</span><span className="list-row__sub">{r.capacityAdults} adults · {r.capacityChildren} children · {r.totalRooms} rooms</span></span>
                   <span className="small"><strong>{formatINR(r.nightlyRatePaise)}</strong>/night</span>
                 </button>
               ))}
@@ -135,24 +134,40 @@ export function PropertyDetail() {
 
         <form className="card" onSubmit={submit} noValidate style={{ alignSelf: 'start' }}>
           <h3>Reserve a room</h3>
+          <Stepper steps={["Dates & guests", "Guest details", "Review & pay"]} current={step - 1} />
           <div className="stack" style={{ marginTop: 14 }}>
-            <div className="grid-2" style={{ gap: 10 }}>
-              <Field label="Check-in" error={form.formState.errors.checkIn?.message}><input className="input" type="date" min={today} {...form.register('checkIn')} /></Field>
-              <Field label="Check-out" error={form.formState.errors.checkOut?.message}><input className="input" type="date" min={values.checkIn} {...form.register('checkOut')} /></Field>
-            </div>
-            <div className="grid-2" style={{ gap: 10 }}>
-              <Field label="Adults"><input className="input" type="number" min={1} max={12} {...form.register('adults', { valueAsNumber: true })} /></Field>
-              <Field label="Children"><input className="input" type="number" min={0} max={12} {...form.register('children', { valueAsNumber: true })} /></Field>
-            </div>
-            <div className="grid-2" style={{ gap: 10 }}>
+            {step === 1 && <>
+              <div className="grid-2" style={{ gap: 10 }}>
+                <Field label="Check-in" error={form.formState.errors.checkIn?.message}><input className="input" type="date" min={today} {...form.register('checkIn')} /></Field>
+                <Field label="Check-out" error={form.formState.errors.checkOut?.message}><input className="input" type="date" min={values.checkIn} {...form.register('checkOut')} /></Field>
+              </div>
+              <div className="grid-2" style={{ gap: 10 }}>
+                <Field label="Adults"><input className="input" type="number" min={1} max={12} {...form.register('adults', { valueAsNumber: true })} /></Field>
+                <Field label="Children"><input className="input" type="number" min={0} max={12} {...form.register('children', { valueAsNumber: true })} /></Field>
+              </div>
               <Field label="Rooms"><input className="input" type="number" min={1} max={8} {...form.register('rooms', { valueAsNumber: true })} /></Field>
-              <Field label="Guest name" error={form.formState.errors.guestName?.message}><input className="input" placeholder="Full name" {...form.register('guestName')} /></Field>
-            </div>
-            {quote && <PriceLines price={quote} title={`${nights} night(s) · ${values.rooms} room(s)`} />}
-            {!quote && <p className="small muted">Choose valid dates to see a price.</p>}
-            {serverError && <div className="notice notice--demo" role="alert">{serverError}</div>}
-            <button className="btn btn--primary btn--block" type="submit" disabled={!form.formState.isValid || !quote || submitting}>{submitting ? 'Sending request…' : 'Request reservation'} <ArrowRight size={17} /></button>
-            <p className="tiny muted">Availability is checked server-side for every night. Confirmation requires the property partner to accept.</p>
+              <button type="button" className="btn btn--primary btn--block" disabled={!form.formState.isValid} onClick={() => setStep(2)}>Continue to guest details <ArrowRight size={17} /></button>
+            </>}
+            {step === 2 && <>
+              <Field label="Guest name" error={form.formState.errors.guestName?.message}><input className="input" placeholder="Full name" {...form.register('guestName')} autoFocus /></Field>
+              <p className="tiny muted">The property receives the guest name for check-in. Contact details come from your GOWAYY account.</p>
+              <div className="row" style={{ gap: 8 }}>
+                <button type="button" className="btn btn--ghost" onClick={() => setStep(1)}>Back</button>
+                <button type="button" className="btn btn--primary" disabled={!values.guestName} onClick={() => setStep(3)}>Review booking</button>
+              </div>
+            </>}
+            {step === 3 && <>
+              <div className="small muted">{values.checkIn} → {values.checkOut} · {values.adults} adults{values.children ? ` · ${values.children} children` : ''} · {values.rooms} room(s)</div>
+              <div className="small"><strong>{values.guestName}</strong></div>
+              {quote && <PriceLines price={quote} title={`${nights} night(s) · ${values.rooms} room(s)`} />}
+              {!quote && <p className="small muted">Choose valid dates to see a price.</p>}
+              {serverError && <div className="notice notice--info" role="alert">{serverError}</div>}
+              <div className="row" style={{ gap: 8 }}>
+                <button type="button" className="btn btn--ghost" onClick={() => setStep(2)}>Back</button>
+                <button className="btn btn--primary" type="submit" disabled={!form.formState.isValid || !quote || submitting}>{submitting ? 'Reserving…' : 'Continue to payment'} <ArrowRight size={17} /></button>
+              </div>
+              <p className="tiny muted">Your booking is confirmed once the property accepts your request.</p>
+            </>}
           </div>
         </form>
       </div>

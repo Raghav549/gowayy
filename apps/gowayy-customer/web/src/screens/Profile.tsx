@@ -8,7 +8,7 @@ import { client } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useSession } from '../store/useSession';
 import { useUI } from '../store/useUI';
-import { SectionHead, EmptyState, DemoBanner, Field } from '../components/ui';
+import { SectionHead, EmptyState, Field } from '../components/ui';
 
 export function Profile() {
   usePageMeta('Your profile');
@@ -75,7 +75,7 @@ export function Profile() {
           <div className="card">
             <h3>Preferences</h3>
             <div className="stack" style={{ marginTop: 14 }}>
-              <div className="between"><span className="row small"><span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg,#EDE3F7,#421080)' }} /> Appearance</span><span className="badge badge--accent">Lavender identity</span></div>
+              <div className="between"><span className="row small"><span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg,#E2C892,#8B6830)' }} /> Appearance</span><span className="badge badge--accent">GOWAYY identity</span></div>
               <div className="between"><span className="row small"><Bell size={16} /> Notifications</span><button className="btn btn--secondary btn--sm" onClick={() => navigate('/profile')}>{notifications.data?.unreadCount ?? 0} unread</button></div>
               <div className="between"><span className="row small"><CreditCard size={16} /> Payment records</span><span className="badge">{payments.data?.length ?? 0}</span></div>
             </div>
@@ -132,7 +132,6 @@ export function Profile() {
         </div>
         <p className="tiny muted" style={{ marginTop: 10 }}>Sessions are stored server-side and the token is kept in local storage (Expo Secure Store on mobile). Account deletion soft-deletes the profile.</p>
       </section>
-      <DemoBanner>Demo OTP adapter, sandbox payments and seeded partner inventory are in use. No real email, payment gateway or hosted Supabase project is connected.</DemoBanner>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 # GOWAYY
 
 One connected journey for travel, transport, hospitality and local commerce — **three apps,
-one shared backend, no admin panel**.
+one shared backend, one secured admin console**.
 
 1. **GOWAYY** (customer) — Expo Android app (`app.gowayy.customer`) + responsive web PWA:
    cabs, shared taxis, hotels/homestays, food, groceries, tourism, experiences, parcels,
@@ -9,9 +9,12 @@ one shared backend, no admin panel**.
 2. **GOWAYY PARTNER** — own Android app (`app.gowayy.partner`) + web app: drivers, delivery
    partners, restaurant / grocery / hotel / homestay / tour operators (claims, verification,
    inventory, menu, rooms, tours, inbox, earnings, settlements).
-3. **GOWAYY EXPLORE** — own Android app (`app.gowayy.explore`) + web PWA: destination
-   discovery with verified-only imagery, hidden gems, route and safety info, and booking
-   handoff into the GOWAYY customer app.
+3. **GOWAYY ADMIN** — separate, server-authorised web console (port 5175) + Android WebView
+   shell (`app.gowayy.admin`): customers, partners, catalog, tourism, orders, bookings,
+   finance, promotions, banners, support, analytics, audit logs, roles and platform settings.
+
+Explore is **not** a separate app: destination discovery, photographs, attractions, packages
+and experiences live inside the Customer app (`/explore`, `/destinations/:slug`).
 
 All three share one PostgreSQL + PostGIS + Supabase backend (one DB, one auth, real-time
 cross-app sync), one design system and shared engine packages.
@@ -21,7 +24,7 @@ cross-app sync), one design system and shared engine packages.
 ```bash
 npm install                 # workspace deps (three web apps + dev-api + packages)
 cd apps/gowayy-customer/mobile && npm install   # Expo deps
-npm run dev:all             # dev API :8787 + customer :5173 + partner :5174 + explore :5175
+npm run dev:all             # dev API :8787 + customer :5173 + partner :5174 + admin :5175
 npm run verify              # typecheck (web+mobile), all tests, edge checks, secret scan, builds
 ```
 
@@ -33,11 +36,11 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 
 | Path | Contents |
 | --- | --- |
-| `apps/gowayy-customer/web` | Customer React+Vite PWA (port 5173): splash, 4-scene onboarding, auth w/ OTP, home, services, marketplace (products/cart/checkout), journey dashboard, profile |
+| `apps/gowayy-customer/web` | Customer React+Vite PWA (port 5173): splash, onboarding, multi-page auth, Home, Explore, Shop, product detail and 4-step checkout, bookings, orders, journey dashboard, account |
 | `apps/gowayy-customer/mobile` | GOWAYY Expo SDK 57 Android app (`app.gowayy.customer`), built as a native Gradle APK in GitHub Actions |
-| `apps/gowayy-partner/web` + `/mobile` | PARTNER web (5174) + Android (`app.gowayy.partner`): auth, onboarding, driver mode, manage, inbox, earnings, profile + verification |
-| `apps/gowayy-explore/web` + `/mobile` | EXPLORE PWA (5175) + Android (`app.gowayy.explore`): destinations, hidden gems, booking handoff, offline shell |
-| `apps/dev-api` | Real Node HTTP API with JSON persistence — auth, pricing, availability, bookings, orders, server-priced commerce, verified payments, refunds, dispatch, partner hub, audit |
+| `apps/gowayy-partner/web` + `/mobile` | PARTNER web (5174) + Android (`app.gowayy.partner`): store dashboard, dynamic products/categories, offers/coupons, orders with delivery-code verification, driver mode, earnings, rooms, packages |
+| `apps/gowayy-admin/web` + `/mobile` | ADMIN console (5175) + Android shell (`app.gowayy.admin`): secured operations, finance, promotions, banners, analytics, audit, settings |
+| `apps/dev-api` | Node HTTP API with JSON persistence — auth/roles, pricing, availability, bookings, orders, server-priced commerce, delivery codes, PDF invoices, payments, refunds, dispatch, partner catalog, admin hub, audit |
 | `packages/*` | Shared types, Zod validation, API client (supabase + dev transports), design system, UI kit, pricing/booking/location/notification engines, commerce, catalog |
 | `supabase/migrations` | Twelve ordered SQL migrations (80+ tables, RLS everywhere, server-priced checkout RPCs) + generated seed |
 | `supabase/functions` | `gowayy-api` Edge gateway (JWT verification, full client contract incl. commerce + partner ops) and HMAC-verified `payment-webhook` |
@@ -48,15 +51,14 @@ See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
 | `.github/workflows` | CI (typecheck+tests+secrets+per-app web builds), independent Vercel deploys, native Gradle Android APK builds and releases |
 | `docs` | Architecture, setup, deployment, API, security, licensing, image research, backup, testing, phases, screenshot analysis |
 
-## Design rules (v2 — "Himalayan Morning")
+## Design rules (v4 — charcoal, ivory and champagne)
 
-Light-only system: warm paper `#FAF4E9`, white surfaces, espresso-ink text, honey-gold
-accents — **no black, charcoal, grey, dark, neon, electric, steel, metallic or chrome
-anywhere** (enforced by unit tests on the token file). Each app has its own accent:
-GOWAYY meadow green `#1E6B4F`, PARTNER clay terracotta `#C2502A`, EXPLORE rhododendron
-plum `#6D3B5E`. Original geometric G logo + per-app marks; original 12-pose monkey mascot
-used sparingly. Reduced-motion support, real verified photographs with honest unavailable
-states, no fabricated ratings, prices or availability.
+Light-only system: warm white `#FDFBF7`, soft ivory `#F4EFE6`, charcoal ink `#1C1B19`,
+graphite text, muted silver and restrained champagne-gold accents `#C6A15B`. The original
+purple-and-gold G logo remains unchanged; **no neon, electric blue, cyan or blue gradients**
+are used in any app. Customer and Partner share one component language with charcoal primary
+actions; Admin uses the same tokens with a gold accent. Reduced-motion support, verified
+photographs with honest unavailable states, and no fabricated ratings, prices or availability.
 
 ## Integrity rules
 

@@ -61,6 +61,18 @@ export const addressSchema = z.object({
   line: z.string().trim().min(5, 'Enter a full address').max(160),
   city: z.string().trim().min(2).max(60),
   pincode: z.string().trim().regex(/^\d{6}$/, 'Enter a 6-digit PIN code'),
+  // Optional structured fields used by the multi-page checkout.
+  name: z.string().trim().max(80).optional(),
+  phone: z.string().trim().regex(/^\d{10}$/, 'Enter a 10-digit phone number').optional(),
+  altPhone: z.string().trim().regex(/^\d{10}$/, 'Enter a 10-digit phone number').optional(),
+  state: z.string().trim().max(60).optional(),
+  area: z.string().trim().max(80).optional(),
+  landmark: z.string().trim().max(120).optional(),
+  house: z.string().trim().max(40).optional(),
+  building: z.string().trim().max(80).optional(),
+  road: z.string().trim().max(120).optional(),
+  line2: z.string().trim().max(120).optional(),
+  isDefault: z.boolean().optional(),
 });
 
 export const coordsSchema = z.object({
@@ -130,7 +142,7 @@ export const parcelBookingSchema = z.object({
 export const paymentInitSchema = z.object({
   bookingId: z.string().nullable(),
   orderId: z.string().nullable(),
-  method: z.enum(['upi', 'upi_intent', 'gateway', 'cash']),
+  method: z.enum(['upi', 'upi_intent', 'gateway', 'card', 'netbanking', 'cash']),
   amountPaise: z.number().int().positive(),
   idempotencyKey: z.string().min(8).max(128),
 });

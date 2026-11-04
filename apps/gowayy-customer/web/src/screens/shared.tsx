@@ -29,19 +29,7 @@ export function DestinationCard({ destination, onSelect }: { destination: Destin
   );
 }
 
-export function DemoListingBadge() {
-  return <span className="badge" title="Seeded sample inventory for development, not a live partner offer">Demo listing</span>;
-}
 
-export function DataNotice() {
-  return (
-    <div className="notice" style={{ marginTop: 28 }}>
-      <Info size={14} /> <strong>Data status.</strong> Destination geography comes from published references and is flagged where approximate.
-      Partner listings, menus, inventory, fares and timetables are <strong>seeded development data</strong> — they are not live offers, and no ratings or availability are invented.
-      Place photographs are only shown where the subject and licence were verified; see <Link className="link" to="/credits">image credits</Link>.
-    </div>
-  );
-}
 
 export function DestinationSelect({ value, onChange, label = 'Destination' }: { value: string; onChange: (id: string) => void; label?: string }) {
   return (
@@ -91,7 +79,7 @@ export function ConnectedRecommendations({ destinationId, title = 'Complete your
           return (
             <div className="card" key={key}>
               <div className="between"><h3 style={{ fontSize: 16 }}>{label}</h3><span className="badge">{items.length}</span></div>
-              {items.length === 0 ? <p className="small muted" style={{ marginTop: 10 }}>No seeded records for this destination.</p> : (
+              {items.length === 0 ? <p className="small muted" style={{ marginTop: 10 }}>No listings for this destination yet.</p> : (
                 <div className="list" style={{ marginTop: 12 }}>
                   {items.slice(0, 3).map((item) => (
                     <Link key={item.id} to={withJourney(item.href)} className="list-row">

@@ -1,4 +1,4 @@
-/** Shared lavender-forward GOWAYY tokens, consumed by all customer mobile screens. */
+/** Shared charcoal/ivory/champagne GOWAYY tokens, consumed by all customer mobile screens. */
 import { themes, typography } from '@gowayy/design-system';
 import type { ThemeMode } from '@gowayy/types';
 import { useUI } from './store/useUI';

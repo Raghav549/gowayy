@@ -1,0 +1,145 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, BackHandler, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { WebView, type WebViewNavigation } from 'react-native-webview';
+
+/**
+ * GOWAYY ADMIN — Android shell.
+ *
+ * The console itself is the secured admin web app (apps/gowayy-admin/web). This
+ * shell never contains admin credentials, business logic or API keys; it loads
+ * the deployed console over HTTPS and lets the server enforce the admin role on
+ * every request. Set EXPO_PUBLIC_ADMIN_URL at build time.
+ */
+const ADMIN_URL = (process.env.EXPO_PUBLIC_ADMIN_URL ?? '').trim();
+
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#FAF7F2' },
+  fill: { flex: 1 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, backgroundColor: '#FAF7F2' },
+  loadingText: { color: '#6B6660', fontSize: 13 },
+  setup: { flex: 1, justifyContent: 'center', padding: 24, gap: 14, backgroundColor: '#FAF7F2' },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brandMark: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#1C1B19', alignItems: 'center', justifyContent: 'center' },
+  brandMarkText: { color: '#E2C892', fontWeight: '800', fontSize: 18 },
+  brandWord: { fontWeight: '800', letterSpacing: 3, color: '#1C1B19' },
+  brandTag: { fontSize: 10, letterSpacing: 2, color: '#8B6830', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '700', color: '#1C1B19', marginTop: 8 },
+  body: { fontSize: 14, lineHeight: 21, color: '#6B6660' },
+  code: { fontFamily: Platform.select({ android: 'monospace', ios: 'Menlo', default: 'monospace' }), fontSize: 12, color: '#1C1B19', backgroundColor: '#F4EFE6', padding: 10, borderRadius: 8 },
+  error: { borderWidth: 1, borderColor: '#E7E0D5', backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, gap: 8 },
+  errorTitle: { fontWeight: '700', color: '#A8453F' },
+  retry: { backgroundColor: '#1C1B19', borderRadius: 999, paddingVertical: 12, alignItems: 'center' },
+  retryText: { color: '#FDFBF7', fontWeight: '700', fontSize: 14 },
+  back: { position: 'absolute', left: 12, bottom: 18, backgroundColor: 'rgba(28,27,25,.82)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
+  backText: { color: '#FDFBF7', fontSize: 12, fontWeight: '600' },
+});
+
+export default function App() {
+  const webRef = useRef<WebView>(null);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    void SplashScreen.hideAsync().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (canGoBack) { webRef.current?.goBack(); return true; }
+      Alert.alert('Leave GOWAYY Admin?', 'You will be signed out only if you choose to sign out in the console.', [
+        { text: 'Stay', style: 'cancel' },
+        { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+      ]);
+      return true;
+    });
+    return () => subscription.remove();
+  }, [canGoBack]);
+
+  const onNavigation = useCallback((state: WebViewNavigation) => setCanGoBack(state.canGoBack), []);
+
+  if (!ADMIN_URL) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.root}>
+          <StatusBar style="dark" />
+          <View style={styles.setup}>
+            <View style={styles.brandRow}>
+              <View style={styles.brandMark}><Text style={styles.brandMarkText}>G</Text></View>
+              <View><Text style={styles.brandWord}>GOWAYY</Text><Text style={styles.brandTag}>ADMIN</Text></View>
+            </View>
+            <Text style={styles.title}>Console URL not configured</Text>
+            <Text style={styles.body}>
+              This Android app is the secured shell for the GOWAYY Admin web console. Set the console URL when building the APK:
+            </Text>
+            <Text style={styles.code}>EXPO_PUBLIC_ADMIN_URL=https://your-admin-console.example</Text>
+            <Text style={styles.body}>
+              The URL must serve the admin console over HTTPS. Sign-in, roles and permissions are enforced by the backend; no administrator credentials are embedded in this app.
+            </Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (!ADMIN_URL.startsWith('https://') && !__DEV__) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.root}>
+          <View style={styles.setup}>
+            <Text style={styles.title}>HTTPS required</Text>
+            <Text style={styles.body}>The admin console must be loaded over HTTPS in a release build. Refusing to load {ADMIN_URL}.</Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+        <StatusBar style="dark" />
+        {failed ? (
+          <View style={styles.setup}>
+            <View style={styles.error}>
+              <Text style={styles.errorTitle}>Could not reach the admin console</Text>
+              <Text style={styles.body}>Check the network connection and that {ADMIN_URL} is available. Your session is not cached on this device.</Text>
+            </View>
+            <Pressable style={styles.retry} onPress={() => { setFailed(false); setLoading(true); webRef.current?.reload(); }}>
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.fill}>
+            <WebView
+              ref={webRef}
+              source={{ uri: ADMIN_URL }}
+              style={styles.fill}
+              originWhitelist={['https://*']}
+              javaScriptEnabled
+              domStorageEnabled
+              sharedCookiesEnabled={false}
+              thirdPartyCookiesEnabled={false}
+              setSupportMultipleWindows={false}
+              allowsBackForwardNavigationGestures
+              onLoadStart={() => setLoading(true)}
+              onLoadEnd={() => setLoading(false)}
+              onError={() => { setFailed(true); setLoading(false); }}
+              onHttpError={(event) => { if (event.nativeEvent.statusCode >= 500) { setFailed(true); setLoading(false); } }}
+              onNavigationStateChange={onNavigation}
+              startInLoadingState={false}
+            />
+            {loading && <View style={styles.loading} pointerEvents="none"><ActivityIndicator color="#C6A15B" /><Text style={styles.loadingText}>Loading the admin console…</Text></View>}
+            {canGoBack && <Pressable style={styles.back} onPress={() => webRef.current?.goBack()} accessibilityLabel="Go back"><Text style={styles.backText}>‹ Back</Text></Pressable>}
+          </View>
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+}

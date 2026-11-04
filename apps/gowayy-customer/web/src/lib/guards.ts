@@ -21,3 +21,9 @@ export function usePageMeta(title: string, description?: string) {
   const meta = document.querySelector('meta[name="description"]');
   if (description && meta) meta.setAttribute('content', description);
 }
+
+/** Human-readable message for a failed query. */
+export function apiErrorText(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return 'Something went wrong. Please try again.';
+}

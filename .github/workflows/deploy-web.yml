@@ -22,11 +22,11 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_CUSTOMER: ${{ secrets.VERCEL_PROJECT_CUSTOMER }}
-          VERCEL_PROJECT_EXPLORE: ${{ secrets.VERCEL_PROJECT_EXPLORE }}
+          VERCEL_PROJECT_ADMIN: ${{ secrets.VERCEL_PROJECT_ADMIN }}
           VERCEL_PROJECT_PARTNER: ${{ secrets.VERCEL_PROJECT_PARTNER }}
         run: |
           missing=()
-          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_CUSTOMER VERCEL_PROJECT_EXPLORE VERCEL_PROJECT_PARTNER; do
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_CUSTOMER VERCEL_PROJECT_ADMIN VERCEL_PROJECT_PARTNER; do
             if [ -z "${!name}" ]; then missing+=("$name"); fi
           done
           if [ "${#missing[@]}" -gt 0 ]; then
@@ -48,11 +48,11 @@ jobs:
             workspace: '@gowayy/customer-web'
             dir: apps/gowayy-customer/web
             title: 'GOWAYY — Connected Journeys'
-          - app: explore
-            project: VERCEL_PROJECT_EXPLORE
-            workspace: '@gowayy/explore-web'
-            dir: apps/gowayy-explore/web
-            title: 'GOWAYY EXPLORE — Discover the Himalaya'
+          - app: admin
+            project: VERCEL_PROJECT_ADMIN
+            workspace: '@gowayy/admin-web'
+            dir: apps/gowayy-admin/web
+            title: 'GOWAYY Admin — Operations console'
           - app: partner
             project: VERCEL_PROJECT_PARTNER
             workspace: '@gowayy/partner-web'

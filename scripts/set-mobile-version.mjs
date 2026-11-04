@@ -2,8 +2,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const [app, versionName, versionCodeText] = process.argv.slice(2);
-if (!['customer', 'explore', 'partner'].includes(app) || !versionName || !/^\d+$/.test(versionCodeText ?? '')) {
-  throw new Error('Usage: node scripts/set-mobile-version.mjs customer|explore|partner <versionName> <versionCode>');
+if (!['customer', 'partner', 'admin'].includes(app) || !versionName || !/^\d+$/.test(versionCodeText ?? '')) {
+  throw new Error('Usage: node scripts/set-mobile-version.mjs customer|partner|admin <versionName> <versionCode>');
 }
 const file = resolve(`apps/gowayy-${app}/mobile/app.json`);
 const config = JSON.parse(readFileSync(file, 'utf8'));

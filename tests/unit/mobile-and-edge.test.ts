@@ -47,8 +47,8 @@ describe('Expo Android application', () => {
   it('configures three isolated Android packages and native per-app update flows', () => {
     const apps = [
       ['customer', 'app.gowayy.customer', 'GOWAYY'],
-      ['explore', 'app.gowayy.explore', 'GOWAYY EXPLORE'],
       ['partner', 'app.gowayy.partner', 'GOWAYY PARTNER'],
+      ['admin', 'app.gowayy.admin', 'GOWAYY ADMIN'],
     ] as const;
     const packageIds = new Set<string>();
     for (const [slug, packageId, name] of apps) {
@@ -60,22 +60,32 @@ describe('Expo Android application', () => {
       packageIds.add(packageId);
       expect(app.expo.android.versionCode).toBeGreaterThan(0);
       expect(app.expo.splash.image).toBe('./assets/branding/g-symbol.png');
-      expect(app.expo.android.permissions).toContain('REQUEST_INSTALL_PACKAGES');
       expect(existsSync(join(root, 'assets/branding/g-symbol.png'))).toBe(true);
       expect(existsSync(join(root, 'assets/branding/splash-logo.png'))).toBe(false);
       expect(existsSync(join(root, 'assets/branding/splash-logo.svg'))).toBe(false);
-      expect(existsSync(join(root, 'app/update.tsx'))).toBe(true);
-      const updater = read(`${root}/src/lib/app-updates.ts`);
-      expect(updater).toContain(`RELEASE_TAG_PREFIX = 'android-${slug}-'`);
-      expect(updater).toContain(packageId);
-      expect(updater).toContain('getInfoAsync(result.uri, { md5: true })');
-      expect(updater).toContain('MANAGE_UNKNOWN_APP_SOURCES');
-      expect(updater).toContain('application/vnd.android.package-archive');
-      const updateScreen = read(`${root}/app/update.tsx`);
-      expect(updateScreen).toContain('Release notes');
-      expect(updateScreen).toContain('Install update');
-      expect(updateScreen).toContain('never silent');
-      expect(read(`${root}/app/_layout.tsx`)).toContain('checkForStartupUpdate');
+      if (slug === 'admin') {
+        // The admin Android app is a hardened WebView shell for the secured console;
+        // it must not embed credentials or admin logic.
+        const shell = read(`${root}/App.tsx`);
+        expect(shell).toContain('EXPO_PUBLIC_ADMIN_URL');
+        expect(shell).toContain("originWhitelist={['https://*']}");
+        expect(shell).toContain('sharedCookiesEnabled={false}');
+        expect(shell).not.toMatch(/admin@gowayy|Gw@yAdmin|service_role/i);
+      } else {
+        expect(app.expo.android.permissions).toContain('REQUEST_INSTALL_PACKAGES');
+        expect(existsSync(join(root, 'app/update.tsx'))).toBe(true);
+        const updater = read(`${root}/src/lib/app-updates.ts`);
+        expect(updater).toContain(`RELEASE_TAG_PREFIX = 'android-${slug}-'`);
+        expect(updater).toContain(packageId);
+        expect(updater).toContain('getInfoAsync(result.uri, { md5: true })');
+        expect(updater).toContain('MANAGE_UNKNOWN_APP_SOURCES');
+        expect(updater).toContain('application/vnd.android.package-archive');
+        const updateScreen = read(`${root}/app/update.tsx`);
+        expect(updateScreen).toContain('Release notes');
+        expect(updateScreen).toContain('Install update');
+        expect(updateScreen).toContain('never silent');
+        expect(read(`${root}/app/_layout.tsx`)).toContain('checkForStartupUpdate');
+      }
     }
     expect(packageIds.size).toBe(3);
     const customer = json<Record<string, any>>('apps/gowayy-customer/mobile/app.json');
@@ -96,7 +106,7 @@ describe('Expo Android application', () => {
   });
 
   it('only displays the approved symbol during each animated mobile splash', () => {
-    for (const app of ['customer', 'explore', 'partner']) {
+    for (const app of ['customer', 'partner']) {
       const root = `apps/gowayy-${app}/mobile`;
       const config = json<Record<string, any>>(`${root}/app.json`);
       expect(config.expo.splash.image).toBe('./assets/branding/g-symbol.png');
@@ -124,7 +134,7 @@ describe('Expo Android application', () => {
   });
 
   it('uses a compatible, complete Expo dependency set', () => {
-    for (const app of ['customer', 'explore', 'partner']) {
+    for (const app of ['customer', 'partner', 'admin']) {
       const pkg = json<Record<string, any>>(`apps/gowayy-${app}/mobile/package.json`);
       const d = pkg.dependencies;
       expect(d.expo).toMatch(/^~57\./);
@@ -174,7 +184,7 @@ describe('Vercel static deployment', () => {
     const prep = read('scripts/prepare-vercel-output.mjs');
     expect(prep).toContain("version: 3");
     expect(prep).toContain("handle: 'filesystem'");
-    for (const app of ['customer', 'partner', 'explore']) {
+    for (const app of ['customer', 'partner', 'admin']) {
       const config = json<Record<string, any>>(`apps/gowayy-${app}/web/vercel.json`);
       expect(config.outputDirectory).toBe('dist');
       expect(config.framework).toBe('vite');

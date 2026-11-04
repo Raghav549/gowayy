@@ -3,7 +3,7 @@
  * checkout and payment-method availability for the dev-api reference backend.
  * Wired in from server.mjs. All prices/stock are recomputed server-side.
  */
-import { catalogue, getProduct, productCategories, searchCatalog } from '@gowayy/catalog';
+import { catalogue, getProduct as catalogGetProduct, searchCatalog } from '@gowayy/catalog';
 import {
   assembleProductDetail, quoteCheckout, paymentMethodOptions, discountPercent,
   couponDiscountPaise, assertVariantAvailable,
@@ -12,6 +12,9 @@ import { makeId, nowIso, formatINR } from '@gowayy/shared-utils';
 
 export function createCommerceModule(ctx) {
   const { db, bad, auth, rateLimit, notify, audit, placeOrderFromCart } = ctx;
+  /** Database-first product resolver so partner-created products behave exactly like seeded ones. */
+  const getProduct = (idOrSlug) => (db().catalogProducts ?? []).find((p) => p.id === idOrSlug || p.slug === idOrSlug) ?? catalogGetProduct(idOrSlug);
+  const allProducts = () => (db().catalogProducts ?? []).filter((p) => p.active !== false && p.published !== false);
 
   function stockOf(productId, variantId) {
     const key = `${productId}:${variantId}`;
@@ -50,25 +53,33 @@ export function createCommerceModule(ctx) {
   async function handle(req, res, method, tail, body, q, send, ok) {
     // ---- catalogue browsing ----
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'categories') {
-      return send(res, 200, { items: productCategories().map((c) => ({ name: c, count: catalogue.marketplaceProducts.filter((p) => p.category === c).length })) });
+      const items = (db().categories ?? []).filter((c) => c.active).map((c) => ({ id: c.id, name: c.name, slug: c.slug, image: c.image, count: allProducts().filter((p) => p.categoryId === c.id || p.category === c.name).length }));
+      const extra = [...new Set(allProducts().map((p) => p.category))].filter((name) => !items.some((i) => i.name === name)).map((name) => ({ id: null, name, slug: name.toLowerCase(), image: null, count: allProducts().filter((p) => p.category === name).length }));
+      return send(res, 200, { items: [...items, ...extra] });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'products' && tail.length === 2) {
-      let items = catalogue.marketplaceProducts;
+      let items = allProducts();
+      if (q.get('categoryId')) items = items.filter((p) => p.categoryId === q.get('categoryId'));
       if (q.get('category')) items = items.filter((p) => p.category.toLowerCase() === String(q.get('category')).toLowerCase());
       if (q.get('storeId')) items = items.filter((p) => p.storeId === q.get('storeId'));
-      if (q.get('q')) { const hits = searchCatalog(String(q.get('q'))); const ids = new Set(hits.filter((h) => h.kind === 'product').map((h) => h.id)); items = items.filter((p) => ids.has(p.id)); }
+      if (q.get('featured') === 'true') items = items.filter((p) => p.featured);
+      if (q.get('q')) {
+        const term = String(q.get('q')).toLowerCase();
+        items = items.filter((p) => `${p.name} ${p.brand} ${p.category} ${(p.tags ?? []).join(' ')}`.toLowerCase().includes(term));
+      }
       return send(res, 200, { items: items.map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'stores') {
-      return send(res, 200, { items: catalogue.groceryStores.map((s) => ({ id: s.id, name: s.name, destinationId: s.destinationId, productCount: catalogue.marketplaceProducts.filter((p) => p.storeId === s.id).length, deliveryCoverageKm: s.deliveryCoverageKm, image: s.image, slots: s.slots })) });
+      return send(res, 200, { items: (db().stores ?? []).filter((s) => s.status === 'active').map((s) => ({ id: s.id, name: s.name, categoryName: s.categoryName, destinationId: s.destinationId, productCount: allProducts().filter((p) => p.storeId === s.id).length, deliveryCoverageKm: s.deliveryCoverageKm, image: s.image, slots: s.slots, openingHours: s.openingHours, openingHoursVerified: s.openingHoursVerified, verified: s.verified, address: s.address })) });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'products' && tail[2] && tail.length === 3) {
       const p = getProduct(tail[2]);
-      if (!p) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
-      const related = p.relatedProductIds.map((id) => catalogue.marketplaceProducts.find((x) => x.id === id)).filter(Boolean);
+      if (!p || p.active === false || p.published === false) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
+      const related = (p.relatedProductIds ?? []).map((id) => allProducts().find((x) => x.id === id)).filter(Boolean);
       const detail = assembleProductDetail(p, related, reviewStatsFor(p.id));
-      // live stock per variant
       detail.variants = detail.variants.map((v) => ({ ...v, stock: stockOf(p.id, v.id) }));
+      detail.store = (db().stores ?? []).find((s) => s.id === p.storeId) ?? null;
+      detail.offers = (db().offers ?? []).filter((o) => o.active && ((o.productIds ?? []).includes(p.id) || (o.categoryIds ?? []).includes(p.categoryId) || o.scope === 'platform'));
       return send(res, 200, { product: detail });
     }
     if (method === 'POST' && tail[0] === 'products' && tail[2] === 'view') {
@@ -81,7 +92,7 @@ export function createCommerceModule(ctx) {
     if (method === 'GET' && tail[0] === 'products' && tail[1] === 'recently-viewed') {
       const { user } = auth(req);
       const ids = db().productViews[user.id] ?? [];
-      return send(res, 200, { items: ids.map((id) => catalogue.marketplaceProducts.find((p) => p.id === id)).filter(Boolean).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
+      return send(res, 200, { items: ids.map((id) => getProduct(id)).filter(Boolean).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
     }
 
     // ---- search recents ----
@@ -158,7 +169,7 @@ export function createCommerceModule(ctx) {
         const coupon = body.coupon ? (db().coupons ?? []).find((c) => c.code === String(body.coupon).trim().toUpperCase() && c.active) : null;
         if (body.coupon && !coupon) bad('INVALID_COUPON', 'This coupon code is not valid');
         const deliveryFeePaise = body.deliverySlot === 'express' ? 9900 : 0;
-        const allPlans = catalogue.marketplaceProducts.flatMap((p) => p.protectionPlans);
+        const allPlans = allProducts().flatMap((p) => p.protectionPlans ?? []);
         const quote = quoteCheckout({ lines, protectionPlans: allPlans, deliveryFeePaise, coupon });
         const mrpTotalPaise = lines.reduce((s, l) => s + (l.mrpPaise ?? l.unitPricePaise) * l.quantity, 0);
         return send(res, 200, {
@@ -177,7 +188,7 @@ export function createCommerceModule(ctx) {
       const { user } = auth(req);
       db().wishlist[user.id] ??= [];
       if (method === 'GET' && tail.length === 1) {
-        return send(res, 200, { items: db().wishlist[user.id].map((id) => catalogue.marketplaceProducts.find((p) => p.id === id)).filter(Boolean).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
+        return send(res, 200, { items: db().wishlist[user.id].map((id) => getProduct(id)).filter(Boolean).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
       }
       if (method === 'POST' && tail.length === 1) {
         const p = getProduct(String(body.productId ?? ''));

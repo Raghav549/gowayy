@@ -12,14 +12,14 @@ const splitMark = (path, label) => `<svg xmlns="http://www.w3.org/2000/svg" view
 const font = "'Manrope','Inter','Segoe UI',system-ui,sans-serif";
 const apps = [
   { dir: 'apps/gowayy-customer/web/public', name: 'GOWAYY', tag: 'customer' },
-  { dir: 'apps/gowayy-explore/web/public', name: 'GOWAYY EXPLORE', tag: 'explore' },
+  { dir: 'apps/gowayy-admin/web/public', name: 'GOWAYY ADMIN', tag: 'admin' },
   { dir: 'apps/gowayy-partner/web/public', name: 'GOWAYY PARTNER', tag: 'partner' },
 ];
 const symbol = (label = 'GOWAYY official purple and orange logo') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="${label}"><title>${label}</title>${mark}</svg>`;
-const wordmark = (app) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 120" role="img" aria-label="${app.name}"><title>${app.name}</title><text x="8" y="88" font-family="${font}" font-size="78" font-weight="800" letter-spacing="1" fill="#17131B">${app.name}</text></svg>`;
-const lockup = (app) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 300" role="img" aria-label="${app.name}"><title>${app.name}</title><g transform="translate(16 24) scale(.45)">${mark}</g><text x="310" y="176" font-family="${font}" font-size="86" font-weight="800" fill="#17131B">${app.name}</text></svg>`;
+const wordmark = (app) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 120" role="img" aria-label="${app.name}"><title>${app.name}</title><text x="8" y="88" font-family="${font}" font-size="78" font-weight="800" letter-spacing="1" fill="#1C1B19">${app.name}</text></svg>`;
+const lockup = (app) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 300" role="img" aria-label="${app.name}"><title>${app.name}</title><g transform="translate(16 24) scale(.45)">${mark}</g><text x="310" y="176" font-family="${font}" font-size="86" font-weight="800" fill="#1C1B19">${app.name}</text></svg>`;
 const monochrome = (fill) => symbol().replaceAll('#421080', fill).replaceAll('#FFA500', fill).replace('GOWAYY official purple and orange logo','GOWAYY monochrome mark');
-const icon = (app) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="${app.name} app icon"><title>${app.name}</title><rect width="512" height="512" rx="112" fill="#EDE3F7"/><g transform="translate(11 39) scale(.79)">${mark}</g></svg>`;
+const icon = (app) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="${app.name} app icon"><title>${app.name}</title><rect width="512" height="512" rx="112" fill="#F4EFE6"/><g transform="translate(11 39) scale(.79)">${mark}</g></svg>`;
 const splash = () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GOWAYY logo symbol"><title>GOWAYY logo symbol</title>${mark}</svg>`;
 
 
@@ -33,9 +33,9 @@ const rootFiles = {
   'wordmark.svg': wordmark(rootApp), 'lockup.svg': lockup(rootApp),
   'lockup-horizontal.svg': lockup(rootApp), 'splash-logo.svg': splash(),
   'android-icon-foreground.svg': symbol(),
-  'android-monochrome-icon.svg': monochrome('#17131B'), 'g-mono.svg': monochrome('#17131B'),
+  'android-monochrome-icon.svg': monochrome('#1C1B19'), 'g-mono.svg': monochrome('#1C1B19'),
   'g-mono-inverse.svg': monochrome('#FFFFFF'),
-  'android-icon-background.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#EDE3F7"/></svg>',
+  'android-icon-background.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#F4EFE6"/></svg>',
 };
 for (const [name, data] of Object.entries(rootFiles)) writeFileSync(join(rootBrand, name), data);
 
@@ -47,9 +47,9 @@ for (const app of apps) {
     'g-symbol.svg': symbol(), 'g-shape.svg': symbol(), 'g-purple.svg': splitMark(markPaths[0], 'GOWAYY purple mark'), 'g-orange.svg': splitMark(markPaths[1], 'GOWAYY orange accent'), 'wordmark.svg': wordmark(app),
     'lockup.svg': lockup(app), 'lockup-horizontal.svg': lockup(app), 'icon.svg': icon(app),
     'splash-logo.svg': splash(), 'android-icon-foreground.svg': symbol(),
-    'android-monochrome-icon.svg': monochrome('#17131B'), 'g-mono.svg': monochrome('#17131B'),
+    'android-monochrome-icon.svg': monochrome('#1C1B19'), 'g-mono.svg': monochrome('#1C1B19'),
     'g-mono-inverse.svg': monochrome('#FFFFFF'),
-    'android-icon-background.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#EDE3F7"/></svg>',
+    'android-icon-background.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#F4EFE6"/></svg>',
   };
   for (const [name, data] of Object.entries(files)) { writeFileSync(join(web, name), data); if (name !== 'splash-logo.svg') writeFileSync(join(mobile, name), data); }
   writeFileSync(join(web, 'app.json'), JSON.stringify({ name: app.name, tag: app.tag, logo: 'shared-official-gowayy-mark' }, null, 2) + '\n');

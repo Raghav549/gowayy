@@ -6,9 +6,9 @@ const app = process.argv[2];
 const apps = {
   customer: 'apps/gowayy-customer/web',
   partner: 'apps/gowayy-partner/web',
-  explore: 'apps/gowayy-explore/web',
+  admin: 'apps/gowayy-admin/web',
 };
-if (!Object.hasOwn(apps, app)) throw new Error('Usage: node scripts/prepare-vercel-output.mjs customer|partner|explore');
+if (!Object.hasOwn(apps, app)) throw new Error('Usage: node scripts/prepare-vercel-output.mjs customer|partner|admin');
 const webDir = resolve(apps[app]);
 const dist = join(webDir, 'dist');
 if (!statSync(dist, { throwIfNoEntry: false })?.isDirectory() || !readFileSync(join(dist, 'index.html'), 'utf8')) {

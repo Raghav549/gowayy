@@ -2,13 +2,13 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const app = process.argv[2];
-if (!['customer', 'explore', 'partner'].includes(app)) throw new Error('Usage: node scripts/verify-web-output.mjs customer|explore|partner');
+if (!['customer', 'partner', 'admin'].includes(app)) throw new Error('Usage: node scripts/verify-web-output.mjs customer|partner|admin');
 const directory = resolve(`apps/gowayy-${app}/web`);
 const dist = join(directory, 'dist');
 const index = join(dist, 'index.html');
 if (!existsSync(index) || !statSync(index).isFile() || statSync(index).size === 0) throw new Error(`Missing production index: ${index}`);
 const html = readFileSync(index, 'utf8');
-const titles = { customer: 'GOWAYY — Connected Journeys', explore: 'GOWAYY EXPLORE — Discover the Himalaya', partner: 'GOWAYY PARTNER — Grow your business' };
+const titles = { customer: 'GOWAYY — Connected Journeys', admin: 'GOWAYY Admin — Operations console', partner: 'GOWAYY PARTNER — Grow your business' };
 if (!html.includes(`<title>${titles[app]}</title>`)) throw new Error(`${index} does not identify the ${app} application.`);
 const references = [...html.matchAll(/(?:src|href)="(\/[^"?#]+)"/g)].map((match) => match[1]).filter((url) => url.startsWith('/assets/'));
 if (!references.length) throw new Error(`No compiled JS/CSS asset references found in ${index}.`);

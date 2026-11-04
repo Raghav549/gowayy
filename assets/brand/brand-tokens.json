@@ -9,62 +9,62 @@
     "Avoid grey-dominated, neon, electric-blue, cyan, metallic and harsh-gradient treatments."
   ],
   "colour": {
-    "ink": "#15121A",
-    "paper": "#FBF8F5",
+    "ink": "#161513",
+    "paper": "#FAF7F2",
     "surface": "#FFFFFF",
-    "surfaceAlt": "#F4EFF8",
-    "warmWhite": "#FFFCF8",
-    "softIvory": "#F8F2EA",
-    "mutedSilver": "#BDB5C5",
-    "silverDeep": "#766F7B",
-    "champagne": "#FFA500",
-    "champagneLight": "#FFC44D",
-    "champagneDeep": "#E58B00",
-    "success": "#38856A",
-    "warning": "#B97826",
-    "danger": "#B94D59",
-    "info": "#7854A8",
+    "surfaceAlt": "#F3EEE6",
+    "warmWhite": "#FDFBF7",
+    "softIvory": "#F4EFE6",
+    "mutedSilver": "#C9C3BA",
+    "silverDeep": "#6B6660",
+    "champagne": "#C6A15B",
+    "champagneLight": "#E2C892",
+    "champagneDeep": "#8B6830",
+    "success": "#3F7A57",
+    "warning": "#A9741F",
+    "danger": "#A8453F",
+    "info": "#52514C",
     "light": {
-      "bg": "#F8F3FB",
+      "bg": "#FAF7F2",
       "surface": "#FFFFFF",
-      "surfaceAlt": "#F1EAF8",
+      "surfaceAlt": "#F3EEE6",
       "raised": "#FFFFFF",
-      "text": "#15121A",
-      "textMuted": "#6F6876",
-      "border": "#E9E0F0",
-      "accent": "#421080",
-      "accentContrast": "#FFFFFF"
+      "text": "#1C1B19",
+      "textMuted": "#6B6660",
+      "border": "#E7E0D5",
+      "accent": "#1C1B19",
+      "accentContrast": "#FDFBF7"
     },
     "dark": {
-      "deprecated": "Light-only lavender identity; mirrors light for compatibility.",
-      "bg": "#F8F3FB",
+      "deprecated": "Light-only charcoal identity; mirrors light for compatibility.",
+      "bg": "#FAF7F2",
       "surface": "#FFFFFF",
-      "surfaceAlt": "#F1EAF8",
+      "surfaceAlt": "#F3EEE6",
       "raised": "#FFFFFF",
-      "text": "#15121A",
-      "textMuted": "#6F6876",
-      "border": "#E9E0F0",
-      "accent": "#421080",
-      "accentContrast": "#FFFFFF"
+      "text": "#1C1B19",
+      "textMuted": "#6B6660",
+      "border": "#E7E0D5",
+      "accent": "#1C1B19",
+      "accentContrast": "#FDFBF7"
     },
     "apps": {
       "customer": {
-        "accent": "#421080",
-        "accentName": "gowayy purple",
-        "accentSoft": "#EDE3F7",
-        "accentContrast": "#FFFFFF"
+        "accent": "#1C1B19",
+        "accentName": "charcoal",
+        "accentSoft": "#F4EFE6",
+        "accentContrast": "#FDFBF7"
       },
       "partner": {
-        "accent": "#421080",
-        "accentName": "gowayy purple",
-        "accentSoft": "#EDE3F7",
-        "accentContrast": "#FFFFFF"
+        "accent": "#1C1B19",
+        "accentName": "charcoal",
+        "accentSoft": "#F4EFE6",
+        "accentContrast": "#FDFBF7"
       },
-      "explore": {
-        "accent": "#421080",
-        "accentName": "gowayy purple",
-        "accentSoft": "#EDE3F7",
-        "accentContrast": "#FFFFFF"
+      "admin": {
+        "accent": "#C6A15B",
+        "accentName": "champagne gold",
+        "accentSoft": "#F4EFE6",
+        "accentContrast": "#161513"
       }
     },
     "purple": "#421080",

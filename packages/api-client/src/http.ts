@@ -157,6 +157,28 @@ export interface GowayyClient {
   partnerSettlements(): Promise<{ items: unknown[] }>;
   requestSettlement(): Promise<{ settlement: unknown }>;
   partnerInbox(): Promise<Record<string, unknown>>;
+
+  // ---- storefront / database-driven catalogue ----
+  storefront?(): Promise<Record<string, unknown>>;
+  storeDetail?(id: string): Promise<Record<string, unknown>>;
+  banners?(): Promise<{ items: unknown[] }>;
+  orderDetail?(id: string): Promise<Record<string, unknown>>;
+  uploadImage?(input: { dataBase64: string; mimeType: string }): Promise<{ url: string }>;
+  partnerCategories?(): Promise<{ items: unknown[]; mine: unknown[] }>;
+  createPartnerCategory?(input: unknown): Promise<Record<string, unknown>>;
+  partnerProducts?(): Promise<{ items: unknown[] }>;
+  createPartnerProduct?(input: unknown): Promise<Record<string, unknown>>;
+  updatePartnerProduct?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  partnerStores?(): Promise<{ items: unknown[] }>;
+  updatePartnerStore?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  partnerOffers?(): Promise<{ items: unknown[] }>;
+  createPartnerOffer?(input: unknown): Promise<Record<string, unknown>>;
+  updatePartnerOffer?(id: string, input: unknown): Promise<Record<string, unknown>>;
+  partnerCoupons?(): Promise<{ items: unknown[] }>;
+  updatePartnerOrderStatus?(id: string, status: string): Promise<Record<string, unknown>>;
+  partnerDeliveries?(): Promise<{ items: unknown[] }>;
+  verifyDelivery?(orderId: string, code: string): Promise<Record<string, unknown>>;
+  updateAddress?(id: string, input: unknown): Promise<{ address: unknown }>;
 }
 
 type FetchImpl = typeof fetch;
@@ -312,5 +334,25 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     partnerSettlements: () => get('/partner/settlements'),
     requestSettlement: () => post('/partner/settlements/request', {}),
     partnerInbox: () => get('/partner/inbox'),
+    storefront: () => get('/storefront'),
+    storeDetail: (id) => get(`/stores/${encodeURIComponent(id)}`),
+    banners: () => get('/banners'),
+    orderDetail: (id) => get(`/orders/${encodeURIComponent(id)}`),
+    uploadImage: (input) => post('/uploads', input),
+    partnerCategories: () => get('/partner/catalog/categories'),
+    createPartnerCategory: (input) => post('/partner/catalog/categories', input),
+    partnerProducts: () => get('/partner/catalog/products'),
+    createPartnerProduct: (input) => post('/partner/catalog/products', input),
+    updatePartnerProduct: (id, input) => patch(`/partner/catalog/products/${encodeURIComponent(id)}`, input),
+    partnerStores: () => get('/partner/catalog/stores'),
+    updatePartnerStore: (id, input) => patch(`/partner/stores/${encodeURIComponent(id)}`, input),
+    partnerOffers: () => get('/partner/offers'),
+    createPartnerOffer: (input) => post('/partner/offers', input),
+    updatePartnerOffer: (id, input) => patch(`/partner/offers/${encodeURIComponent(id)}`, input),
+    partnerCoupons: () => get('/partner/coupons'),
+    updatePartnerOrderStatus: (id, status) => post(`/partner/orders/${encodeURIComponent(id)}/status`, { status }),
+    partnerDeliveries: () => get('/partner/deliveries'),
+    verifyDelivery: (orderId, code) => post(`/partner/deliveries/${encodeURIComponent(orderId)}/verify`, { code }),
+    updateAddress: (id, input) => patch(`/addresses/${encodeURIComponent(id)}`, input),
   };
 }

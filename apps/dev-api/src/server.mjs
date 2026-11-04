@@ -34,6 +34,11 @@ import { buildNotification, toNotification, deduplicate } from '@gowayy/notifica
 import { makeId, randomToken, nowIso, nightsBetween, formatINR, slugify } from '@gowayy/shared-utils';
 import { createCommerceModule } from './commerce.mjs';
 import { createPartnerHub } from './partner-hub.mjs';
+import { createCatalogHub, readUpload, ensureUploadDir } from './catalog-hub.mjs';
+import { createAdminHub } from './admin.mjs';
+import { createDeliveryCodeService } from './delivery.mjs';
+import { renderOrderInvoicePdf, renderBookingInvoicePdf } from './invoice.mjs';
+import { seedDemoData, seedCatalogCollections } from './seed.mjs';
 import { quoteCheckout, assertVariantAvailable } from '@gowayy/commerce';
 import { getProduct } from '@gowayy/catalog';
 
@@ -57,6 +62,8 @@ function emptyDb() {
     carts: {}, wishlist: {}, productStock: {}, productViews: {}, searchHistory: {},
     partners: [], partnerProfiles: {}, partnerDocuments: {}, menus: {}, rooms: {}, tours: {},
     settlements: [], wallet: {},
+    categories: [], stores: [], catalogProducts: [], offers: [], banners: [], settings: {},
+    featuredDestinations: [], deliveryCodes: {}, admins: [],
     coupons: [
       { code: 'GOWAYY100', kind: 'flat', valuePaise: 10000, minSubtotalPaise: 30000, active: true },
       { code: 'WELCOME10', kind: 'percent', valuePercent: 10, maxPaise: 20000, minSubtotalPaise: 20000, active: true },
@@ -86,7 +93,25 @@ function seedInventory() {
     if (db.sharedSeats[key] === undefined) db.sharedSeats[key] = r.seatsTotal;
   }
 }
-seedInventory(); save();
+seedInventory();
+if (DEMO_MODE) { seedDemoData(db, { hashPassword, makeId, nowIso }); seedCatalogCollections(db); }
+ensureUploadDir();
+save();
+
+/** Delivery verification codes (hashed + encrypted, never exposed to partners). */
+const delivery = createDeliveryCodeService(db, WEBHOOK_SECRET);
+
+/** Strip protected fields and expose the customer's own code only on demand. */
+function publicOrder(order, options = {}) {
+  if (!order) return null;
+  const { deliveryCodeEnc, ...rest } = order;
+  void deliveryCodeEnc;
+  return {
+    ...rest,
+    deliveryVerification: delivery.maskedFor(order.id),
+    ...(options.includeDeliveryCode ? { deliveryCode: delivery.reveal(order.id) } : {}),
+  };
+}
 
 const audit = (actor, action, detail = {}) => { db.audit.push({ id: makeId('aud'), at: nowIso(), actor, action, detail }); };
 const notify = (userId, event) => {
@@ -280,6 +305,7 @@ function createOrder(user, body) {
     if (j && !j.serviceIds.includes(order.id)) { j.serviceIds.push(order.id); j.updatedAt = nowIso(); }
   }
   db.jobs.push({ id: makeId('job'), service: body.service, bookingId: null, orderId: order.id, status: 'open', driverId: null, createdAt: nowIso() });
+  delivery.issue(order.id);
   notify(user.id, { type: 'booking.created', reference: order.reference, service: body.service });
   audit(user.id, 'order.created', { orderId: order.id, totalPaise: order.price.totalPaise });
   return order;
@@ -329,7 +355,7 @@ function placeOrderFromCart(user, body) {
   if (!address) bad('ADDRESS_REQUIRED', 'Choose a delivery address', 422);
   const method = String(body.paymentMethod ?? '');
   const priced = lines.map((l) => {
-    const p = getProduct(l.productId);
+    const p = db.catalogProducts.find((x) => x.id === l.productId || x.slug === l.productId) ?? getProduct(l.productId);
     const v = p?.variants.find((x) => x.id === l.variantId);
     if (!p || !v) bad('ITEM_UNAVAILABLE', 'A cart item is no longer available', 409);
     const stock = db.productStock[`${p.id}:${v.id}`] ?? v.stock;
@@ -356,6 +382,7 @@ function placeOrderFromCart(user, body) {
   db.orders.push(order);
   db.carts[user.id] = { lines: [], updatedAt: nowIso() };
   db.jobs.push({ id: makeId('job'), service: 'marketplace', bookingId: null, orderId: order.id, status: 'open', driverId: null, createdAt: nowIso() });
+  delivery.issue(order.id);
   notify(user.id, { type: 'booking.created', reference: order.reference, service: 'marketplace' });
   audit(user.id, 'order.created', { orderId: order.id, service: 'marketplace', totalPaise: quote.totalPaise });
   return order;
@@ -368,6 +395,8 @@ const commerce = createCommerceModule({
   db: () => db, bad, auth, rateLimit, notify, audit, placeOrderFromCart,
 });
 const partnerHub = createPartnerHub({ db: () => db, bad, auth, rateLimit, notify, audit, formatINR });
+const catalogHub = createCatalogHub({ db: () => db, bad, auth, rateLimit, notify, audit, delivery, publicOrder, save });
+const adminHub = createAdminHub({ db: () => db, bad, auth, audit, publicOrder, delivery });
 
 async function route(req, res, url) {
   const method = req.method ?? 'GET';
@@ -379,9 +408,10 @@ async function route(req, res, url) {
 
   if (method === 'GET' && path === '/api/health') {
     return send(res, 200, {
-      ok: true, service: 'gowayy-dev-api', version: '0.1.0', mode: DEMO_MODE ? 'development' : 'production',
-      otpAdapter: OTP_PROVIDER === 'demo' ? 'demo (labelled, not real email verification)' : OTP_PROVIDER,
-      paymentProvider: 'sandbox', storage: 'local JSON file', supabase: 'not connected in this environment',
+      ok: true, service: 'gowayy-dev-api', version: '0.2.0', mode: DEMO_MODE ? 'development' : 'production',
+      otpAdapter: OTP_PROVIDER === 'demo' ? 'demo (not real email verification)' : OTP_PROVIDER,
+      supabase: process.env.SUPABASE_URL ? 'configured' : 'not connected (development API)',
+      paymentProvider: process.env.GOWAYY_PAYMENT_PROVIDER ?? 'sandbox',
       serverTime: nowIso(),
     });
   }
@@ -399,7 +429,31 @@ async function route(req, res, url) {
     if (!map[name]) bad('NOT_FOUND', 'Unknown catalogue collection', 404);
     return send(res, 200, { items: map[name], count: map[name].length });
   }
-  if (method === 'GET' && path === '/api/search') return send(res, 200, { query: q.get('q') ?? '', hits: searchCatalog(q.get('q') ?? '') });
+  if (method === 'GET' && path === '/api/search') {
+    const term = String(q.get('q') ?? '').trim().toLowerCase();
+    const base = searchCatalog(q.get('q') ?? '');
+    if (term.length > 1) {
+      // Database-driven products and stores (including partner-created ones) are
+      // searchable alongside the seeded catalogue.
+      const extra = [];
+      for (const p of db.catalogProducts) {
+        if (p.active === false || p.published === false) continue;
+        if (`${p.name} ${p.brand} ${p.category} ${(p.tags ?? []).join(' ')}`.toLowerCase().includes(term)) {
+          const store = db.stores.find((s) => s.id === p.storeId);
+          extra.push({ id: p.id, kind: 'product', title: p.name, subtitle: `${store?.name ?? p.brand} · ${p.category}`, service: 'marketplace', destinationId: store?.destinationId ?? null, href: `/products/${p.slug}` });
+        }
+      }
+      for (const s of db.stores) {
+        if (s.status !== 'active') continue;
+        if (`${s.name} ${s.categoryName} ${s.description}`.toLowerCase().includes(term)) {
+          extra.push({ id: s.id, kind: 'store', title: s.name, subtitle: `${s.categoryName} · ${db.catalogProducts.filter((p) => p.storeId === s.id).length} products`, service: 'marketplace', destinationId: s.destinationId, href: `/groceries/${s.id}` });
+        }
+      }
+      const seen = new Set(base.map((h) => `${h.kind}-${h.id}`));
+      for (const hit of extra) if (!seen.has(`${hit.kind}-${hit.id}`)) base.unshift(hit);
+    }
+    return send(res, 200, { query: q.get('q') ?? '', hits: base });
+  }
   if (method === 'GET' && path === '/api/recommendations') return send(res, 200, { destinationId: q.get('destinationId'), groups: recommendationsForDestination(q.get('destinationId') ?? '') });
   if (method === 'GET' && path === '/api/credits') return send(res, 200, {
     policy: 'Only verified, permissibly licensed photographs are displayed. See assets/images/IMAGE_SOURCES.json.',
@@ -468,6 +522,7 @@ async function route(req, res, url) {
     const d = zod(loginSchema, body);
     const user = db.users.find((u) => u.email === emailOf(d.email) && !u.deletedAt);
     if (!user || !verifyPassword(d.password, user.passwordHash)) bad('INVALID_CREDENTIALS', 'Email or password is incorrect', 401);
+    if ((user.accountStatus ?? 'active') !== 'active') bad('ACCOUNT_SUSPENDED', 'This account is suspended. Contact support.', 403);
     const session = sessionFor(user.id);
     audit(user.id, 'auth.login', {});
     return ok(res, { user: publicUser(user), session });
@@ -623,7 +678,7 @@ async function route(req, res, url) {
 
   // ------- bookings & orders (read + server-authoritative transitions) -------
   if (method === 'GET' && path === '/api/bookings') { const { user } = auth(req); return send(res, 200, { items: db.bookings.filter((b) => b.userId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) }); }
-  if (method === 'GET' && path === '/api/orders') { const { user } = auth(req); return send(res, 200, { items: db.orders.filter((o) => o.userId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) }); }
+  if (method === 'GET' && path === '/api/orders') { const { user } = auth(req); return send(res, 200, { items: db.orders.filter((o) => o.userId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((o) => publicOrder(o)) }); }
   if (method === 'GET' && tail[0] === 'bookings' && tail[1] && tail.length === 2) {
     const { user } = auth(req); const b = db.bookings.find((x) => x.id === tail[1] && x.userId === user.id);
     if (!b) bad('NOT_FOUND', 'Booking not found', 404);
@@ -632,7 +687,38 @@ async function route(req, res, url) {
   if (method === 'GET' && tail[0] === 'orders' && tail[1] && tail.length === 2) {
     const { user } = auth(req); const o = db.orders.find((x) => x.id === tail[1] && x.userId === user.id);
     if (!o) bad('NOT_FOUND', 'Order not found', 404);
-    return send(res, 200, { order: o, payment: db.payments.find((p) => p.id === o.paymentId) ?? null });
+    return send(res, 200, { order: publicOrder(o, { includeDeliveryCode: true }), payment: db.payments.find((p) => p.id === o.paymentId) ?? null });
+  }
+  if (method === 'GET' && tail[0] === 'orders' && tail[2] === 'invoice') {
+    const { user } = auth(req); const o = db.orders.find((x) => x.id === tail[1] && (x.userId === user.id || user.roles.includes('admin')));
+    if (!o) bad('NOT_FOUND', 'Order not found', 404);
+    const store = db.stores.find((s) => s.id === o.listingId) ?? { name: catalogue.restaurants.find((r) => r.id === o.listingId)?.name ?? 'GOWAYY store' };
+    const customer = db.users.find((u) => u.id === o.userId);
+    const payment = db.payments.find((p) => p.id === o.paymentId) ?? null;
+    const pdf = renderOrderInvoicePdf({ order: o, store, customer: { name: `${customer?.firstName ?? ''} ${customer?.lastName ?? ''}`.trim(), email: customer?.email }, payment });
+    audit(user.id, 'invoice.downloaded', { orderId: o.id });
+    res.writeHead(200, {
+      'content-type': 'application/pdf',
+      'content-length': pdf.length,
+      'content-disposition': `inline; filename="GOWAYY-invoice-${o.reference}.pdf"`,
+      'cache-control': 'private, no-store',
+      'access-control-allow-origin': '*',
+    });
+    return res.end(pdf);
+  }
+  if (method === 'GET' && tail[0] === 'bookings' && tail[2] === 'invoice') {
+    const { user } = auth(req); const b = db.bookings.find((x) => x.id === tail[1] && (x.userId === user.id || user.roles.includes('admin')));
+    if (!b) bad('NOT_FOUND', 'Booking not found', 404);
+    const customer = db.users.find((u) => u.id === b.userId);
+    const payment = db.payments.find((p) => p.id === b.paymentId) ?? null;
+    const pdf = renderBookingInvoicePdf({ booking: b, customer: { name: `${customer?.firstName ?? ''} ${customer?.lastName ?? ''}`.trim(), email: customer?.email }, payment });
+    audit(user.id, 'invoice.downloaded', { bookingId: b.id });
+    res.writeHead(200, {
+      'content-type': 'application/pdf', 'content-length': pdf.length,
+      'content-disposition': `inline; filename="GOWAYY-booking-${b.reference}.pdf"`,
+      'cache-control': 'private, no-store', 'access-control-allow-origin': '*',
+    });
+    return res.end(pdf);
   }
   if (method === 'POST' && tail[0] === 'bookings' && tail[2] === 'transition') {
     const { user } = auth(req);
@@ -706,17 +792,24 @@ async function route(req, res, url) {
     if (body.status === 'cancelled' && o.service === 'grocery') {
       for (const it of o.items) db.inventory[`${o.listingId}:${it.id}`] = (db.inventory[`${o.listingId}:${it.id}`] ?? 0) + it.quantity;
     }
+    if (body.status === 'delivered') {
+      const rec = delivery.recordFor(o.id);
+      if (rec && !rec.verifiedAt) bad('DELIVERY_CODE_REQUIRED', 'Validate the customer delivery verification code first', 409);
+    }
     o.status = body.status; o.updatedAt = nowIso();
     notify(o.userId, { type: 'delivery.tracking', reference: o.reference, status: o.status.replace(/_/g, ' ') });
-    if (o.status === 'accepted') notify(o.userId, { type: 'restaurant.accepted', reference: o.reference, restaurant: catalogue.restaurants.find((r) => r.id === o.listingId)?.name ?? catalogue.groceryStores.find((s) => s.id === o.listingId)?.name ?? 'Store' });
+    if (o.status === 'accepted') notify(o.userId, { type: 'restaurant.accepted', reference: o.reference, restaurant: db.stores.find((s) => s.id === o.listingId)?.name ?? catalogue.restaurants.find((r) => r.id === o.listingId)?.name ?? catalogue.groceryStores.find((s) => s.id === o.listingId)?.name ?? 'Store' });
     audit(user.id, 'order.transition', { orderId: o.id, status: o.status });
-    return ok(res, { order: o });
+    return ok(res, { order: publicOrder(o) });
   }
 
   // ------- payments (sandbox, server-verified) -------
   if (method === 'POST' && path === '/api/payments/init') {
     const { user } = auth(req); rateLimit(req, 'payment', 60);
     const d = zod(paymentInitSchema, body);
+    if (['card', 'netbanking'].includes(d.method) && !process.env.GOWAYY_PAYMENT_GATEWAY_KEY) {
+      bad('GATEWAY_NOT_CONFIGURED', 'Card and net-banking payments need gateway credentials. Use UPI sandbox in this environment.', 503);
+    }
     const { target } = paymentTarget(user.id, d.bookingId, d.orderId);
     if (d.amountPaise !== target.price.totalPaise) bad('AMOUNT_MISMATCH', 'Amount does not match the server-side total', 409);
     return ok(res, { payment: idempotency(req, () => {
@@ -746,6 +839,14 @@ async function route(req, res, url) {
     // the same signature-verifying webhook path. No client-supplied success is trusted.
     const raw = JSON.stringify({ eventId: makeId('evt'), type: 'payment.captured', paymentId: p.id, amountPaise: p.amountPaise, providerReference: `sandbox_${randomToken(8)}` });
     verifyWebhook(raw, createHmac('sha256', WEBHOOK_SECRET).update(raw).digest('hex'));
+    if (p.orderId) {
+      const order = db.orders.find((o) => o.id === p.orderId);
+      if (order) { order.paymentStatus = 'paid'; order.paymentMethod = p.method; order.updatedAt = nowIso(); }
+    }
+    if (p.bookingId) {
+      const booking = db.bookings.find((b) => b.id === p.bookingId);
+      if (booking) { booking.paymentStatus = 'paid'; booking.paymentMethod = p.method; booking.updatedAt = nowIso(); }
+    }
     return ok(res, { payment: p, sandbox: true, note: 'Provider event was signed and verified server-side through the webhook handler.' });
   }
   if (method === 'POST' && tail[0] === 'payments' && tail[2] === 'refund') {
@@ -777,7 +878,24 @@ async function route(req, res, url) {
   if (path === '/api/addresses') {
     const { user } = auth(req);
     if (method === 'GET') return send(res, 200, { items: db.addresses.filter((a) => a.userId === user.id) });
-    if (method === 'POST') { const d = zod(addressSchema, body); const a = { id: makeId('adr'), userId: user.id, ...d }; db.addresses.push(a); return ok(res, { address: a }, 201); }
+    if (method === 'POST') {
+      const d = zod(addressSchema, body);
+      if (d.isDefault) for (const a of db.addresses.filter((x) => x.userId === user.id)) a.isDefault = false;
+      const a = { id: makeId('adr'), userId: user.id, ...d, createdAt: nowIso() };
+      db.addresses.push(a);
+      audit(user.id, 'address.created', { addressId: a.id });
+      return ok(res, { address: a }, 201);
+    }
+  }
+  if (tail[0] === 'addresses' && tail[1] && method === 'PATCH') {
+    const { user } = auth(req);
+    const address = db.addresses.find((a) => a.id === tail[1] && a.userId === user.id);
+    if (!address) bad('NOT_FOUND', 'Address not found', 404);
+    if (body.isDefault) for (const a of db.addresses.filter((x) => x.userId === user.id)) a.isDefault = false;
+    for (const key of ['label', 'line', 'city', 'pincode', 'name', 'phone', 'altPhone', 'state', 'area', 'landmark', 'house', 'building', 'road', 'line2', 'isDefault']) {
+      if (body[key] !== undefined) address[key] = body[key];
+    }
+    return ok(res, { address });
   }
   if (tail[0] === 'addresses' && tail[1] && method === 'DELETE') { const { user } = auth(req); db.addresses = db.addresses.filter((a) => !(a.id === tail[1] && a.userId === user.id)); return ok(res, { deleted: true }); }
   if (path === '/api/saved-places') {
@@ -865,13 +983,19 @@ async function route(req, res, url) {
   }
 
   // ------- marketplace commerce + partner hub modules -------
+  await catalogHub.handle(req, res, method, tail, body, q, send, ok);
+  if (res.headersSent) return;
+  await adminHub.handle(req, res, method, tail, body, q, send, ok);
+  if (res.headersSent) return;
   await commerce.handle(req, res, method, tail, body, q, send, ok);
   if (res.headersSent) return;
   await partnerHub.handle(req, res, method, tail, body, q, send, ok);
   if (res.headersSent) return;
 
   if (method === 'POST' && path === '/api/dev/reset' && DEMO_MODE) {
-    db = emptyDb(); seedInventory(); audit('dev', 'db.reset', {});
+    db = emptyDb(); seedInventory();
+    seedDemoData(db, { hashPassword, makeId, nowIso }); seedCatalogCollections(db);
+    audit('dev', 'db.reset', {});
     return ok(res, { reset: true, notice: 'Development database cleared.' });
   }
 
@@ -884,6 +1008,19 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
   if (req.method === 'OPTIONS') { res.writeHead(204, { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, authorization, idempotency-key, x-gowayy-signature', 'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS' }); return res.end(); }
   try {
+    if ((req.method ?? 'GET') === 'GET' && url.pathname.startsWith('/uploads/')) {
+      const file = readUpload(url.pathname.slice('/uploads/'.length));
+      if (!file) { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('Not found'); return; }
+      res.writeHead(200, {
+        'content-type': file.contentType,
+        'content-length': file.data.length,
+        'cache-control': 'public, max-age=31536000, immutable',
+        'x-content-type-options': 'nosniff',
+        'access-control-allow-origin': '*',
+      });
+      res.end(file.data);
+      return;
+    }
     await route(req, res, url);
   } catch (e) {
     if (e instanceof HttpError || (e && typeof e === 'object' && typeof e.status === 'number')) {

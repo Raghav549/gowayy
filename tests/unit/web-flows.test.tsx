@@ -85,8 +85,8 @@ describe('multi-step registration and OTP', () => {
     fireEvent.click(next);
 
     // react-hook-form's handleSubmit resolves asynchronously after validation.
-    await waitFor(() => expect(screen.getByText('Secure your account')).toBeInTheDocument());
-    const create = screen.getByRole('button', { name: /create account/i });
+    await waitFor(() => expect(screen.getByText('Create your sign-in details')).toBeInTheDocument());
+    const create = screen.getByRole('button', { name: /^continue$/i });
     expect(create).toBeDisabled();
     fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'aarav@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('At least 10 characters'), { target: { value: 'weak' } });
@@ -97,8 +97,8 @@ describe('multi-step registration and OTP', () => {
     fireEvent.click(create);
 
     await waitFor(() => expect(screen.getByText(/Verify your email/i)).toBeInTheDocument());
-    expect(screen.getByText(/DEVELOPMENT MODE/i)).toBeInTheDocument();
-    expect(screen.getByText(/DEMO OTP ADAPTER/i)).toBeInTheDocument();
+    expect(screen.queryByText(/DEVELOPMENT MODE/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Development test code/i)).toBeInTheDocument();
     const digits = Array.from({ length: 6 }, (_, i) => screen.getByLabelText(`Digit ${i + 1}`));
     expect(digits).toHaveLength(6);
 

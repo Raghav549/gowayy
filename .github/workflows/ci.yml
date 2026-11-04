@@ -31,20 +31,20 @@ jobs:
       - name: Install Customer mobile dependencies
         working-directory: apps/gowayy-customer/mobile
         run: npm ci --no-audit --no-fund
-      - name: Install Explore mobile dependencies
-        working-directory: apps/gowayy-explore/mobile
-        run: npm ci --no-audit --no-fund
       - name: Install Partner mobile dependencies
         working-directory: apps/gowayy-partner/mobile
+        run: npm ci --no-audit --no-fund
+      - name: Install Admin mobile dependencies
+        working-directory: apps/gowayy-admin/mobile
         run: npm ci --no-audit --no-fund
       - name: Typecheck shared packages and web apps
         run: npm run typecheck
       - name: Typecheck Customer Android app
         run: npm run typecheck:mobile
-      - name: Typecheck Explore Android app
-        run: npm run typecheck:explore-mobile
       - name: Typecheck Partner Android app
         run: npm run typecheck:partner-mobile
+      - name: Typecheck Admin Android app
+        run: npm run typecheck:admin-mobile
       - name: Unit tests
         run: npm run test
       - name: Integration tests (dev-api over HTTP)
@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [customer, explore, partner]
+        app: [customer, partner, admin]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
