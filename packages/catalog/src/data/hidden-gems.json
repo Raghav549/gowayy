@@ -1,0 +1,146 @@
+[
+  {
+    "id": "gem_lepchajagat",
+    "destinationId": "dst_lepchajagat",
+    "name": "Lepchajagat",
+    "coords": {
+      "lat": 27.005,
+      "lng": 88.222
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Lepchajagat; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "March–May and October–November",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_lamahatta",
+    "destinationId": "dst_lamahatta",
+    "name": "Lamahatta",
+    "coords": {
+      "lat": 27.022,
+      "lng": 88.262
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Lamahatta; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "October–May",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_tinchuley",
+    "destinationId": "dst_tinchuley",
+    "name": "Tinchuley",
+    "coords": {
+      "lat": 27.03,
+      "lng": 88.33
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Tinchuley; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "October–April",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_takdah",
+    "destinationId": "dst_takdah",
+    "name": "Takdah",
+    "coords": {
+      "lat": 27.048,
+      "lng": 88.35
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Takdah; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "March–May and October–December",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_chatakpur",
+    "destinationId": "dst_chatakpur",
+    "name": "Chatakpur",
+    "coords": {
+      "lat": 27.01,
+      "lng": 88.23
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Chatakpur; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "October–March",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "Located near a wildlife sanctuary area; forest-department permissions and entry rules may apply.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_sittong",
+    "destinationId": "dst_sittong",
+    "name": "Sittong",
+    "coords": {
+      "lat": 26.93,
+      "lng": 88.4
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Sittong; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "November–January",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_dawaipani",
+    "destinationId": "dst_dawaipani",
+    "name": "Dawaipani",
+    "coords": {
+      "lat": 27.01,
+      "lng": 88.25
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Dawaipani; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "October–April",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  },
+  {
+    "id": "gem_jorebunglow",
+    "destinationId": "dst_jorebunglow",
+    "name": "Jorebunglow",
+    "coords": {
+      "lat": 26.95,
+      "lng": 88.24
+    },
+    "coordinateAccuracy": "approximate",
+    "route": "From Darjeeling or Siliguri by hired/shared taxi towards Jorebunglow; confirm the last-mile road with a local operator.",
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary — confirm locally.",
+    "bestPeriod": "Year round",
+    "localTravelGuidance": "Arrange return transport in advance; mobile coverage and evening transport can be limited.",
+    "restrictions": "No verified permit information available for this build; check with local authorities.",
+    "safetyWarnings": "Travel in daylight, avoid monsoon landslide-prone stretches, and do not rely on approximate coordinates for navigation.",
+    "source": "https://darjeeling.gov.in/gallery-category/travel-tourism/",
+    "infoStatus": "community-reference"
+  }
+]

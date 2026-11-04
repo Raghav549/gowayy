@@ -1,0 +1,781 @@
+[
+  {
+    "id": "grc_1",
+    "service": "grocery",
+    "name": "Hill Basket Market",
+    "destinationId": "dst_darjeeling",
+    "description": "Demo grocery store in Darjeeling with independent seeded inventory.",
+    "coords": {
+      "lat": 27.0375,
+      "lng": 88.26169999999999
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Hill Basket Market",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Demo listing",
+      "Independent inventory"
+    ],
+    "deliveryCoverageKm": 8,
+    "slots": [
+      "08:00–11:00",
+      "12:00–15:00",
+      "17:00–20:00"
+    ],
+    "products": [
+      {
+        "id": "grp_1_1",
+        "storeId": "grc_1",
+        "name": "Apples (1 kg)",
+        "category": "Fruits",
+        "unit": "kg",
+        "pricePaise": 18000,
+        "stock": 14,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_1_2",
+        "storeId": "grc_1",
+        "name": "Bananas (1 dozen)",
+        "category": "Fruits",
+        "unit": "dozen",
+        "pricePaise": 6000,
+        "stock": 21,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_3",
+        "storeId": "grc_1",
+        "name": "Oranges (1 kg)",
+        "category": "Fruits",
+        "unit": "kg",
+        "pricePaise": 14000,
+        "stock": 7,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_4",
+        "storeId": "grc_1",
+        "name": "Potatoes (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 4000,
+        "stock": 40,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_5",
+        "storeId": "grc_1",
+        "name": "Onions (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 5000,
+        "stock": 34,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_1_6",
+        "storeId": "grc_1",
+        "name": "Tomatoes (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 6000,
+        "stock": 18,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_7",
+        "storeId": "grc_1",
+        "name": "Milk (1 L)",
+        "category": "Dairy",
+        "unit": "litre",
+        "pricePaise": 6500,
+        "stock": 18,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_8",
+        "storeId": "grc_1",
+        "name": "Curd (500 g)",
+        "category": "Dairy",
+        "unit": "pack",
+        "pricePaise": 4500,
+        "stock": 11,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_9",
+        "storeId": "grc_1",
+        "name": "Paneer (200 g)",
+        "category": "Dairy",
+        "unit": "pack",
+        "pricePaise": 9000,
+        "stock": 5,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_1_10",
+        "storeId": "grc_1",
+        "name": "Whole wheat bread",
+        "category": "Bakery",
+        "unit": "loaf",
+        "pricePaise": 5500,
+        "stock": 10,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_11",
+        "storeId": "grc_1",
+        "name": "Butter croissant",
+        "category": "Bakery",
+        "unit": "piece",
+        "pricePaise": 6000,
+        "stock": 7,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_12",
+        "storeId": "grc_1",
+        "name": "Potato chips",
+        "category": "Snacks",
+        "unit": "pack",
+        "pricePaise": 4000,
+        "stock": 23,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_13",
+        "storeId": "grc_1",
+        "name": "Biscuits",
+        "category": "Snacks",
+        "unit": "pack",
+        "pricePaise": 3500,
+        "stock": 30,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_1_14",
+        "storeId": "grc_1",
+        "name": "Darjeeling tea (100 g)",
+        "category": "Beverages",
+        "unit": "pack",
+        "pricePaise": 16000,
+        "stock": 10,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_15",
+        "storeId": "grc_1",
+        "name": "Mineral water (1 L)",
+        "category": "Beverages",
+        "unit": "bottle",
+        "pricePaise": 2500,
+        "stock": 48,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_16",
+        "storeId": "grc_1",
+        "name": "Dishwash liquid",
+        "category": "Household",
+        "unit": "bottle",
+        "pricePaise": 12000,
+        "stock": 14,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_17",
+        "storeId": "grc_1",
+        "name": "Laundry detergent (1 kg)",
+        "category": "Household",
+        "unit": "pack",
+        "pricePaise": 22000,
+        "stock": 8,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_1_18",
+        "storeId": "grc_1",
+        "name": "Toothpaste",
+        "category": "Personal care",
+        "unit": "tube",
+        "pricePaise": 9000,
+        "stock": 14,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_19",
+        "storeId": "grc_1",
+        "name": "Soap",
+        "category": "Personal care",
+        "unit": "bar",
+        "pricePaise": 4500,
+        "stock": 20,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_20",
+        "storeId": "grc_1",
+        "name": "Rice (1 kg)",
+        "category": "Packaged foods",
+        "unit": "kg",
+        "pricePaise": 9500,
+        "stock": 17,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_21",
+        "storeId": "grc_1",
+        "name": "Instant noodles",
+        "category": "Packaged foods",
+        "unit": "pack",
+        "pricePaise": 4500,
+        "stock": 22,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_1_22",
+        "storeId": "grc_1",
+        "name": "Local honey (250 g)",
+        "category": "Local products",
+        "unit": "jar",
+        "pricePaise": 28000,
+        "stock": 5,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_1_23",
+        "storeId": "grc_1",
+        "name": "Handmade pickle",
+        "category": "Local products",
+        "unit": "jar",
+        "pricePaise": 15000,
+        "stock": 7,
+        "substitutionAllowed": true
+      }
+    ]
+  },
+  {
+    "id": "grc_2",
+    "service": "grocery",
+    "name": "Daily Needs Store",
+    "destinationId": "dst_siliguri",
+    "description": "Demo grocery store in Siliguri with independent seeded inventory.",
+    "coords": {
+      "lat": 26.7301,
+      "lng": 88.3943
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Daily Needs Store",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Demo listing",
+      "Independent inventory"
+    ],
+    "deliveryCoverageKm": 12,
+    "slots": [
+      "09:00–12:00",
+      "14:00–18:00",
+      "19:00–21:00"
+    ],
+    "products": [
+      {
+        "id": "grp_2_1",
+        "storeId": "grc_2",
+        "name": "Apples (1 kg)",
+        "category": "Fruits",
+        "unit": "kg",
+        "pricePaise": 18000,
+        "stock": 12,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_2_2",
+        "storeId": "grc_2",
+        "name": "Bananas (1 dozen)",
+        "category": "Fruits",
+        "unit": "dozen",
+        "pricePaise": 6000,
+        "stock": 19,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_3",
+        "storeId": "grc_2",
+        "name": "Oranges (1 kg)",
+        "category": "Fruits",
+        "unit": "kg",
+        "pricePaise": 14000,
+        "stock": 5,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_4",
+        "storeId": "grc_2",
+        "name": "Potatoes (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 4000,
+        "stock": 38,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_5",
+        "storeId": "grc_2",
+        "name": "Onions (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 5000,
+        "stock": 32,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_2_6",
+        "storeId": "grc_2",
+        "name": "Tomatoes (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 6000,
+        "stock": 16,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_7",
+        "storeId": "grc_2",
+        "name": "Milk (1 L)",
+        "category": "Dairy",
+        "unit": "litre",
+        "pricePaise": 6500,
+        "stock": 16,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_8",
+        "storeId": "grc_2",
+        "name": "Curd (500 g)",
+        "category": "Dairy",
+        "unit": "pack",
+        "pricePaise": 4500,
+        "stock": 9,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_9",
+        "storeId": "grc_2",
+        "name": "Paneer (200 g)",
+        "category": "Dairy",
+        "unit": "pack",
+        "pricePaise": 9000,
+        "stock": 3,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_2_10",
+        "storeId": "grc_2",
+        "name": "Whole wheat bread",
+        "category": "Bakery",
+        "unit": "loaf",
+        "pricePaise": 5500,
+        "stock": 8,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_11",
+        "storeId": "grc_2",
+        "name": "Butter croissant",
+        "category": "Bakery",
+        "unit": "piece",
+        "pricePaise": 6000,
+        "stock": 5,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_12",
+        "storeId": "grc_2",
+        "name": "Potato chips",
+        "category": "Snacks",
+        "unit": "pack",
+        "pricePaise": 4000,
+        "stock": 21,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_13",
+        "storeId": "grc_2",
+        "name": "Biscuits",
+        "category": "Snacks",
+        "unit": "pack",
+        "pricePaise": 3500,
+        "stock": 28,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_2_14",
+        "storeId": "grc_2",
+        "name": "Darjeeling tea (100 g)",
+        "category": "Beverages",
+        "unit": "pack",
+        "pricePaise": 16000,
+        "stock": 8,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_15",
+        "storeId": "grc_2",
+        "name": "Mineral water (1 L)",
+        "category": "Beverages",
+        "unit": "bottle",
+        "pricePaise": 2500,
+        "stock": 46,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_16",
+        "storeId": "grc_2",
+        "name": "Dishwash liquid",
+        "category": "Household",
+        "unit": "bottle",
+        "pricePaise": 12000,
+        "stock": 12,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_17",
+        "storeId": "grc_2",
+        "name": "Laundry detergent (1 kg)",
+        "category": "Household",
+        "unit": "pack",
+        "pricePaise": 22000,
+        "stock": 6,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_2_18",
+        "storeId": "grc_2",
+        "name": "Toothpaste",
+        "category": "Personal care",
+        "unit": "tube",
+        "pricePaise": 9000,
+        "stock": 12,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_19",
+        "storeId": "grc_2",
+        "name": "Soap",
+        "category": "Personal care",
+        "unit": "bar",
+        "pricePaise": 4500,
+        "stock": 18,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_20",
+        "storeId": "grc_2",
+        "name": "Rice (1 kg)",
+        "category": "Packaged foods",
+        "unit": "kg",
+        "pricePaise": 9500,
+        "stock": 15,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_21",
+        "storeId": "grc_2",
+        "name": "Instant noodles",
+        "category": "Packaged foods",
+        "unit": "pack",
+        "pricePaise": 4500,
+        "stock": 20,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_2_22",
+        "storeId": "grc_2",
+        "name": "Local honey (250 g)",
+        "category": "Local products",
+        "unit": "jar",
+        "pricePaise": 28000,
+        "stock": 3,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_2_23",
+        "storeId": "grc_2",
+        "name": "Handmade pickle",
+        "category": "Local products",
+        "unit": "jar",
+        "pricePaise": 15000,
+        "stock": 5,
+        "substitutionAllowed": true
+      }
+    ]
+  },
+  {
+    "id": "grc_3",
+    "service": "grocery",
+    "name": "Valley Groceries",
+    "destinationId": "dst_kalimpong",
+    "description": "Demo grocery store in Kalimpong with independent seeded inventory.",
+    "coords": {
+      "lat": 27.0653,
+      "lng": 88.4623
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Valley Groceries",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Demo listing",
+      "Independent inventory"
+    ],
+    "deliveryCoverageKm": 7,
+    "slots": [
+      "08:00–12:00",
+      "16:00–19:00"
+    ],
+    "products": [
+      {
+        "id": "grp_3_1",
+        "storeId": "grc_3",
+        "name": "Apples (1 kg)",
+        "category": "Fruits",
+        "unit": "kg",
+        "pricePaise": 18000,
+        "stock": 10,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_3_2",
+        "storeId": "grc_3",
+        "name": "Bananas (1 dozen)",
+        "category": "Fruits",
+        "unit": "dozen",
+        "pricePaise": 6000,
+        "stock": 17,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_3",
+        "storeId": "grc_3",
+        "name": "Oranges (1 kg)",
+        "category": "Fruits",
+        "unit": "kg",
+        "pricePaise": 14000,
+        "stock": 3,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_4",
+        "storeId": "grc_3",
+        "name": "Potatoes (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 4000,
+        "stock": 36,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_5",
+        "storeId": "grc_3",
+        "name": "Onions (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 5000,
+        "stock": 30,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_3_6",
+        "storeId": "grc_3",
+        "name": "Tomatoes (1 kg)",
+        "category": "Vegetables",
+        "unit": "kg",
+        "pricePaise": 6000,
+        "stock": 14,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_7",
+        "storeId": "grc_3",
+        "name": "Milk (1 L)",
+        "category": "Dairy",
+        "unit": "litre",
+        "pricePaise": 6500,
+        "stock": 14,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_8",
+        "storeId": "grc_3",
+        "name": "Curd (500 g)",
+        "category": "Dairy",
+        "unit": "pack",
+        "pricePaise": 4500,
+        "stock": 7,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_9",
+        "storeId": "grc_3",
+        "name": "Paneer (200 g)",
+        "category": "Dairy",
+        "unit": "pack",
+        "pricePaise": 9000,
+        "stock": 1,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_3_10",
+        "storeId": "grc_3",
+        "name": "Whole wheat bread",
+        "category": "Bakery",
+        "unit": "loaf",
+        "pricePaise": 5500,
+        "stock": 6,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_11",
+        "storeId": "grc_3",
+        "name": "Butter croissant",
+        "category": "Bakery",
+        "unit": "piece",
+        "pricePaise": 6000,
+        "stock": 3,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_12",
+        "storeId": "grc_3",
+        "name": "Potato chips",
+        "category": "Snacks",
+        "unit": "pack",
+        "pricePaise": 4000,
+        "stock": 19,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_13",
+        "storeId": "grc_3",
+        "name": "Biscuits",
+        "category": "Snacks",
+        "unit": "pack",
+        "pricePaise": 3500,
+        "stock": 26,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_3_14",
+        "storeId": "grc_3",
+        "name": "Darjeeling tea (100 g)",
+        "category": "Beverages",
+        "unit": "pack",
+        "pricePaise": 16000,
+        "stock": 6,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_15",
+        "storeId": "grc_3",
+        "name": "Mineral water (1 L)",
+        "category": "Beverages",
+        "unit": "bottle",
+        "pricePaise": 2500,
+        "stock": 44,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_16",
+        "storeId": "grc_3",
+        "name": "Dishwash liquid",
+        "category": "Household",
+        "unit": "bottle",
+        "pricePaise": 12000,
+        "stock": 10,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_17",
+        "storeId": "grc_3",
+        "name": "Laundry detergent (1 kg)",
+        "category": "Household",
+        "unit": "pack",
+        "pricePaise": 22000,
+        "stock": 4,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_3_18",
+        "storeId": "grc_3",
+        "name": "Toothpaste",
+        "category": "Personal care",
+        "unit": "tube",
+        "pricePaise": 9000,
+        "stock": 10,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_19",
+        "storeId": "grc_3",
+        "name": "Soap",
+        "category": "Personal care",
+        "unit": "bar",
+        "pricePaise": 4500,
+        "stock": 16,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_20",
+        "storeId": "grc_3",
+        "name": "Rice (1 kg)",
+        "category": "Packaged foods",
+        "unit": "kg",
+        "pricePaise": 9500,
+        "stock": 13,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_21",
+        "storeId": "grc_3",
+        "name": "Instant noodles",
+        "category": "Packaged foods",
+        "unit": "pack",
+        "pricePaise": 4500,
+        "stock": 18,
+        "substitutionAllowed": false
+      },
+      {
+        "id": "grp_3_22",
+        "storeId": "grc_3",
+        "name": "Local honey (250 g)",
+        "category": "Local products",
+        "unit": "jar",
+        "pricePaise": 28000,
+        "stock": 1,
+        "substitutionAllowed": true
+      },
+      {
+        "id": "grp_3_23",
+        "storeId": "grc_3",
+        "name": "Handmade pickle",
+        "category": "Local products",
+        "unit": "jar",
+        "pricePaise": 15000,
+        "stock": 3,
+        "substitutionAllowed": true
+      }
+    ]
+  }
+]

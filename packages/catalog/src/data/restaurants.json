@@ -1,0 +1,359 @@
+[
+  {
+    "id": "rst_1",
+    "service": "food",
+    "name": "Himalayan Kitchen",
+    "destinationId": "dst_darjeeling",
+    "description": "Demo restaurant listing in Darjeeling. Replace with a verified partner before launch.",
+    "coords": {
+      "lat": 27.037000000000003,
+      "lng": 88.2637
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Himalayan Kitchen",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Nepali",
+      "Tibetan",
+      "Indian",
+      "Demo listing"
+    ],
+    "cuisines": [
+      "Nepali",
+      "Tibetan",
+      "Indian"
+    ],
+    "openingHours": "09:00–21:00",
+    "prepMinutes": 35,
+    "menu": [
+      {
+        "id": "menu_rst_1_1",
+        "restaurantId": "rst_1",
+        "name": "Momos (8 pcs)",
+        "description": "Steamed dumplings with chutney",
+        "pricePaise": 18000,
+        "category": "Starters",
+        "vegetarian": true,
+        "customizations": [
+          {
+            "id": "extra",
+            "label": "Extra portion",
+            "extraPaise": 6000
+          }
+        ],
+        "available": true
+      },
+      {
+        "id": "menu_rst_1_2",
+        "restaurantId": "rst_1",
+        "name": "Thukpa",
+        "description": "Noodle soup with vegetables",
+        "pricePaise": 21000,
+        "category": "Mains",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_1_3",
+        "restaurantId": "rst_1",
+        "name": "Butter chicken",
+        "description": "Chicken in tomato gravy",
+        "pricePaise": 32000,
+        "category": "Mains",
+        "vegetarian": false,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_1_4",
+        "restaurantId": "rst_1",
+        "name": "Darjeeling tea",
+        "description": "Pot of estate tea",
+        "pricePaise": 9000,
+        "category": "Drinks",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      }
+    ]
+  },
+  {
+    "id": "rst_2",
+    "service": "food",
+    "name": "Mall Road Cafe",
+    "destinationId": "dst_darjeeling",
+    "description": "Demo restaurant listing in Darjeeling. Replace with a verified partner before launch.",
+    "coords": {
+      "lat": 27.038,
+      "lng": 88.2637
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Mall Road Cafe",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Cafe",
+      "Bakery",
+      "Demo listing"
+    ],
+    "cuisines": [
+      "Cafe",
+      "Bakery"
+    ],
+    "openingHours": "08:00–20:00",
+    "prepMinutes": 20,
+    "menu": [
+      {
+        "id": "menu_rst_2_1",
+        "restaurantId": "rst_2",
+        "name": "Croissant",
+        "description": "Butter croissant",
+        "pricePaise": 12000,
+        "category": "Bakery",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_2_2",
+        "restaurantId": "rst_2",
+        "name": "Cappuccino",
+        "description": "Double espresso with milk",
+        "pricePaise": 16000,
+        "category": "Drinks",
+        "vegetarian": true,
+        "customizations": [
+          {
+            "id": "extra",
+            "label": "Extra portion",
+            "extraPaise": 6000
+          }
+        ],
+        "available": true
+      },
+      {
+        "id": "menu_rst_2_3",
+        "restaurantId": "rst_2",
+        "name": "Club sandwich",
+        "description": "Grilled sandwich",
+        "pricePaise": 24000,
+        "category": "Mains",
+        "vegetarian": false,
+        "customizations": [],
+        "available": true
+      }
+    ]
+  },
+  {
+    "id": "rst_3",
+    "service": "food",
+    "name": "Teesta Valley Diner",
+    "destinationId": "dst_kalimpong",
+    "description": "Demo restaurant listing in Kalimpong. Replace with a verified partner before launch.",
+    "coords": {
+      "lat": 27.0638,
+      "lng": 88.46430000000001
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Teesta Valley Diner",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Indian",
+      "Chinese",
+      "Demo listing"
+    ],
+    "cuisines": [
+      "Indian",
+      "Chinese"
+    ],
+    "openingHours": "10:00–22:00",
+    "prepMinutes": 30,
+    "menu": [
+      {
+        "id": "menu_rst_3_1",
+        "restaurantId": "rst_3",
+        "name": "Veg chowmein",
+        "description": "Stir-fried noodles",
+        "pricePaise": 19000,
+        "category": "Mains",
+        "vegetarian": true,
+        "customizations": [
+          {
+            "id": "extra",
+            "label": "Extra portion",
+            "extraPaise": 6000
+          }
+        ],
+        "available": true
+      },
+      {
+        "id": "menu_rst_3_2",
+        "restaurantId": "rst_3",
+        "name": "Chilli chicken",
+        "description": "Indo-Chinese chicken",
+        "pricePaise": 29000,
+        "category": "Mains",
+        "vegetarian": false,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_3_3",
+        "restaurantId": "rst_3",
+        "name": "Fresh lime soda",
+        "description": "Chilled lime soda",
+        "pricePaise": 9000,
+        "category": "Drinks",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      }
+    ]
+  },
+  {
+    "id": "rst_4",
+    "service": "food",
+    "name": "Mirik Lakeside Kitchen",
+    "destinationId": "dst_mirik",
+    "description": "Demo restaurant listing in Mirik. Replace with a verified partner before launch.",
+    "coords": {
+      "lat": 26.899,
+      "lng": 88.18400000000001
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Mirik Lakeside Kitchen",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Indian",
+      "Nepali",
+      "Demo listing"
+    ],
+    "cuisines": [
+      "Indian",
+      "Nepali"
+    ],
+    "openingHours": "09:00–20:00",
+    "prepMinutes": 30,
+    "menu": [
+      {
+        "id": "menu_rst_4_1",
+        "restaurantId": "rst_4",
+        "name": "Aloo dum",
+        "description": "Spiced potato curry",
+        "pricePaise": 16000,
+        "category": "Mains",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_4_2",
+        "restaurantId": "rst_4",
+        "name": "Fish curry",
+        "description": "Local fish curry",
+        "pricePaise": 28000,
+        "category": "Mains",
+        "vegetarian": false,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_4_3",
+        "restaurantId": "rst_4",
+        "name": "Sel roti",
+        "description": "Rice bread",
+        "pricePaise": 10000,
+        "category": "Snacks",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      }
+    ]
+  },
+  {
+    "id": "rst_5",
+    "service": "food",
+    "name": "Kurseong Tea Room",
+    "destinationId": "dst_kurseong",
+    "description": "Demo restaurant listing in Kurseong. Replace with a verified partner before launch.",
+    "coords": {
+      "lat": 26.8879,
+      "lng": 88.278
+    },
+    "dataClass": "demo-listing",
+    "availabilitySource": "seeded-inventory",
+    "image": {
+      "status": "unavailable",
+      "alt": "Photograph unavailable for Kurseong Tea Room",
+      "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+    },
+    "tags": [
+      "Cafe",
+      "Snacks",
+      "Demo listing"
+    ],
+    "cuisines": [
+      "Cafe",
+      "Snacks"
+    ],
+    "openingHours": "08:00–19:00",
+    "prepMinutes": 18,
+    "menu": [
+      {
+        "id": "menu_rst_5_1",
+        "restaurantId": "rst_5",
+        "name": "Estate tea",
+        "description": "Single-estate black tea",
+        "pricePaise": 11000,
+        "category": "Drinks",
+        "vegetarian": true,
+        "customizations": [],
+        "available": true
+      },
+      {
+        "id": "menu_rst_5_2",
+        "restaurantId": "rst_5",
+        "name": "Vegetable pakora",
+        "description": "Fried fritters",
+        "pricePaise": 14000,
+        "category": "Snacks",
+        "vegetarian": true,
+        "customizations": [
+          {
+            "id": "extra",
+            "label": "Extra portion",
+            "extraPaise": 6000
+          }
+        ],
+        "available": true
+      },
+      {
+        "id": "menu_rst_5_3",
+        "restaurantId": "rst_5",
+        "name": "Egg roll",
+        "description": "Paratha wrap",
+        "pricePaise": 17000,
+        "category": "Snacks",
+        "vegetarian": false,
+        "customizations": [],
+        "available": true
+      }
+    ]
+  }
+]

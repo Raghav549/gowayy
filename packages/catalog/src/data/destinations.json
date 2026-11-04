@@ -1,0 +1,627 @@
+[
+  {
+    "id": "dst_darjeeling",
+    "slug": "darjeeling",
+    "name": "Darjeeling",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.036,
+      "lng": 88.2627
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 2042,
+    "elevationVerified": true,
+    "description": "Hill town in the Darjeeling Himalaya known for tea gardens, the UNESCO-listed Darjeeling Himalayan Railway and views towards Kangchenjunga.",
+    "bestSeason": "March\u2013May and October\u2013December",
+    "estimatedVisitHours": 48,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "verified",
+        "assetPath": "images/destinations/darjeeling/darjeeling-railway-station-hero.webp",
+        "thumbPath": "images/destinations/darjeeling/darjeeling-railway-station-card.webp",
+        "alt": "Darjeeling railway station with narrow-gauge steam locomotives",
+        "credit": "Alexkom000 (Alexey Komarov), CC BY 4.0",
+        "license": "CC BY 4.0",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:2024-03-05_Darjeeling_railway_station_4.jpg"
+      },
+      {
+        "status": "verified",
+        "assetPath": "images/destinations/darjeeling/town-hall-clock-tower-hero.webp",
+        "thumbPath": "images/destinations/darjeeling/town-hall-clock-tower-card.webp",
+        "alt": "Darjeeling Town Hall clock tower",
+        "credit": "Alexkom000 (Alexey Komarov), CC BY 4.0",
+        "license": "CC BY 4.0",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:2024-03-05_The_Clock_tower_of_Darjeeling_Town_Hall.jpg"
+      },
+      {
+        "status": "verified",
+        "assetPath": "images/destinations/darjeeling/ropeway-tea-gardens-hero.webp",
+        "thumbPath": "images/destinations/darjeeling/ropeway-tea-gardens-card.webp",
+        "alt": "Ropeway cabin above tea gardens near Darjeeling",
+        "credit": "Jyoti PN via Wikimedia Commons, CC BY-SA 4.0 (publisher-attested)",
+        "license": "CC BY-SA 4.0",
+        "sourceUrl": "https://india.mongabay.com/2024/09/commentary-tea-gardens-in-darjeeling-and-kalimpong-can-aid-in-landscape-conservation/",
+        "verificationNote": "Licence attested by the publisher; Commons file page not independently located."
+      }
+    ],
+    "activities": [
+      "Tea garden visit",
+      "Heritage railway ride",
+      "Mall Road walk",
+      "Sunrise viewpoint"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  },
+  {
+    "id": "dst_kalimpong",
+    "slug": "kalimpong",
+    "name": "Kalimpong",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.0608,
+      "lng": 88.4633
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 1247,
+    "elevationVerified": true,
+    "description": "Eastern Himalayan hill town with monasteries, nurseries and views over the Teesta valley.",
+    "bestSeason": "October\u2013April",
+    "estimatedVisitHours": 36,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "verified",
+        "assetPath": "images/destinations/kalimpong/zang-dhok-palri-phodang-hero.webp",
+        "thumbPath": "images/destinations/kalimpong/zang-dhok-palri-phodang-card.webp",
+        "alt": "Zang Dhok Palri Phodang monastery, Kalimpong",
+        "credit": "Bernard Gagnon, CC BY-SA 4.0",
+        "license": "CC BY-SA 4.0",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Zang_Dhok_Palri_Phodang_02.jpg"
+      }
+    ],
+    "activities": [
+      "Monastery visit",
+      "Nursery walk",
+      "Deolo Hill viewpoint"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  },
+  {
+    "id": "dst_kurseong",
+    "slug": "kurseong",
+    "name": "Kurseong",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 26.8829,
+      "lng": 88.277
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 1458,
+    "elevationVerified": true,
+    "description": "Quiet hill station on the Darjeeling Himalayan Railway route, surrounded by tea estates.",
+    "bestSeason": "March\u2013June and September\u2013November",
+    "estimatedVisitHours": 24,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "verified",
+        "assetPath": "images/destinations/kurseong/dhr-station-hero.webp",
+        "thumbPath": "images/destinations/kurseong/dhr-station-card.webp",
+        "alt": "Darjeeling Himalayan Railway train at Kurseong station",
+        "credit": "PP Yoonus, CC BY-SA 3.0",
+        "license": "CC BY-SA 3.0",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kurseong_Station,_Darjeeling_Himalayan_Railway_1031.jpg"
+      }
+    ],
+    "activities": [
+      "Railway heritage",
+      "Tea estate walk",
+      "Eagle\u2019s Craig viewpoint"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  },
+  {
+    "id": "dst_mirik",
+    "slug": "mirik",
+    "name": "Mirik",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 26.895,
+      "lng": 88.183
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 1767,
+    "elevationVerified": true,
+    "description": "Small hill settlement around Sumendu Lake, encircled by tea gardens and forest.",
+    "bestSeason": "September\u2013April",
+    "estimatedVisitHours": 18,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "verified",
+        "assetPath": "images/destinations/mirik/sumendu-lake-hero.webp",
+        "thumbPath": "images/destinations/mirik/sumendu-lake-card.webp",
+        "alt": "Sumendu Lake at Mirik",
+        "credit": "Benoy, CC BY-SA 3.0",
+        "license": "CC BY-SA 3.0",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mirik_Sumendu_Lake.jpg"
+      }
+    ],
+    "activities": [
+      "Lakeside walk",
+      "Boating (seasonal)",
+      "Tea garden visit"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  },
+  {
+    "id": "dst_siliguri",
+    "slug": "siliguri",
+    "name": "Siliguri",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 26.7271,
+      "lng": 88.3953
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 122,
+    "elevationVerified": true,
+    "description": "Plains gateway to the Darjeeling hills; rail, road and air connections including Bagdogra Airport.",
+    "bestSeason": "Year round",
+    "estimatedVisitHours": 12,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Siliguri",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Transit hub",
+      "Market visit",
+      "Wildlife sanctuary nearby"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  },
+  {
+    "id": "dst_lepchajagat",
+    "slug": "lepchajagat",
+    "name": "Lepchajagat",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.005,
+      "lng": 88.222
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Forest hamlet near Darjeeling known for quiet pine and rhododendron walks. Coordinates are approximate.",
+    "bestSeason": "March\u2013May and October\u2013November",
+    "estimatedVisitHours": 8,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Lepchajagat",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Forest walk",
+      "Birdwatching"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_lamahatta",
+    "slug": "lamahatta",
+    "name": "Lamahatta",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.022,
+      "lng": 88.262
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Small village with an eco-park and mountain views on the Darjeeling\u2013Kalimpong road. Coordinates are approximate.",
+    "bestSeason": "October\u2013May",
+    "estimatedVisitHours": 6,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Lamahatta",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Eco-park walk",
+      "Village visit"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_tinchuley",
+    "slug": "tinchuley",
+    "name": "Tinchuley",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.03,
+      "lng": 88.33
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Village on the Darjeeling\u2013Kalimpong route associated with organic farming and homestays. Coordinates are approximate.",
+    "bestSeason": "October\u2013April",
+    "estimatedVisitHours": 10,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Tinchuley",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Village walk",
+      "Farm visit"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_takdah",
+    "slug": "takdah",
+    "name": "Takdah",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.048,
+      "lng": 88.35
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Former British cantonment area with orchid and tea nurseries. Coordinates are approximate.",
+    "bestSeason": "March\u2013May and October\u2013December",
+    "estimatedVisitHours": 8,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Takdah",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Orchid nursery",
+      "Heritage walk"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_chatakpur",
+    "slug": "chatakpur",
+    "name": "Chatakpur",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.01,
+      "lng": 88.23
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Small eco-village inside the Senchal wildlife area. Access and permissions vary; check locally. Coordinates are approximate.",
+    "bestSeason": "October\u2013March",
+    "estimatedVisitHours": 10,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Chatakpur",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Nature walk",
+      "Village stay"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_sandakphu",
+    "slug": "sandakphu",
+    "name": "Sandakphu",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.10583,
+      "lng": 88.00167
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 3636,
+    "elevationVerified": true,
+    "description": "Highest point in West Bengal on the Singalila Ridge, reached by a multi-day trek from Maneybhanjan. Permits and guides are required.",
+    "bestSeason": "April\u2013May and October\u2013December",
+    "estimatedVisitHours": 72,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Sandakphu",
+        "verificationNote": "No verified, permissibly licensed photograph of Sandakphu itself was found. A genuine CC BY 2.0 photograph of Shikhar Lodge at Tumling on the Singalila Ridge trail is recorded in IMAGE_SOURCES.json as a route photograph, but it does not depict Sandakphu and is not used as a destination photograph."
+      }
+    ],
+    "activities": [
+      "Singalila Ridge trek",
+      "Himalayan viewpoint"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "High-altitude trek: permits, guide and acclimatisation required; carry warm layers and water.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  },
+  {
+    "id": "dst_sittong",
+    "slug": "sittong",
+    "name": "Sittong",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 26.93,
+      "lng": 88.4
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Village in the Kurseong hills known for orange orchards in winter. Coordinates are approximate.",
+    "bestSeason": "November\u2013January",
+    "estimatedVisitHours": 10,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Sittong",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Orange orchard visit",
+      "Village walk"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_dawaipani",
+    "slug": "dawaipani",
+    "name": "Dawaipani",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.01,
+      "lng": 88.25
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Quiet hillside village with views towards the Teesta valley. Coordinates are approximate.",
+    "bestSeason": "October\u2013April",
+    "estimatedVisitHours": 6,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Dawaipani",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Village walk",
+      "Viewpoint"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_jorebunglow",
+    "slug": "jorebunglow",
+    "name": "Jorebunglow",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 26.95,
+      "lng": 88.24
+    },
+    "coordinateAccuracy": "approximate",
+    "elevationM": null,
+    "elevationVerified": false,
+    "description": "Small settlement below Ghum on the hill road, surrounded by tea estates. Coordinates are approximate.",
+    "bestSeason": "Year round",
+    "estimatedVisitHours": 6,
+    "hiddenGem": true,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Jorebunglow",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Tea estate walk",
+      "Railway heritage nearby"
+    ],
+    "accessibility": "Road access via shared or private taxi from Darjeeling/Siliguri; last-mile road conditions vary \u2014 confirm locally.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "community-reference",
+    "dataSourceNote": "Coordinates approximate from regional references; not field-verified."
+  },
+  {
+    "id": "dst_ghum",
+    "slug": "ghum",
+    "name": "Ghum",
+    "region": "Darjeeling Himalaya",
+    "state": "West Bengal",
+    "country": "India",
+    "coords": {
+      "lat": 27.008,
+      "lng": 88.247
+    },
+    "coordinateAccuracy": "published",
+    "elevationM": 2225,
+    "elevationVerified": true,
+    "description": "Hill settlement near Darjeeling with one of the highest railway stations on the DHR line.",
+    "bestSeason": "Year round",
+    "estimatedVisitHours": 6,
+    "hiddenGem": false,
+    "images": [
+      {
+        "status": "unavailable",
+        "alt": "Photograph unavailable for Ghum",
+        "verificationNote": "No verified, permissibly licensed photograph of this exact place was found in the 2026-11-03 research pass. A designed placeholder is shown instead."
+      }
+    ],
+    "activities": [
+      "Railway heritage",
+      "Monastery visit"
+    ],
+    "accessibility": "Reachable by road from Siliguri / Bagdogra; hill roads are slow and weather-dependent.",
+    "safety": "Hill roads can be affected by landslides in monsoon. Use registered transport and check local advisories.",
+    "weatherNote": "Live weather requires a configured provider; this build does not display forecast data. Check a weather service before travel.",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Darjeeling",
+      "https://en.wikipedia.org/wiki/Sandakphu",
+      "https://darjeeling.gov.in/gallery-category/travel-tourism/"
+    ],
+    "infoStatus": "published-reference",
+    "dataSourceNote": "Coordinates from published geographic references."
+  }
+]

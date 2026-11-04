@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "composite": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@gowayy/types": ["packages/types/src/index.ts"],
+      "@gowayy/validation": ["packages/validation/src/index.ts"],
+      "@gowayy/shared-utils": ["packages/shared-utils/src/index.ts"],
+      "@gowayy/design-system": ["packages/design-system/src/index.ts"],
+      "@gowayy/ui": ["packages/ui/src/index.ts"],
+      "@gowayy/api-client": ["packages/api-client/src/index.ts"],
+      "@gowayy/booking-engine": ["packages/booking-engine/src/index.ts"],
+      "@gowayy/location-engine": ["packages/location-engine/src/index.ts"],
+      "@gowayy/pricing-engine": ["packages/pricing-engine/src/index.ts"],
+      "@gowayy/notification-engine": ["packages/notification-engine/src/index.ts"],
+      "@gowayy/catalog": ["packages/catalog/src/index.ts"]
+    }
+  }
+}
