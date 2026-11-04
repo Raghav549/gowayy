@@ -331,6 +331,16 @@ export function Destinations() {
       setGalleryFor(updated);
     } catch (err) { showToast(errorText(err), 'error'); }
   };
+  const replaceImage = async (d: DestinationRecord, imageId: string) => {
+    const next = window.prompt('New image path (/images/… or /uploads/…) or an HTTPS URL');
+    if (!next) return;
+    try {
+      await admin(`/destinations/${d.id}/images/${imageId}`, { method: 'PATCH', body: { path: next.trim() } });
+      showToast('Image replaced', 'success'); await refresh();
+      const updated = (await admin<{ items: DestinationRecord[] }>('/destinations')).items.find((x) => x.id === d.id) ?? null;
+      setGalleryFor(updated);
+    } catch (err) { showToast(errorText(err), 'error'); }
+  };
   const deleteImage = async (d: DestinationRecord, imageId: string) => {
     try { await admin(`/destinations/${d.id}/images/${imageId}`, { method: 'DELETE' }); showToast('Image removed', 'success'); await refresh(); }
     catch (err) { showToast(errorText(err), 'error'); }
@@ -396,6 +406,7 @@ export function Destinations() {
                   {img.primary ? <Badge tone="gold">cover</Badge> : <button className="btn btn--ghost btn--sm" onClick={() => void setPrimary(galleryFor, img.id)}>Set cover</button>}
                   <button className="btn btn--ghost btn--sm" aria-label="Move image earlier" disabled={(img.order ?? 1) <= 1} onClick={() => void moveImage(galleryFor, img.id, -1)}><ArrowUp size={14} /></button>
                   <button className="btn btn--ghost btn--sm" aria-label="Move image later" disabled={(img.order ?? 1) >= (galleryFor.images?.length ?? 1)} onClick={() => void moveImage(galleryFor, img.id, 1)}><ArrowDown size={14} /></button>
+                  <button className="btn btn--ghost btn--sm" onClick={() => void replaceImage(galleryFor, img.id)}>Replace</button>
                   <button className="btn btn--ghost btn--sm" aria-label="Delete image" onClick={() => void deleteImage(galleryFor, img.id)}><Trash2 size={14} /></button>
                 </div>
               </div>
