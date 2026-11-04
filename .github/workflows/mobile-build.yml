@@ -185,11 +185,21 @@ jobs:
       - name: Build signed release APK
         if: github.ref == 'refs/heads/main'
         working-directory: apps/gowayy-${{ matrix.app }}/mobile/android
-        run: ./gradlew --no-daemon --stacktrace assembleRelease
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon --stacktrace assembleRelease 2>&1 | tee "$RUNNER_TEMP/gradle-build.log"
       - name: Build installable debug APK (non-production branches)
         if: github.ref != 'refs/heads/main'
         working-directory: apps/gowayy-${{ matrix.app }}/mobile/android
-        run: ./gradlew --no-daemon --stacktrace assembleDebug
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon --stacktrace assembleDebug 2>&1 | tee "$RUNNER_TEMP/gradle-build.log"
+      - name: Surface Gradle failure diagnostics
+        if: failure()
+        run: |
+          if [ -f "$RUNNER_TEMP/gradle-build.log" ]; then
+            tail -n 30 "$RUNNER_TEMP/gradle-build.log" | while IFS= read -r line; do echo "::error::$line"; done
+          fi
 
       - name: Inspect APK package, version, signature and archive
         env:
