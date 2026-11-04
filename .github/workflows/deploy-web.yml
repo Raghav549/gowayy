@@ -87,6 +87,7 @@ jobs:
 
   report:
     name: Deployment report
+    if: always()
     needs: [preflight, deploy-customer, deploy-partner, deploy-explore]
     runs-on: ubuntu-latest
     steps:

@@ -106,6 +106,7 @@ jobs:
 
   report:
     name: Build report
+    if: always()
     needs: [preflight, build-customer, build-partner, build-explore]
     runs-on: ubuntu-latest
     steps:
