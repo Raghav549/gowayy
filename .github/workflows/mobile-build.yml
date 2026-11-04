@@ -198,7 +198,8 @@ jobs:
         if: failure()
         run: |
           if [ -f "$RUNNER_TEMP/gradle-build.log" ]; then
-            tail -n 30 "$RUNNER_TEMP/gradle-build.log" | while IFS= read -r line; do echo "::error::$line"; done
+            awk '/^\* What went wrong:/{show=1; count=0} show && count++ < 45 {print}' "$RUNNER_TEMP/gradle-build.log" | while IFS= read -r line; do echo "::error::$line"; done
+            grep -E '^(FAILURE:|BUILD FAILED|.*Execution failed for task|.*Caused by:|.*error:)' "$RUNNER_TEMP/gradle-build.log" | tail -n 12 | while IFS= read -r line; do echo "::error::$line"; done
           fi
 
       - name: Inspect APK package, version, signature and archive
