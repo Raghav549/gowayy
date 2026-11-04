@@ -8,7 +8,12 @@ export function GSymbol({ size = 36 }: { size?: number }) {
   return <Image source={require('../../assets/branding/g-symbol.png')} style={{ width: size, height: size }} contentFit="contain" accessibilityLabel="GOWAYY G symbol" />;
 }
 export function Wordmark({ width = 150 }: { width?: number }) {
-  return <Image source={require('../../assets/branding/wordmark.png')} style={{ width, height: width / 6.2 }} contentFit="contain" accessibilityLabel="GOWAYY" />;
+  const { c } = useTheme();
+  return (
+    <Text accessibilityLabel="GOWAYY" style={{ width, fontSize: width / 6.2, fontWeight: font.display, letterSpacing: width / 42, color: c.text }}>
+      GOWAYY
+    </Text>
+  );
 }
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';

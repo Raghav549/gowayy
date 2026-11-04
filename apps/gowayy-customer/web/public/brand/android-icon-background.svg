@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <defs><radialGradient id="bg" cx="0.32" cy="0.22" r="0.95">
-    <stop offset="0" stop-color="#2B2F36"/><stop offset="0.6" stop-color="#1B1E23"/><stop offset="1" stop-color="#0D0F12"/>
-  </radialGradient></defs>
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="customer icon background"><rect width="512" height="512" rx="112" fill="#E2EFE7"/></svg>
