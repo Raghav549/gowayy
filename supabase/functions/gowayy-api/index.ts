@@ -304,6 +304,57 @@ const handlers: Record<string, Handler> = {
     return { job: camel(r.job), driver: driverShape(r.driver) };
   },
 
+  // ---- marketplace commerce (shared by all three apps) ----------------------
+  commerceCategories: async () => camel(await publicRpc<unknown[]>('rpc_commerce_categories', {})),
+  commerceProducts: async (_c, a) => {
+    const f = obj(a, 'filter');
+    return { items: camel(await publicRpc<unknown[]>('rpc_commerce_products', { p_category: f.category ?? null, p_q: f.q ?? null, p_store: f.storeId ?? null })) };
+  },
+  productDetail: async (_c, a) => ({ product: camel(await publicRpc<A>('rpc_product_detail', { p_slug: s(a, 'slug') })) }),
+  recommendedStores: async () => camel(await publicRpc<unknown[]>('rpc_recommended_stores', {})),
+  recentlyViewedProducts: async (c) => camel(await select('recently_viewed', 'select=product_id&order=viewed_at.desc&limit=12', tokenOf(c))),
+  recordProductView: async (c, a) => { await rpc('rpc_record_product_view', { p_product: s(a, 'slug') }, tokenOf(c)); },
+  cart: async (c) => ({ lines: camel(await rpc<A>('rpc_cart_get', { p_user: c!.id }, tokenOf(c))) }),
+  addToCart: async (c, a) => { await rpc('rpc_cart_upsert', { p_user: c!.id, p_product: s(obj(a, 'input'), 'productId'), p_variant: s(obj(a, 'input'), 'variantId'), p_quantity: Number(obj(a, 'input').quantity ?? 1), p_plan: (obj(a, 'input') as A).protectionPlanId ?? null }, tokenOf(c)); return { lines: camel(await rpc<A>('rpc_cart_get', { p_user: c!.id }, tokenOf(c))) }; },
+  updateCartLine: async (c, a) => { await rpc('rpc_cart_update_line', { p_user: c!.id, p_line: s(a, 'id'), p_payload: obj(a, 'input') }, tokenOf(c)); return { lines: camel(await rpc<A>('rpc_cart_get', { p_user: c!.id }, tokenOf(c))) }; },
+  removeCartLine: async (c, a) => { await rpc('rpc_cart_delete_line', { p_user: c!.id, p_line: s(a, 'id') }, tokenOf(c)); return { lines: camel(await rpc<A>('rpc_cart_get', { p_user: c!.id }, tokenOf(c))) }; },
+  clearCart: async (c) => { await rpc('rpc_cart_clear', { p_user: c!.id }, tokenOf(c)); },
+  cartQuote: async (c, a) => rpc('rpc_cart_quote', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c)),
+  wishlist: async (c) => ({ items: camel(await select('wishlists', 'select=product_id&order=created_at.desc', tokenOf(c))) }),
+  addToWishlist: async (c, a) => { await rpc('rpc_wishlist_add', { p_user: c!.id, p_product: s(a, 'productId') }, tokenOf(c)); },
+  removeFromWishlist: async (c, a) => { await rpc('rpc_wishlist_remove', { p_user: c!.id, p_product: s(a, 'productId') }, tokenOf(c)); },
+  recentSearches: async (c) => ({ items: (camel(await select('search_history', 'select=query&order=created_at.desc&limit=10', tokenOf(c))) as A[]).map((r) => r.query) }),
+  recordSearch: async (c, a) => { await rpc('rpc_record_search', { p_user: c!.id, p_q: s(a, 'q') }, tokenOf(c)); },
+  paymentMethods: async (_c, a) => camel(await publicRpc<A>('rpc_payment_methods', { p_total_paise: Number((a as A).totalPaise ?? 0) })),
+  checkout: async (c, a) => camel(await rpc<A>('rpc_marketplace_checkout', {
+    p_user: c!.id, p_address: obj(obj(a, 'input'), 'address') ?? {}, p_method: s(obj(a, 'input'), 'paymentMethod'),
+    p_slot: s(obj(a, 'input'), 'deliverySlot') ?? 'standard', p_coupon: (obj(a, 'input') as A).coupon ?? null,
+    p_instructions: s(obj(a, 'input'), 'instructions') ?? '', p_journey: (obj(a, 'input') as A).journeyId ?? null,
+  }, tokenOf(c))),
+  // ---- GOWAYY PARTNER hub ----------------------------------------------------
+  partnerOverview: async (c) => camel(await rpc<A>('rpc_partner_overview', { p_user: c!.id }, tokenOf(c))),
+  partnerProfile: async (c) => ({ profile: camel(await select('partner_profiles', 'select=*&user_id=eq.' + c!.id, tokenOf(c)).then((r) => (Array.isArray(r) ? r[0] ?? null : null))) }),
+  updatePartnerProfile: async (c, a) => camel(await rpc('rpc_partner_profile_upsert', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  partnerVerification: async (c) => ({ documents: camel(await select('partner_documents', 'select=*&user_id=eq.' + c!.id, tokenOf(c))) }),
+  uploadPartnerDocument: async (c, a) => camel(await rpc('rpc_partner_document_upload', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  partnerInventory: async (c) => camel(await rpc<A>('rpc_partner_inventory', { p_user: c!.id }, tokenOf(c))),
+  adjustInventory: async (c, a) => camel(await rpc('rpc_partner_inventory_adjust', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  partnerMenu: async (c) => ({ items: camel(await select('partner_menu_items', 'select=*&user_id=eq.' + c!.id + '&order=created_at.desc', tokenOf(c))) }),
+  addMenuItem: async (c, a) => camel(await rpc('rpc_partner_menu_add', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  updateMenuItem: async (c, a) => camel(await rpc('rpc_partner_menu_update', { p_user: c!.id, p_id: s(a, 'id'), p_payload: obj(a, 'input') }, tokenOf(c))),
+  deleteMenuItem: async (c, a) => { await rpc('rpc_partner_menu_delete', { p_user: c!.id, p_id: s(a, 'id') }, tokenOf(c)); },
+  partnerRooms: async (c) => ({ items: camel(await select('partner_rooms', 'select=*&user_id=eq.' + c!.id + '&order=created_at.desc', tokenOf(c))) }),
+  addRoom: async (c, a) => camel(await rpc('rpc_partner_room_add', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  updateRoom: async (c, a) => camel(await rpc('rpc_partner_room_update', { p_user: c!.id, p_id: s(a, 'id'), p_payload: obj(a, 'input') }, tokenOf(c))),
+  setAvailability: async (c, a) => camel(await rpc('rpc_partner_availability_set', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  partnerTours: async (c) => ({ items: camel(await select('partner_tours', 'select=*&user_id=eq.' + c!.id + '&order=created_at.desc', tokenOf(c))) }),
+  addTour: async (c, a) => camel(await rpc('rpc_partner_tour_add', { p_user: c!.id, p_payload: obj(a, 'input') }, tokenOf(c))),
+  updateTour: async (c, a) => camel(await rpc('rpc_partner_tour_update', { p_user: c!.id, p_id: s(a, 'id'), p_payload: obj(a, 'input') }, tokenOf(c))),
+  partnerEarnings: async (c) => camel(await rpc<A>('rpc_partner_earnings', { p_user: c!.id }, tokenOf(c))),
+  partnerSettlements: async (c) => ({ items: camel(await select('settlements', 'select=*&user_id=eq.' + c!.id + '&order=created_at.desc', tokenOf(c))) }),
+  requestSettlement: async (c) => camel(await rpc('rpc_settlement_request', { p_user: c!.id }, tokenOf(c))),
+  partnerInbox: async (c) => camel(await rpc<A>('rpc_partner_inbox', { p_user: c!.id }, tokenOf(c))),
+
   resetDev: async () => { throw new HttpError(501, 'NOT_AVAILABLE', 'The development reset endpoint does not exist on the Supabase backend.'); },
 };
 

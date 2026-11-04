@@ -17,6 +17,8 @@ import restaurantsJson from './data/restaurants.json' with { type: 'json' };
 import groceryStoresJson from './data/grocery-stores.json' with { type: 'json' };
 import packagesJson from './data/tour-packages.json' with { type: 'json' };
 import experiencesJson from './data/experiences.json' with { type: 'json' };
+import productsJson from './data/products.json' with { type: 'json' };
+import type { MarketplaceProduct } from '@gowayy/commerce';
 import { slugify } from '@gowayy/shared-utils';
 
 export const destinations = destinationsJson as unknown as Destination[];
@@ -30,10 +32,11 @@ export const restaurants = restaurantsJson as unknown as Restaurant[];
 export const groceryStores = groceryStoresJson as unknown as GroceryStore[];
 export const tourPackages = packagesJson as unknown as TourPackage[];
 export const experiences = experiencesJson as unknown as Experience[];
+export const marketplaceProducts = productsJson as unknown as MarketplaceProduct[];
 
 export const catalogue = {
   destinations, hiddenGems, attractions, places, vehicles, sharedTaxiRoutes,
-  properties, restaurants, groceryStores, tourPackages, experiences,
+  properties, restaurants, groceryStores, tourPackages, experiences, marketplaceProducts,
 };
 
 export function getDestination(idOrSlug: string): Destination | undefined {
@@ -44,6 +47,15 @@ export function getVehicle(id: string): VehicleClass | undefined { return vehicl
 export function getProperty(id: string): Property | undefined { return properties.find((p) => p.id === id); }
 export function getRestaurant(id: string): Restaurant | undefined { return restaurants.find((r) => r.id === id); }
 export function getStore(id: string): GroceryStore | undefined { return groceryStores.find((s) => s.id === id); }
+export function getProduct(idOrSlug: string): MarketplaceProduct | undefined {
+  return marketplaceProducts.find((p) => p.id === idOrSlug || p.slug === idOrSlug);
+}
+export function productsByCategory(category: string): MarketplaceProduct[] {
+  return marketplaceProducts.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+}
+export function productCategories(): string[] {
+  return [...new Set(marketplaceProducts.map((p) => p.category))];
+}
 export function getOffering(id: string): { id: string; name: string; pricePaise: number; service: 'tourism' | 'experience' | 'package'; destinationId: string } | undefined {
   const p = tourPackages.find((x) => x.id === id);
   if (p) return { id: p.id, name: p.name, pricePaise: p.pricePaise, service: 'package', destinationId: p.destinationId };
@@ -93,6 +105,10 @@ export function searchCatalog(query: string, limit = 30): SearchHit[] {
   }
   for (const p of tourPackages) if (p.name.toLowerCase().includes(q)) add({ id: p.id, kind: 'package', title: p.name, subtitle: `${p.durationHours} h · demo package`, service: 'package', destinationId: p.destinationId, href: `/packages?offering=${p.id}` });
   for (const e of experiences) if (e.name.toLowerCase().includes(q)) add({ id: e.id, kind: 'experience', title: e.name, subtitle: `${e.durationMinutes} min · demo experience`, service: 'experience', destinationId: e.destinationId, href: `/experiences?offering=${e.id}` });
+  for (const p of marketplaceProducts) if (`${p.name} ${p.brand} ${p.category}`.toLowerCase().includes(q)) {
+    const v = p.variants.find((x) => x.stock > 0) ?? p.variants[0];
+    add({ id: p.id, kind: 'product', title: p.name, subtitle: `${p.brand} · ${v ? `${v.stock > 0 ? 'in stock' : 'last units/out of stock'}` : ''} · demo listing`, service: 'marketplace', destinationId: null, href: `/products/${p.slug}` });
+  }
   return hits.slice(0, limit);
 }
 

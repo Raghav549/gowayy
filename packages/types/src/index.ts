@@ -2,11 +2,11 @@
 
 export type ServiceKind =
   | 'cab' | 'shared_taxi' | 'food' | 'grocery' | 'hotel' | 'homestay'
-  | 'tourism' | 'experience' | 'package' | 'parcel';
+  | 'tourism' | 'experience' | 'package' | 'parcel' | 'marketplace';
 
 export const SERVICE_KINDS: readonly ServiceKind[] = [
   'cab', 'shared_taxi', 'food', 'grocery', 'hotel', 'homestay',
-  'tourism', 'experience', 'package', 'parcel',
+  'tourism', 'experience', 'package', 'parcel', 'marketplace',
 ] as const;
 
 export type BookingStatus =
@@ -22,7 +22,7 @@ export type PaymentStatus =
   | 'refunded' | 'partially_refunded';
 
 export type PaymentMethod = 'upi' | 'upi_intent' | 'gateway' | 'cash';
-export type Role = 'customer' | 'driver' | 'restaurant' | 'grocery' | 'property';
+export type Role = 'customer' | 'driver' | 'restaurant' | 'grocery' | 'property' | 'tour_operator';
 export type VerificationState = 'unverified' | 'pending' | 'verified' | 'rejected';
 export type ThemeMode = 'light' | 'dark';
 
@@ -363,7 +363,7 @@ export interface SupportTicket {
 
 export interface SearchHit {
   id: string;
-  kind: 'destination' | 'attraction' | 'property' | 'restaurant' | 'food' | 'grocery' | 'taxi_route' | 'experience' | 'package';
+  kind: 'destination' | 'attraction' | 'property' | 'restaurant' | 'food' | 'grocery' | 'taxi_route' | 'experience' | 'package' | 'product';
   title: string;
   subtitle: string;
   service: ServiceKind | null;

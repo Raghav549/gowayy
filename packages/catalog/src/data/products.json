@@ -1,0 +1,175 @@
+[
+  {
+    "id": "prd_powerbank",
+    "slug": "himal-trekker-20000-power-bank-67w",
+    "storeId": "grc_1",
+    "brand": "Himal Works",
+    "name": "Himal Trekker 20000mAh Power Bank with 67W Turbo Output, in-built USB-C cable, digital display and triple output ports",
+    "category": "Electronics",
+    "dataClass": "demo-listing",
+    "highlights": [
+      "Charge laptop, phone and tablet at the same time",
+      "Recharges fully in about 2.5 hours with a compatible 67W charger",
+      "Built-in USB-C cable doubles as a carry lanyard"
+    ],
+    "highlightsNote": "Summarised from seller-provided product information.",
+    "description": "A 20000mAh power bank designed for long Himalayan road trips: 67W turbo output via PD 3.0 / PPS, 12-layer cell protection, a digital charge display and three simultaneous output ports so a laptop, phone and earbuds can charge together. Demo listing — figures are seller-provided and not independently verified.",
+    "specifications": [
+      { "label": "Capacity", "value": "20000mAh" },
+      { "label": "Max output", "value": "67W turbo (PD 3.0 / PPS)" },
+      { "label": "Output ports", "value": "2 × USB-A + 1 × USB-C (triple output)" },
+      { "label": "Built-in cable", "value": "USB-C, doubles as lanyard" },
+      { "label": "Recharge time", "value": "≈ 2.5 hours with a 67W charger" },
+      { "label": "Cell protection", "value": "12-layer protection system" },
+      { "label": "Display", "value": "Digital charge-level display" }
+    ],
+    "inTheBox": ["Power bank unit", "Built-in USB-C lanyard cable", "User guide", "Warranty card"],
+    "warranty": "1 year brand warranty from the date of purchase (demo listing — terms shown are seller-provided).",
+    "faq": [
+      { "q": "How many devices can charge simultaneously?", "a": "Three — two USB-A ports plus one USB-C port can output at the same time, within the 67W total budget." },
+      { "q": "Is this compatible with my MacBook?", "a": "It supports USB-C PD output up to 67W, which covers most USB-C laptops including MacBooks that charge over USB-C. Check your laptop's required wattage." },
+      { "q": "Can it charge while it is recharging?", "a": "Pass-through charging is supported, but total output is limited while the power bank itself is recharging." }
+    ],
+    "images": [
+      { "status": "unavailable", "alt": "Product photograph unavailable for Himal Trekker power bank", "verificationNote": "Demo listing: no verified product photograph is bundled. A designed placeholder is shown instead of a random stock photo." }
+    ],
+    "variants": [
+      { "id": "var_ice_blue", "label": "Ice Blue", "pricePaise": 319900, "mrpPaise": 599900, "stock": 12 },
+      { "id": "var_olive", "label": "Olive Green", "pricePaise": 199900, "mrpPaise": 399900, "stock": 8 },
+      { "id": "var_jet_black", "label": "Jet Black", "pricePaise": 319900, "mrpPaise": 599900, "stock": 0 }
+    ],
+    "protectionPlans": [
+      {
+        "id": "prot_1y_damage",
+        "provider": "GOWAYY Care (demo plan)",
+        "demo": true,
+        "title": "1 Year Accidental Damage Protection",
+        "pricePaise": 23700,
+        "mrpPaise": 36500,
+        "perMonthPaise": 2000,
+        "coverage": ["Accidental damage (drops, liquid spill)", "Free pickup and drop for repairs", "Cashless claim via the GOWAYY support desk"],
+        "terms": "Demo plan shown for development only. A production plan requires a real insurance partner, its policy wording and regulator-approved terms.",
+        "exclusions": ["Loss or theft", "Damage from misuse or unauthorised repair", "Cosmetic wear"]
+      }
+    ],
+    "relatedProductIds": ["prd_cable", "prd_charger", "prd_earbuds"],
+    "deliveryNote": "Delivery estimate appears at checkout based on the selected address and the store's delivery coverage."
+  },
+  {
+    "id": "prd_cable",
+    "slug": "braided-usb-c-cable-2m-100w",
+    "storeId": "grc_1",
+    "brand": "Himal Works",
+    "name": "Braided USB-C to USB-C cable, 2 m, 100W, 67W-class fast charging",
+    "category": "Electronics",
+    "dataClass": "demo-listing",
+    "highlights": ["100W USB-C PD delivery", "Braided nylon jacket", "2 metre length for cars and bedsides"],
+    "description": "A 2 m braided USB-C cable rated for 100W PD charging — pairs with the Himal Trekker power bank for full-speed laptop charging. Demo listing.",
+    "specifications": [
+      { "label": "Length", "value": "2 m" },
+      { "label": "Max power", "value": "100W USB-C PD" },
+      { "label": "Connector", "value": "USB-C to USB-C" },
+      { "label": "Jacket", "value": "Braided nylon" }
+    ],
+    "inTheBox": ["Cable"],
+    "faq": [{ "q": "Does it support data transfer?", "a": "Yes, USB 2.0 data alongside 100W power delivery." }],
+    "images": [{ "status": "unavailable", "alt": "Product photograph unavailable for braided USB-C cable", "verificationNote": "Demo listing: designed placeholder shown." }],
+    "variants": [
+      { "id": "var_cable_black", "label": "Graphite", "pricePaise": 79900, "mrpPaise": 129900, "stock": 30 },
+      { "id": "var_cable_white", "label": "Ivory", "pricePaise": 79900, "mrpPaise": 129900, "stock": 22 }
+    ],
+    "protectionPlans": [],
+    "relatedProductIds": ["prd_powerbank", "prd_charger"],
+    "deliveryNote": "Delivery estimate appears at checkout."
+  },
+  {
+    "id": "prd_charger",
+    "slug": "gan-65w-wall-charger-2port",
+    "storeId": "grc_1",
+    "brand": "Himal Works",
+    "name": "65W GaN wall charger with USB-C + USB-A ports",
+    "category": "Electronics",
+    "dataClass": "demo-listing",
+    "highlights": ["65W GaN fast charger", "Charges a laptop and a phone together", "Compact foldable plug"],
+    "description": "A compact 65W GaN charger with one USB-C (PD) and one USB-A port. Demo listing.",
+    "specifications": [
+      { "label": "Total output", "value": "65W" },
+      { "label": "Ports", "value": "1 × USB-C PD + 1 × USB-A" },
+      { "label": "Plug", "value": "Foldable" }
+    ],
+    "inTheBox": ["Charger unit"],
+    "faq": [{ "q": "Does it support PPS?", "a": "The USB-C port supports PD 3.0 and PPS profiles up to 65W." }],
+    "images": [{ "status": "unavailable", "alt": "Product photograph unavailable for 65W GaN charger", "verificationNote": "Demo listing: designed placeholder shown." }],
+    "variants": [{ "id": "var_charger_white", "label": "Warm White", "pricePaise": 249900, "mrpPaise": 399900, "stock": 15 }],
+    "protectionPlans": [],
+    "relatedProductIds": ["prd_powerbank", "prd_cable"],
+    "deliveryNote": "Delivery estimate appears at checkout."
+  },
+  {
+    "id": "prd_earbuds",
+    "slug": "ridge-buds-wireless-earbuds",
+    "storeId": "grc_1",
+    "brand": "Himal Works",
+    "name": "Ridge Buds wireless earbuds with charging case",
+    "category": "Electronics",
+    "dataClass": "demo-listing",
+    "highlights": ["Bluetooth wireless with charging case", "Made for noisy shared taxis and windy viewpoints"],
+    "description": "Lightweight wireless earbuds with a pocket charging case. Demo listing.",
+    "specifications": [
+      { "label": "Connectivity", "value": "Bluetooth wireless" },
+      { "label": "Case", "value": "Pocket charging case included" }
+    ],
+    "inTheBox": ["Earbuds", "Charging case"],
+    "faq": [],
+    "images": [{ "status": "unavailable", "alt": "Product photograph unavailable for Ridge Buds earbuds", "verificationNote": "Demo listing: designed placeholder shown." }],
+    "variants": [{ "id": "var_buds_black", "label": "Jet Black", "pricePaise": 149900, "mrpPaise": 299900, "stock": 18 }],
+    "protectionPlans": [],
+    "relatedProductIds": ["prd_powerbank"],
+    "deliveryNote": "Delivery estimate appears at checkout."
+  },
+  {
+    "id": "prd_tea",
+    "slug": "darjeeling-first-flush-tea-250g",
+    "storeId": "grc_1",
+    "brand": "Tista Valley Estates",
+    "name": "Darjeeling first-flush black tea, 250 g tin",
+    "category": "Local Foods",
+    "dataClass": "demo-listing",
+    "highlights": ["First-flush Darjeeling black tea", "250 g sealed tin", "Sourced from Tista Valley estates (seller-declared)"],
+    "description": "A 250 g tin of first-flush Darjeeling black tea. Demo listing — estate sourcing is seller-declared and not independently verified.",
+    "specifications": [
+      { "label": "Net weight", "value": "250 g" },
+      { "label": "Type", "value": "First-flush black tea" },
+      { "label": "Pack", "value": "Sealed tin" }
+    ],
+    "inTheBox": ["250 g tea tin"],
+    "faq": [{ "q": "Is it freshly packed?", "a": "Tins are sealed at the estate; the harvest flush is printed on the base of the tin." }],
+    "images": [{ "status": "unavailable", "alt": "Product photograph unavailable for Darjeeling tea tin", "verificationNote": "Demo listing: designed placeholder shown." }],
+    "variants": [{ "id": "var_tea_250", "label": "250 g tin", "pricePaise": 89900, "mrpPaise": 120000, "stock": 25 }],
+    "protectionPlans": [],
+    "relatedProductIds": ["prd_honey"],
+    "deliveryNote": "Delivery estimate appears at checkout."
+  },
+  {
+    "id": "prd_honey",
+    "slug": "wild-himalayan-honey-500g",
+    "storeId": "grc_1",
+    "brand": "Tista Valley Estates",
+    "name": "Wild Himalayan honey, 500 g glass jar",
+    "category": "Local Foods",
+    "dataClass": "demo-listing",
+    "highlights": ["Raw wild Himalayan honey", "500 g glass jar", "Seller-declared forest source"],
+    "description": "Raw wild honey in a 500 g glass jar. Demo listing — forest source is seller-declared.",
+    "specifications": [
+      { "label": "Net weight", "value": "500 g" },
+      { "label": "Pack", "value": "Glass jar" }
+    ],
+    "inTheBox": ["500 g honey jar"],
+    "faq": [],
+    "images": [{ "status": "unavailable", "alt": "Product photograph unavailable for wild Himalayan honey", "verificationNote": "Demo listing: designed placeholder shown." }],
+    "variants": [{ "id": "var_honey_500", "label": "500 g jar", "pricePaise": 74900, "mrpPaise": 99900, "stock": 20 }],
+    "protectionPlans": [],
+    "relatedProductIds": ["prd_tea"],
+    "deliveryNote": "Delivery estimate appears at checkout."
+  }
+]

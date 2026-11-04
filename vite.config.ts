@@ -8,13 +8,14 @@ export const aliases = {
   '@gowayy/validation': r('./packages/validation/src/index.ts'),
   '@gowayy/shared-utils': r('./packages/shared-utils/src/index.ts'),
   '@gowayy/design-system': r('./packages/design-system/src/index.ts'),
-  '@gowayy/ui': r('./packages/ui/src/index.ts'),
+  '@gowayy/ui': r('./packages/ui/src/index.tsx'),
   '@gowayy/api-client': r('./packages/api-client/src/index.ts'),
   '@gowayy/booking-engine': r('./packages/booking-engine/src/index.ts'),
   '@gowayy/location-engine': r('./packages/location-engine/src/index.ts'),
   '@gowayy/pricing-engine': r('./packages/pricing-engine/src/index.ts'),
   '@gowayy/notification-engine': r('./packages/notification-engine/src/index.ts'),
   '@gowayy/catalog': r('./packages/catalog/src/index.ts'),
+  '@gowayy/commerce': r('./packages/commerce/src/index.ts'),
 };
 
 export default defineConfig({

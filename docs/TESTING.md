@@ -6,7 +6,7 @@ npm test                       # Vitest unit tests (8 files / 68 tests)
 npm run test:integration       # node:test against the real dev API (18 tests)
 npm run test:supabase          # PGlite migrations + seed + schema behaviour (16 tests)
 npm run test:edge              # deno check for both Edge Functions + 5 runtime shared-logic tests
-npm run typecheck:mobile       # strict TypeScript for apps/mobile
+npm run typecheck:mobile       # strict TypeScript for the Expo app
 npm run scan:secrets           # high-confidence credential pattern scan
 npm run bundle:mobile:web      # Metro web export
 npm run bundle:mobile:android  # Metro Android Hermes export

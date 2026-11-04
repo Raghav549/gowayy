@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": { "composite": false, "declaration": false, "noEmit": true, "types": ["vitest/globals", "node"] },
-  "include": ["apps/web/src", "apps/dev-api/src", "packages/*/src", "tests/unit/**/*.ts", "tests/unit/**/*.tsx", "vite.config.ts", "vitest.config.ts"]
+  "include": ["apps/gowayy-customer/web/src", "apps/gowayy-partner/web/src", "apps/gowayy-explore/web/src", "apps/dev-api/src", "packages/*/src", "tests/unit/**/*.ts", "tests/unit/**/*.tsx", "vite.config.ts", "vitest.config.ts"]
 }

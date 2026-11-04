@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const brand = join(root, 'assets/brand');
-const web = join(root, 'apps/web/public/brand');
-const mobile = join(root, 'apps/mobile/assets/branding');
+const web = join(root, 'apps/gowayy-customer/web/public/brand');
+const mobile = join(root, 'apps/gowayy-customer/mobile/assets/branding');
 const images = join(root, 'assets/images/branding');
 for (const d of [web, mobile, images]) mkdirSync(d, { recursive: true });
 

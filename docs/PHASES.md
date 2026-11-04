@@ -38,7 +38,7 @@ verified, and what is not. Nothing below claims a build or deployment that was n
   drop-off, dates, travellers and service ids. Mobile journey dashboard and web
   equivalent show component status and connected recommendations.
 - Map/location provider architecture: `packages/location-engine` (web) and
-  `apps/mobile/src/lib/location.ts` (Expo Location + reverse geocode + navigation
+  `apps/gowayy-customer/mobile/src/lib/location.ts` (Expo Location + reverse geocode + navigation
   handoff). Honest fallback: where no tile provider key exists, the app opens verified
   coordinates in the device map app instead of drawing a fake map.
 
@@ -109,3 +109,23 @@ Verified in this workspace:
   measurement on a mid-range Android device. A local source secret scan passes with 0
   high-confidence credential patterns, but no hosted scanner has been run.
 - No deployment. No admin panel was created at any point.
+
+## Phase 8 — three-app monorepo completion (2026-11-04)
+
+- **GOWAYY PARTNER** web app delivered (`apps/gowayy-partner/web`, port 5174): auth,
+  onboarding, driver mode, manage (inventory/menu/rooms/tours), inbox, earnings,
+  profile with document verification, support/sign-out/delete-account.
+- **GOWAYY EXPLORE** PWA delivered (`apps/gowayy-explore/web`, port 5175): destination
+  discovery with verified-only imagery, hidden gems with routes/safety, and booking
+  handoff into the GOWAYY customer app (`?source=explore`), offline shell + manifest.
+- **Commerce + partner backend** wired end-to-end: Edge gateway ops for all commerce
+  and partner-hub calls, SQL migrations `202611040011`/`0012` (marketplace, carts,
+  wishlists, orders, partner profiles/documents/inventory/menu/rooms/tours, server-priced
+  checkout RPC, payment-method RPC, 15%-commission earnings RPC, settlement requests),
+  and dev-api modules live-verified over HTTP.
+- CI/CD added: `.github/workflows/ci.yml` (typecheck web+mobile, unit, integration,
+  PGlite schema, Deno edge tests, secret scan, builds), `deploy-web.yml` (three Vercel
+  projects), `mobile-build.yml` (EAS Android). Per-app `vercel.json` ×3, `eas.json`
+  channels, `docs/DEPLOYMENT.md`.
+- `npm run verify` green: 68 unit + 25 integration + 16 supabase + 5 edge tests, secret
+  scan clean, all three web apps build.

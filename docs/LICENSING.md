@@ -25,7 +25,7 @@ A human-readable attribution list is `assets/images/ATTRIBUTION.md`. The 15 dest
 records in `packages/catalog/src/data/destinations.json` and attraction records in
 `attractions.json` reference images by `assetPath` with `alt`, `credit`, `license` and
 `sourceUrl`; `verificationNote` explains any unavailable asset. `scripts/sync-assets.mjs`
-copies optimized WebP derivatives into `apps/web/public/images/`.
+copies optimized WebP derivatives into `apps/gowayy-customer/web/public/images/`.
 
 ## Verified assets (checked 2026-11-03)
 

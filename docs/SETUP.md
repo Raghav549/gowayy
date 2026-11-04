@@ -4,7 +4,7 @@
 
 ```bash
 npm install
-npm run dev          # dev API on :8787, Vite web on :5173
+npm run dev:all      # dev API :8787, customer :5173, partner :5174, explore :5175
 npm run verify       # typecheck (web + mobile), unit, integration, SQL, Edge, web build
 ```
 
@@ -21,7 +21,7 @@ server-verified event, never a client-side success signal.
 ## Android (Expo SDK 58)
 
 ```bash
-cd apps/mobile
+cd apps/gowayy-customer/mobile
 npm install --legacy-peer-deps
 cp .env.example .env        # set an absolute LAN/IP or HTTPS API URL
 npm run typecheck           # TypeScript strict
@@ -31,7 +31,7 @@ npm run build:android:dev   # EAS development APK (requires EAS account/project)
 npm run build:android:prod  # EAS production AAB
 ```
 
-`apps/mobile/app.json` defines the `gowayy://` scheme, `gowayy.app` App Links,
+`apps/gowayy-customer/mobile/app.json` defines the `gowayy://` scheme, `gowayy.app` App Links,
 `app.gowayy.customer` package, adaptive/monochrome icons, splash, and location +
 notification permissions. `eas.json` defines `development`/`preview` APK profiles and a
 `production` app-bundle profile. Run `eas init` once to add a real `projectId` under
@@ -39,7 +39,7 @@ notification permissions. `eas.json` defines `development`/`preview` APK profile
 
 On a physical device `localhost` is not the API. Set
 `EXPO_PUBLIC_GOWAYY_API_BASE_URL` to a reachable origin and
-`EXPO_PUBLIC_GOWAYY_ASSET_BASE_URL` to the host serving `apps/web/public/`. Without an
+`EXPO_PUBLIC_GOWAYY_ASSET_BASE_URL` to the host serving `apps/gowayy-customer/web/public/`. Without an
 asset base the app shows the designed unavailable state for photographs rather than a
 substitute image.
 

@@ -104,7 +104,7 @@ describe('connected journey engine', () => {
     expect(byService.food.bookingId).toBe('ord_food');
     expect(byService.hotel.state).toBe('not_booked');
     expect(byService.grocery.state).toBe('not_booked');
-    expect(components).toHaveLength(10);
+    expect(components).toHaveLength(11);
   });
 
   it('filters recommendations by active destination only', () => {

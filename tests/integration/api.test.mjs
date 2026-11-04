@@ -200,7 +200,7 @@ test('journey context persists and the dashboard is built from real records', as
 
   const dashboard = await get(`/api/journeys/${state.journeyId}`);
   assert.equal(dashboard.status, 200);
-  assert.equal(dashboard.json.components.length, 10);
+  assert.equal(dashboard.json.components.length, 11);
   assert.ok(dashboard.json.components.every((c) => c.state === 'not_booked'), 'no fabricated bookings');
 
   const rec = await get('/api/recommendations?destinationId=dst_darjeeling');

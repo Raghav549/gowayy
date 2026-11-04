@@ -1,64 +1,75 @@
 # GOWAYY
 
-One connected journey for travel, transport, hospitality and local commerce. Customer-facing
-Android and Web applications only — **no admin panel**.
+One connected journey for travel, transport, hospitality and local commerce — **three apps,
+one shared backend, no admin panel**.
 
-GOWAYY connects cab booking, shared taxis, food ordering, grocery shopping, hotels and
-homestays, tourism/sightseeing, local experiences, parcel delivery, destination discovery
-and local business discovery through a single shared journey context. Pick Bagdogra
-Airport → Darjeeling and the app surfaces stays, attractions, sightseeing packages,
-local taxis, restaurants and grocery coverage while keeping the journey attached to
-every subsequent booking.
+1. **GOWAYY** (customer) — Expo Android app + responsive web PWA: cabs, shared taxis,
+   hotels/homestays, food, groceries, tourism, experiences, parcels, shopping/marketplace,
+   all attached to a shared journey context.
+2. **GOWAYY PARTNER** — own app id, package and branding for drivers, delivery partners and
+   restaurant / grocery / hotel / homestay / tour operators (claims, verification, inventory,
+   menu, rooms, tours, inbox, earnings, settlements).
+3. **GOWAYY EXPLORE** — web + PWA destination discovery with verified-only imagery, hidden
+   gems, route and safety info, and booking handoff into the GOWAYY customer app.
+
+All three share one PostgreSQL + PostGIS + Supabase backend (one DB, one auth, real-time
+cross-app sync), one design system and shared engine packages.
 
 ## Quick start
 
 ```bash
-npm install
-npm run dev        # development API :8787 + responsive web app :5173
-npm run verify     # all typechecks, tests, Edge checks, and web build
+npm install                 # workspace deps (three web apps + dev-api + packages)
+cd apps/gowayy-customer/mobile && npm install   # Expo deps
+npm run dev:all             # dev API :8787 + customer :5173 + partner :5174 + explore :5175
+npm run verify              # typecheck (web+mobile), all tests, edge checks, secret scan, builds
 ```
 
-See [`docs/SETUP.md`](docs/SETUP.md) for Android/Expo, Supabase deployment, environment
-variables and secrets.
+See [`docs/SETUP.md`](docs/SETUP.md) for environment variables and secrets,
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel + EAS + Supabase deployment, and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full map.
 
-## What is in the repository
+## Repository map
 
 | Path | Contents |
 | --- | --- |
-| `apps/web` | React + TypeScript Vite PWA: Three.js G splash, four animated onboarding scenes, auth, home, explore, service flows, journey dashboard, checkout, partner mode, profile, credits |
-| `apps/mobile` | Expo SDK 58 / Expo Router Android app: Reanimated splash, four animated onboarding scenes, 5-tab navigation, 8 dedicated service routes, journey dashboard, checkout, partner mode, credits |
-| `apps/dev-api` | Real Node HTTP API with JSON persistence — auth, pricing, availability, bookings, orders, payments, refunds, notifications, dispatch, audit |
-| `packages/*` | Shared types, Zod validation, API client, design system, UI, pricing/booking/location/notification engines and catalog (imported by both apps) |
-| `supabase/migrations`, `seed` | Ten ordered SQL migrations (69 tables, 35 RPCs, RLS everywhere) + generated catalog seed |
-| `supabase/functions` | `gowayy-api` Edge gateway (JWT verification, full client contract, field normalization) and HMAC-verified `payment-webhook` |
-| `assets/brand` | Original layered 2.5D G symbol, wordmark, app/adaptive/monochrome icons, splash logo, colour tokens, typography |
-| `assets/images` | Verified exact-place photographs, WebP derivatives, source/licence manifest and attribution |
-| `tests` | Vitest unit, dev-API integration, PGlite schema/behaviour tests |
-| `docs` | Architecture, setup, API, security, licensing, image research, backup, testing, phase report |
+| `apps/gowayy-customer/web` | Customer React+Vite PWA (port 5173): splash, 4-scene onboarding, auth w/ OTP, home, services, marketplace (products/cart/checkout), journey dashboard, profile |
+| `apps/gowayy-customer/mobile` | Expo SDK 58 Android app (EAS): same flows, Reanimated splash, 5-tab nav, OTA via EAS Update |
+| `apps/gowayy-partner/web` | Partner React+Vite app (port 5174): auth, onboarding, driver mode, manage (inventory/menu/rooms/tours), inbox, earnings, profile + verification |
+| `apps/gowayy-explore/web` | Explore PWA (port 5175): destination discovery, hidden gems, booking handoff to GOWAYY, offline shell |
+| `apps/dev-api` | Real Node HTTP API with JSON persistence — auth, pricing, availability, bookings, orders, server-priced commerce, verified payments, refunds, dispatch, partner hub, audit |
+| `packages/*` | Shared types, Zod validation, API client (supabase + dev transports), design system, UI kit, pricing/booking/location/notification engines, commerce, catalog |
+| `supabase/migrations` | Twelve ordered SQL migrations (80+ tables, RLS everywhere, server-priced checkout RPCs) + generated seed |
+| `supabase/functions` | `gowayy-api` Edge gateway (JWT verification, full client contract incl. commerce + partner ops) and HMAC-verified `payment-webhook` |
+| `assets/brand` | Original layered 2.5D G symbol + per-app marks, wordmarks, splash logos, colour tokens |
+| `assets/mascot` | Original "Kanchu" monkey mascot, 12 SVG poses (from the reference image), lightweight static fallbacks |
+| `assets/images` | Verified exact-place photographs, WebP derivatives, `IMAGE_SOURCES.json` licence manifest, `ATTRIBUTION.md` |
+| `tests` | Vitest unit, dev-API HTTP integration, PGlite schema/behaviour tests, Deno Edge tests |
+| `.github/workflows` | CI (typecheck+tests+secrets+builds), per-app Vercel deploys, EAS Android build |
+| `docs` | Architecture, setup, deployment, API, security, licensing, image research, backup, testing, phases, screenshot analysis |
 
 ## Design rules
 
 Deep charcoal, graphite, warm white, soft ivory, muted silver and restrained champagne.
-No neon/blue-dominated palette, no generic pin or car logos, no decorative buttons.
-Both themes, reduced-motion support, real photographs with honest unavailable states,
-and no fabricated ratings or availability.
+No neon/blue-dominated palette, no generic pin or car logos. Original geometric G logo;
+original monkey mascot used sparingly (empty states, splash), never on every screen.
+Both themes, reduced-motion support, real verified photographs with honest unavailable
+states, and no fabricated ratings, prices or availability.
 
 ## Integrity rules
 
-- All bookings persist; status and price are server-authoritative.
+- All bookings/orders persist; status and price are server-authoritative (server-priced
+  cart quotes and checkout; stock decremented server-side).
 - Payments are sandbox-only in development; client-side "success" never confirms a
-  booking. Capture requires a signature-verified server event.
+  booking. Capture requires a signature-verified webhook; refunds are server-side;
+  unavailable payment methods are visibly disabled with reasons.
 - Demo OTP and demo driver/partner verification are clearly labelled as development
   adapters and never claim to be real verification.
-- No service-role key, webhook secret or provider credential is bundled into a client.
-- Real-place photographs are used only when the exact subject and licence were verified.
+- No service-role key, webhook secret or provider credential is bundled into a client or
+  the repo (enforced by `npm run scan:secrets` in CI).
+- Real-place photographs only with verified exact subject + licence.
 
 ## Verification status
 
-Run in this workspace: root + mobile strict typecheck, 68 unit tests, 18 dev-API
-integration tests, 16 PGlite/PostgreSQL 17.5 SQL tests, Deno typecheck and 5 runtime tests for both Edge Functions, Vite web build, Metro web export (36 bundles), Metro Android Hermes export,
-and live HTTP 200 checks for web + API.
-
-Not run: EAS build/APK/AAB, on-device Android test, hosted Supabase deployment,
-PostGIS-enabled migration run, real payment/OTP/map providers, browser E2E automation,
-or production deployment. Full detail: [`docs/PHASES.md`](docs/PHASES.md).
+`npm run verify` runs: root + mobile strict typecheck, 68 unit tests, 25 dev-API HTTP
+integration tests, 16 PGlite/PostgreSQL schema tests, Deno typecheck + runtime tests for
+both Edge Functions, repo secret scan, and production builds of all three web apps.

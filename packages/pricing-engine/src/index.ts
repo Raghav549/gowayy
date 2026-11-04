@@ -85,7 +85,7 @@ export function priceParcel(input: { distanceKm: number; weightKg: number }): Pr
 /** Platform commission rates as a percentage of the pre-tax subtotal. */
 export const COMMISSION_RATES: Record<ServiceKind, number> = {
   cab: 12, shared_taxi: 8, food: 15, grocery: 10, hotel: 12, homestay: 12,
-  tourism: 14, experience: 14, package: 14, parcel: 12,
+  tourism: 14, experience: 14, package: 14, parcel: 12, marketplace: 15,
 };
 
 export function commissionFor(service: ServiceKind, subtotalPaise: number): number {

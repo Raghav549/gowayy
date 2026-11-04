@@ -30,22 +30,22 @@ describe('Expo Android application', () => {
       'app/checkout.tsx', 'app/partner.tsx', 'app/credits.tsx', 'app/support.tsx', 'app/settings.tsx',
       'app/+not-found.tsx',
     ];
-    for (const r of routes) expect(existsSync(join(root, 'apps/mobile', r)), `${r} missing`).toBe(true);
+    for (const r of routes) expect(existsSync(join(root, 'apps/gowayy-customer/mobile', r)), `${r} missing`).toBe(true);
   });
 
   it('has a dedicated interface and navigation entry for all eight services', () => {
     for (const kind of ['cabs', 'hotels', 'food', 'groceries', 'tourism', 'experiences', 'packages', 'parcels']) {
-      const src = read(`apps/mobile/app/${kind}.tsx`);
+      const src = read(`apps/gowayy-customer/mobile/app/${kind}.tsx`);
       expect(src).toContain('ServiceScreen');
       expect(src).toContain(`kind="${kind}"`);
-      const home = read('apps/mobile/app/(tabs)/home.tsx');
+      const home = read('apps/gowayy-customer/mobile/app/(tabs)/home.tsx');
       expect(home).toContain(`key: '${kind}'`);
       expect(home).toContain('router.push(`/${s.key}`)');
     }
   });
 
   it('configures Android delivery: package, icons, permissions, deep links and EAS profiles', () => {
-    const app = json<Record<string, any>>('apps/mobile/app.json');
+    const app = json<Record<string, any>>('apps/gowayy-customer/mobile/app.json');
     expect(app.expo.name).toBe('GOWAYY');
     expect(app.expo.scheme).toBe('gowayy');
     expect(app.expo.android.package).toBe('app.gowayy.customer');
@@ -55,15 +55,15 @@ describe('Expo Android application', () => {
     expect(app.expo.android.permissions).toContain('POST_NOTIFICATIONS');
     expect(JSON.stringify(app.expo.android.intentFilters)).toContain('gowayy.app');
     for (const asset of ['app-icon.png', 'icon-foreground.png', 'icon-background.png', 'icon-monochrome.png', 'splash-logo.png', 'g-symbol.png']) {
-      expect(existsSync(join(root, 'apps/mobile/assets/branding', asset)), asset).toBe(true);
+      expect(existsSync(join(root, 'apps/gowayy-customer/mobile/assets/branding', asset)), asset).toBe(true);
     }
-    const eas = json<Record<string, any>>('apps/mobile/eas.json');
+    const eas = json<Record<string, any>>('apps/gowayy-customer/mobile/eas.json');
     expect(eas.build.development.android.buildType).toBe('apk');
     expect(eas.build.production.android.buildType).toBe('app-bundle');
   });
 
   it('uses a compatible, complete Expo dependency set', () => {
-    const pkg = json<Record<string, any>>('apps/mobile/package.json');
+    const pkg = json<Record<string, any>>('apps/gowayy-customer/mobile/package.json');
     const d = pkg.dependencies;
     expect(d['expo']).toMatch(/^~58\./);
     for (const lib of ['expo-router', 'react-native-reanimated', 'react-native-gesture-handler', 'react-native-worklets',
@@ -72,13 +72,13 @@ describe('Expo Android application', () => {
     // Reanimated 4.7.1 requires worklets 0.13.x (an earlier pin of 0.7.1 broke npm resolution).
     expect(d['react-native-reanimated']).toBe('4.7.1');
     expect(d['react-native-worklets']).toMatch(/^0\.13\./);
-    expect(read('apps/mobile/tsconfig.json')).toContain('"strict": true');
-    expect(read('apps/mobile/metro.config.js')).toContain('watchFolders');
+    expect(read('apps/gowayy-customer/mobile/tsconfig.json')).toContain('"strict": true');
+    expect(read('apps/gowayy-customer/mobile/metro.config.js')).toContain('watchFolders');
   });
 
   it('never embeds a service-role key or admin interface in client code', () => {
     const clientFiles = [
-      ...walk('apps/web/src'), ...walk('apps/mobile/app'), ...walk('apps/mobile/src'),
+      ...walk('apps/gowayy-customer/web/src'), ...walk('apps/gowayy-customer/mobile/app'), ...walk('apps/gowayy-customer/mobile/src'),
       ...walk('packages/api-client/src'),
     ].filter((f) => /\.(ts|tsx|js|mjs)$/.test(f));
     for (const f of clientFiles) {
