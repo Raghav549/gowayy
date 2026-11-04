@@ -68,8 +68,8 @@ or the Android toolchain is listed as a manual action rather than claimed as wor
   routable from the console; all `/api/admin/*` calls require an `admin` role server-side and
   customer/partner tokens receive 401/403.
 - Destinations CMS: create/edit, activate/deactivate, ordering, cover image, multiple images,
-  gallery reordering, remove image; existing seeded destinations remain editable and nothing was
-  deleted. Cover-first ordering is honoured by the customer merge hook.
+  gallery reordering, replace image, remove image; existing seeded destinations remain editable and
+  nothing was deleted. Cover-first ordering is honoured by the customer merge hook.
 - Posters CMS: upload or URL, edit, replace, delete, reorder, schedule window, active toggle,
   preview, validation, upload progress.
 - Cities and serviceability are DB records, with **independent food and grocery pincode lists**.
