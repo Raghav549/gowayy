@@ -115,10 +115,10 @@ jobs:
         with:
           packages: 'platform-tools'
           accept-android-sdk-licenses: true
-      - name: Install Android API 37 platform
-        run: sdkmanager --channel=3 --install 'platforms;android-37' && test -d "$ANDROID_HOME/platforms/android-37"
-      - name: Install Android Build Tools 37.0.0
-        run: sdkmanager --channel=3 --install 'build-tools;37.0.0' && test -d "$ANDROID_HOME/build-tools/37.0.0"
+      - name: Install Android API 36 platform
+        run: sdkmanager --install 'platforms;android-36' && test -d "$ANDROID_HOME/platforms/android-36"
+      - name: Install Android Build Tools 36.0.0
+        run: sdkmanager --install 'build-tools;36.0.0' && test -d "$ANDROID_HOME/build-tools/36.0.0"
       - name: Install Android NDK 27.1.12297006
         run: sdkmanager --install 'ndk;27.1.12297006' && test -d "$ANDROID_HOME/ndk/27.1.12297006"
 
@@ -149,6 +149,12 @@ jobs:
       - name: Generate clean native Android project
         working-directory: apps/gowayy-${{ matrix.app }}/mobile
         run: npx expo prebuild --platform android --no-install
+      - name: Pin compile SDK to runner-available stable Android API
+        working-directory: apps/gowayy-${{ matrix.app }}/mobile/android
+        run: |
+          printf '\nandroid.compileSdkVersion=36\nandroid.buildToolsVersion=36.0.0\n' >> gradle.properties
+          grep -F 'android.compileSdkVersion=36' gradle.properties
+          grep -F 'android.buildToolsVersion=36.0.0' gradle.properties
       - name: Configure Gradle to use the protected release signing key
         run: node scripts/configure-android-signing.mjs "apps/gowayy-${{ matrix.app }}/mobile/android/app/build.gradle"
 
