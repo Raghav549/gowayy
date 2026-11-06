@@ -134,20 +134,27 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
       {!unavailable && storeList.length > 0 && (
         <section>
           <div className="between"><h3 style={{ fontSize: 18 }}>Stores listing here</h3><Link to="/categories" className="btn btn--secondary btn--sm">All shops</Link></div>
-          <div className="grid-3" style={{ marginTop: 12 }}>
-            {storeList.map((s) => (
-              <Link key={s.id} to={`/categories?store=${s.id}`} className="card card--hover store-card">
-                <div className="row" style={{ gap: 12 }}>
-                  <span className="store-avatar" aria-hidden="true"><Store size={20} /></span>
-                  <div style={{ minWidth: 0 }}><strong>{s.name}</strong><div className="tiny muted">{s.categoryName ?? 'Store'}{s.address ? ` · ${s.address}` : ''}</div></div>
-                </div>
-                <div className="row tiny muted row--wrap" style={{ gap: 10, marginTop: 12 }}>
-                  <span className="row" style={{ gap: 4 }}><Package size={11} /> {s.productCount} products</span>
-                  {s.deliveryCoverageKm ? <span className="row" style={{ gap: 4 }}><MapPin size={11} /> {s.deliveryCoverageKm} km</span> : null}
-                  {s.openingHoursVerified && s.openingHours ? <span>{s.openingHours}</span> : null}
-                </div>
-              </Link>
-            ))}
+          <div className="grid-3 store-grid" style={{ marginTop: 12 }}>
+            {storeList.map((s) => {
+              const banner = s.image?.status === 'verified' && (s.image as unknown as { assetPath?: string }).assetPath ? `/${String((s.image as unknown as { assetPath?: string }).assetPath).replace(/^\//, '')}` : null;
+              return (
+                <article key={s.id} className="card store-card store-card--brand">
+                  <Link to={`/categories?store=${s.id}`} className="store-card__banner" aria-label={s.name}>
+                    {banner ? <img src={banner} alt={s.name} loading="lazy" decoding="async" /> : <div className="store-card__banner-fallback" />}
+                  </Link>
+                  <div className="store-card__identity">
+                    <span className="store-card__logo" aria-hidden="true">{s.image?.status === 'verified' && (s.image as unknown as { assetPath?: string }).assetPath ? <img src={`/${String((s.image as unknown as { assetPath?: string }).assetPath).replace(/^\//, '')}`} alt="" loading="lazy" decoding="async" /> : <Store size={18} />}</span>
+                    <div className="store-card__titles"><strong title={s.name}>{s.name}</strong><span className="tiny muted">{s.categoryName ?? 'Store'}{s.address ? ` · ${s.address}` : ''}</span></div>
+                    <Link className="btn btn--secondary btn--sm store-card__visit" to={`/categories?store=${s.id}`}>Visit</Link>
+                  </div>
+                  <div className="store-card__meta tiny muted">
+                    <span className="row" style={{ gap: 4 }}><Package size={11} /> {s.productCount} products</span>
+                    {s.deliveryCoverageKm ? <span className="row" style={{ gap: 4 }}><MapPin size={11} /> {s.deliveryCoverageKm} km</span> : null}
+                    {s.openingHoursVerified && s.openingHours ? <span>{s.openingHours}</span> : <span>Hours not verified</span>}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}

@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { client } from '../../src/lib/client';
 import { useUI } from '../../src/store/useUI';
-import { Button, Card, EmptyState, Screen, SectionTitle } from '../../src/components/UI';
+import { Button, Card, EmptyState, Screen, SectionTitle, SkeletonList } from '../../src/components/UI';
 import { useTheme, spacing, radius, font } from '../../src/theme';
 import type { Booking } from '@gowayy/types';
 
@@ -26,7 +26,7 @@ export default function BookingsScreen() {
   return (
     <Screen>
       <SectionTitle eyebrow="Account" title="Bookings & reservations" />
-      {bookings.isLoading ? <Text style={{ color: c.textMuted }}>Loading…</Text> : null}
+      {bookings.isLoading ? <SkeletonList rows={4} /> : null}
       {bookings.data?.length === 0 ? <EmptyState title="No bookings yet" body="Book a cab, stay, sightseeing experience or parcel and it will appear here with its server-side status."
         action={<Button title="Explore services" onPress={() => router.push('/home')} />} /> : null}
       {bookings.data?.map((b) => (

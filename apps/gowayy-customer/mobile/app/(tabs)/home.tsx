@@ -7,7 +7,7 @@ import { client } from '../../src/lib/client';
 import { useJourney } from '../../src/store/useJourney';
 import { useSession } from '../../src/store/useSession';
 import { useUI } from '../../src/store/useUI';
-import { Button, Card, DemoBanner, EmptyState, Photo, Screen, SectionTitle, TextInput } from '../../src/components/UI';
+import { Button, Card, DemoBanner, EmptyState, Photo, Screen, SectionTitle, TextInput, Skeleton } from '../../src/components/UI';
 import { ListingCard } from '../../src/components/Cards';
 import { expoLocationProvider, type LocationFix } from '../../src/lib/location';
 import { useTheme, spacing, radius, font } from '../../src/theme';
@@ -107,7 +107,7 @@ export default function HomeScreen() {
         </Pressable>
       </View>
       {query.trim().length > 1 ? <Card>
-        {hits.isLoading ? <Text style={{ color: c.textMuted }}>Searching…</Text> : null}
+        {hits.isLoading ? <Skeleton height={22} /> : null}
         {hits.data?.slice(0, 5).map((h) => (
           <Pressable key={`${h.kind}-${h.id}`} onPress={() => router.push({ pathname: '/explore', params: { q: h.title } })} style={styles.hit}>
             <Text style={{ color: c.text, flex: 1 }}>{h.title}</Text><Text style={{ color: c.textMuted, fontSize: font.sizes.xs }}>{h.kind}</Text>

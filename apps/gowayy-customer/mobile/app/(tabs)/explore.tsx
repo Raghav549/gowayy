@@ -28,7 +28,7 @@ export default function ExploreScreen() {
     <Screen>
       <Field label="Universal search"><TextInput value={query} onChangeText={setQuery} placeholder="Destinations, hotels, food, attractions…" autoCapitalize="none" testID="explore-search" /></Field>
       {query.trim().length > 1 ? <Card>
-        {hits.isLoading ? <Text style={{ color: c.textMuted }}>Searching…</Text> : null}
+        {hits.isLoading ? <Skeleton height={20} /> : null}
         {hits.data?.slice(0, 8).map((h) => (
           <Pressable key={`${h.kind}-${h.id}`} onPress={() => {
             if (h.kind === 'destination') router.push({ pathname: '/destinations/[slug]', params: { slug: h.id.replace(/^dst_/, '') } });

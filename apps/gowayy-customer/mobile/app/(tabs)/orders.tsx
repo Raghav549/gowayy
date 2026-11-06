@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { client } from '../../src/lib/client';
 import { useUI } from '../../src/store/useUI';
-import { Button, Card, EmptyState, Screen, SectionTitle } from '../../src/components/UI';
+import { Button, Card, EmptyState, Screen, SectionTitle, SkeletonList } from '../../src/components/UI';
 import { useTheme, spacing, radius, font } from '../../src/theme';
 import type { Order } from '@gowayy/types';
 
@@ -26,7 +26,7 @@ export default function OrdersScreen() {
   return (
     <Screen>
       <SectionTitle eyebrow="Account" title="Food & grocery orders" />
-      {orders.isLoading ? <Text style={{ color: c.textMuted }}>Loading…</Text> : null}
+      {orders.isLoading ? <SkeletonList rows={4} /> : null}
       {orders.data?.length === 0 ? <EmptyState title="No orders yet" body="Browse a restaurant menu or a local grocery store to place your first order."
         action={<Button title="Browse food" onPress={() => router.push('/food')} />} /> : null}
       {orders.data?.map((o) => (

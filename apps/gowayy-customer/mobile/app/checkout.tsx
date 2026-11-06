@@ -73,7 +73,7 @@ export default function CheckoutScreen() {
     <Screen>
       <SectionTitle eyebrow="Secure checkout" title="Payment" />
       <DemoBanner>DEVELOPMENT SANDBOX. No real money moves. In production, capture only succeeds after a signature-verified payment webhook; a client-side "success" never confirms a booking.</DemoBanner>
-      {record.isLoading ? <Text style={{ color: c.textMuted }}>Loading record…</Text> : null}
+      {record.isLoading ? <Skeleton height={64} /> : null}
       {record.data ? <Card>
         <Text style={{ color: c.text, fontWeight: '700' }}>{reference}</Text>
         <Text style={{ color: c.textMuted, fontSize: font.sizes.xs }}>Status: {'booking' in record.data ? record.data.booking.status : record.data.order.status} (server-authoritative)</Text>

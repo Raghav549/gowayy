@@ -256,7 +256,7 @@ export function ServiceScreen({ kind }: { kind: ServiceKind }) {
             items: cartItems, deliveryAddress: address.trim(), instructions: instructions.trim(),
             slot: slot || null, coupon: coupon.trim() || null, substitution, journeyId: journey?.id ?? null,
           }, idemKey()))} />
-        </> : <Text style={{ color: c.textMuted }}>Loading listings…</Text>}
+        </> : <SkeletonList rows={4} />}
       </> : null}
 
       {kind === 'tourism' || kind === 'experiences' || kind === 'packages' ? <>

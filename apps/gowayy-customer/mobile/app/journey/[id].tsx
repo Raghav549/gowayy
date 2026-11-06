@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { client } from '../../src/lib/client';
 import { useJourney } from '../../src/store/useJourney';
 import { useUI } from '../../src/store/useUI';
-import { Button, Card, Field, Screen, SectionTitle, TextInput } from '../../src/components/UI';
+import { Button, Card, Field, Screen, SectionTitle, Skeleton, SkeletonList, TextInput } from '../../src/components/UI';
 import { useTheme, spacing, radius, font } from '../../src/theme';
 
 const SERVICES = [
@@ -52,8 +52,7 @@ export default function JourneyDashboard() {
     finally { setSaving(false); }
   }
 
-  if (!j) return <Screen><Card><Text style={{ color: c.text }}>{q.isLoading ? 'Loading journey…' : 'Journey not found.'}</Text>
-    <Button title="Explore" variant="secondary" onPress={() => router.push('/explore')} /></Card></Screen>;
+  if (!j) return <Screen>{q.isLoading ? <SkeletonList rows={3} /> : <Card><Text style={{ color: c.text }}>Journey not found.</Text><Button title="Explore" variant="secondary" onPress={() => router.push('/explore')} /></Card>}</Screen>;
 
   return (
     <Screen>

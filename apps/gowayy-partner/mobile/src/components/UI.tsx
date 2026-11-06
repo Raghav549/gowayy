@@ -1,5 +1,6 @@
 /** Light-themed primitives for GOWAYY PARTNER (Android). */
-import { Pressable, ScrollView, Text, TextInput as RNInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Pressable, ScrollView, Text, TextInput as RNInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, font, radius, spacing } from '../theme';
 
 export function Screen({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
@@ -64,4 +65,19 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
       <Body muted>{body}</Body>
     </Card>
   );
+}
+function usePulse() {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true })]));
+    loop.start(); return () => loop.stop();
+  }, [v]);
+  return v.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
+}
+export function Skeleton({ height = 14, width, style, radius: r }: { height?: number; width?: number | string; style?: ViewStyle; radius?: number }) {
+  const opacity = usePulse();
+  return <Animated.View style={[{ height, width: width as unknown as number | undefined, backgroundColor: colors.surfaceAlt, borderRadius: r ?? radius.md, opacity }, style]} />;
+}
+export function SkeletonList({ rows = 3 }: { rows?: number }) {
+  return <View style={{ gap: spacing.sm }}>{Array.from({ length: rows }).map((_, i) => <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md, backgroundColor: colors.surface }}><Skeleton height={42} width={42} radius={12} /><View style={{ flex: 1, gap: 6 }}><Skeleton height={14} width={'48%'} /><Skeleton height={12} width={'74%'} /></View><Skeleton height={24} width={64} radius={radius.pill} /></View>)}</View>;
 }

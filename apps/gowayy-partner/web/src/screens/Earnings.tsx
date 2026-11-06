@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Download, Wallet } from 'lucide-react';
 import { client } from '../lib/client';
 import { useUI } from '../store';
-import { SectionHead, Skeleton, Stat, Badge } from '@gowayy/ui';
+import { SectionHead, Skeleton, SkeletonMetrics, SkeletonTable, Stat, Badge } from '@gowayy/ui';
 import { formatINR } from '@gowayy/shared-utils';
 
 export function Earnings() {
@@ -15,7 +15,7 @@ export function Earnings() {
     onSuccess: async (r) => { showToast('Settlement requested', 'success'); await qc.invalidateQueries(); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
-  if (earnings.isLoading) return <Skeleton style={{ height: 260 }} />;
+  if (earnings.isLoading) return <div className="stack"><SkeletonMetrics count={3} /><SkeletonTable rows={5} cols={4} /></div>;
   const e = earnings.data as any;
   return (
     <div className="stack">
