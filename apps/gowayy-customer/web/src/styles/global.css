@@ -145,9 +145,12 @@ p { margin: 0; }
 
 .list { display: flex; flex-direction: column; gap: 10px; }
 .list-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--gw-surface); border: 1px solid var(--gw-border); border-radius: 12px; }
-.list-row__body { flex: 1; min-width: 0; }
+.list-row__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .list-row__title { font-weight: 650; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.list-row__sub { color: var(--gw-text-muted); font-size: 13px; }
+.list-row__sub { color: var(--gw-text-muted); font-size: 13px; overflow-wrap: anywhere; }
+.list-row > .badge { flex-shrink: 0; }
+.search-page .list-row { align-items: flex-start; }
+.search-page .list-row__title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .divider { height: 1px; background: var(--gw-border); margin: 16px 0; }
 
 .notice { border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 20px; border: 1px solid var(--gw-border); background: var(--gw-surface-alt); color: var(--gw-text-muted); }
@@ -481,9 +484,9 @@ body { background:var(--gw-gradient-page); color:var(--gw-text); }
 @keyframes catRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .banner-carousel { position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--gw-border); background: var(--gw-charcoal); }
 .banner-carousel__track { display: flex; transition: transform 520ms cubic-bezier(.22,1,.36,1); touch-action: pan-y; }
-.banner { position: relative; flex: 0 0 100%; min-height: 132px; height: clamp(132px, 17vw, 176px); display: grid; grid-template-columns: 1.25fr .75fr; color: var(--gw-warm-white); overflow: hidden; }
-.banner__media { position: relative; height: 100%; }
-.banner__media img { width: 100%; height: 100%; object-fit: cover; }
+.banner { position: relative; flex: 0 0 100%; min-height: 132px; height: clamp(132px, 17vw, 176px); display: block; color: var(--gw-warm-white); overflow: hidden; }
+.banner__media { position: absolute; inset: 0; height: 100%; }
+.banner__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .banner__media::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(28,27,25,.92), rgba(28,27,25,.25)); }
 .banner__media-fallback { height: 100%; background: linear-gradient(120deg, #262421, #3A362F); }
 .banner__body { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 16px 18px; max-width: 66%; }

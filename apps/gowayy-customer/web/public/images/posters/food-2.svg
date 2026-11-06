@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500" role="img" aria-label="TEA & BAKERY">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500" role="img" aria-label="TEA &amp; BAKERY">
 <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#421080"/><stop offset="1" stop-color="#2A1740"/></linearGradient>
 <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".28"/><stop offset="1" stop-color="#ffffff" stop-opacity=".04"/></linearGradient></defs>
 <rect width="1200" height="500" fill="url(#bg)"/>
@@ -13,7 +13,7 @@
 </g>
 <rect x="64" y="88" width="560" height="324" rx="28" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".22"/>
 <text x="104" y="150" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#FFFFFF" opacity=".85">On orders above ₹299 across town</text>
-<text x="104" y="228" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="58" font-weight="800" fill="#FFFFFF">TEA & BAKERY</text>
+<text x="104" y="228" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="58" font-weight="800" fill="#FFFFFF">TEA &amp; BAKERY</text>
 <text x="104" y="280" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" fill="#FFFFFF" opacity=".9">Free delivery</text>
 <rect x="104" y="322" width="290" height="58" rx="29" fill="#17131B"/>
 <text x="132" y="359" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#FFFFFF">See menu →</text>

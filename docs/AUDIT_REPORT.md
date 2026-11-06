@@ -9,7 +9,7 @@
 
 This was an implementation pass, not an audit-only exercise. The branch contains responsive Customer/Partner/Admin corrections, a real host-offering/slot/booking slice, server-scoped Partner fulfilment, Admin RPC read/write paths, commerce/checkout fixes, upload validation, payment/refund orchestration, persistent payout requests, database migrations, and a secure owner-account provisioner.
 
-**Production readiness: NOT YET READY.** The repository-level web/API/SQL checks are green, but a hosted Supabase project was not available, live third-party delivery was not tested, browser viewport and Android device runs were not possible, the complete push-delivery architecture is not implemented, and the dependency audit still reports advisories requiring planned major upgrades.
+**Production readiness: NOT YET READY.** Repository-level web/API/SQL checks and real Chromium responsive checks are green, but a hosted Supabase project was not available, live third-party delivery was not tested, Android device runs were not possible, the complete push-delivery architecture is not implemented, and the dependency audit still reports advisories requiring planned major upgrades.
 
 ## 2. Implemented and tested
 
@@ -18,10 +18,11 @@ This was an implementation pass, not an audit-only exercise. The branch contains
 - Preserved the purple/lavender and gold identity, logos, typography and imagery.
 - Removed the requested descriptive copy and consolidated competing product/store search controls into the shared `UniversalSearch` flow while retaining PIN serviceability and category filters.
 - Corrected responsive grids, card boundaries, `min-width: 0`, text wrapping/clamping, product imagery/fallbacks, authentication widths, navigation spacing and safe-area behaviour in the existing styles rather than replacing the brand layout.
-- Kept navigation reachable and content clear of fixed navigation in the implemented web shells.
+- Fixed long search-result rows escaping their cards at 360 px, made the home banner image cover the full desktop banner, and escaped invalid SVG ampersands that prevented three poster images from decoding.
+- Kept navigation reachable and content clear of fixed navigation in the implemented web shells; the shared Partner/top-bar shell now retains GOWAYY branding on mobile.
 - Checkout and payment UI distinguishes provider confirmation from a browser return; it does not turn a redirect into a successful payment.
 
-**Evidence:** root TypeScript, unit/web-flow tests and all three production builds. No browser visual claim is made; see §5.
+**Evidence:** root TypeScript, unit/web-flow tests, all three production builds, and real Chromium viewport checks in §4.
 
 ### Real local experiences and packages
 
@@ -45,13 +46,14 @@ This was an implementation pass, not an audit-only exercise. The branch contains
 - Earnings cover actual assigned/owned services and per-service commission rates. Per-payment settlement rows are separate from persistent payout requests.
 - A refund creates a unique reversing ledger entry per original settlement/refund pair. Unpaid affected payout batches are cancelled and unlinked for recalculation; replay cannot duplicate reversals.
 
-**Evidence:** 28 HTTP integration tests and SQL marketplace/payment/experience scope tests.
+**Evidence:** 29 HTTP integration tests and SQL marketplace/payment/experience scope tests.
 
 ### Admin and backend
 
 - Added server-authorized Admin read/write RPC paths and corrected the Admin Supabase wrapper so it does not call a nonexistent nested Edge URL.
 - Admin navigation reaches the implemented control-centre sections.
 - Added a runtime test that calls all 19 Admin read resources and verifies non-admin denial.
+- Aligned the development Admin overview audit entries with Supabase's `createdAt` contract, fixing `Invalid Date` in recent activity; an HTTP regression test now validates every returned timestamp.
 - Added production-safe defaults: demo OTP, sandbox capture and demo Partner verification are refused when demo mode is off.
 - Added address/payment/order fixes, scoped transitions, catalogue read models, Storage bucket provisioning and upload handling.
 
@@ -95,14 +97,17 @@ The migration series was executed against embedded PostgreSQL/PGlite, including 
 | `npm run typecheck:partner-mobile` | Passed after `npm ci --prefix apps/gowayy-partner/mobile` |
 | `npm run typecheck:admin-mobile` | Passed after `npm ci --prefix apps/gowayy-admin/mobile` |
 | `npm test` | **73 passed, 5 skipped**; 9 files passed, 2 skipped |
-| `npm run test:integration` | **28/28 passed** against real HTTP servers and isolated persistent databases |
+| `npm run test:integration` | **29/29 passed** against real HTTP servers and isolated persistent databases |
 | `npm run test:supabase` | **25/25 passed** against PGlite migrations and generated seed |
 | `npm run test:edge` | Deno checks passed for both functions/tests; **5/5 tests passed** |
 | `npm run scan:secrets` | Passed; **194 source files, 0 high-confidence credential patterns** |
 | `npm run build:all` | Passed: Customer **1717**, Partner **1667**, Admin **1647** modules |
 | `verify-web-output.mjs customer/partner/admin` | All 3 passed; app-local `dist/index.html`, referenced bundles and SPA fallback verified |
+| Real Chromium responsive/auth checks | **104/104 passed**, 0 browser console/page errors; exact scope below |
 | Owner provisioner contract tests | **2/2 passed** with mocked fetch; no live Supabase claim |
 | `npm audit` | **9 advisories remain**: 5 moderate, 2 high, 2 critical |
+
+The browser result comprises **101 viewport snapshots plus 3 fresh-launch checks**. Viewports were 360, 390, 430, 768, 1024, 1366 and 1920 px. Customer login/register/forgot, home, food, booking details and booking review ran at all seven sizes; Customer categories/search and Partner manage ran at representative mobile/tablet/desktop sizes; Customer confirmation/checkout ran at four and Admin partner verification at five representative sizes; Partner login/home and Admin login/overview ran at all seven. All three splash screens exited correctly on a fresh 390 px launch. Checks covered document overflow, requested-image decoding, off-viewport controls, intended navigation and duplicate search inputs, followed by manual screenshot inspection of booking, search, home, Partner and Admin layouts. The flow used the real local HTTP API with an isolated `/tmp` database and explicitly created development-only offerings/slots; no visual fixtures were added to production seeds. Temporary Chromium tooling was removed with `npm ci` after the run.
 
 Skipped unit tests remain the pre-existing `customer-live-render.test.tsx` (4) and `marketplace-e2e.test.ts` (1). JSDOM emits known React Router future-flag and unimplemented `window.scrollTo` warnings without failing tests. There is no repository lint script, so no ESLint result is claimed.
 
@@ -120,7 +125,7 @@ A transient test-run environment issue removed npm workspace links; `npm install
 | Maps/geocoding | **Partially implemented** | Existing coordinates/manual location and estimates remain; configure a real geocoding/map provider and verify it. No API key was invented |
 | Background tracking | **Not implemented** | Add only with a justified driver use case, consent, Android permissions and policy review |
 | Actual payout execution | **Not implemented** | Persistent payout requests/ledger reconciliation exist; bank transfers and paid-state reconciliation require a finance/provider workflow |
-| Browser responsive verification | **Blocked by missing browser tooling** | No Chromium/Firefox executable exists. 360/390/430/768/1024/1366/1920 visual runs remain pending; CSS/build tests are not visual proof |
+| Browser responsive verification | **Implemented and tested for the documented web flows** | 104 real Chromium checks passed at the required widths; this does not prove every possible screen, Firefox/Safari, installed PWA or native-device behaviour |
 | Android APK/AAB and devices | **Blocked by missing SDK/device** | Mobile TypeScript passes, but Java, Android SDK, `adb` and emulator/device are absent. No APK, signing, installation or physical-device claim |
 | Hosted Storage | **Awaiting Supabase** | HTTP upload validation/retrieval passed; hosted bucket upload/public-read smoke remains pending |
 | Dependency security | **Partially implemented / planned upgrade required** | Available audit fixes require major Vite/Vitest, React Router and Zod migrations. Do not use `npm audit fix --force` without a separate regression plan |
@@ -230,6 +235,7 @@ See `docs/DEPLOYMENT.md` for artifact/version/signing behaviour and `docs/SETUP.
 ## 8. File manifest
 
 The manifest below is relative to the repository root and compares the complete working tree at report time with the baseline. `M` means modified; `A` means added.
+- `M` `apps/dev-api/src/admin.mjs`
 - `M` `apps/dev-api/src/catalog-hub.mjs`
 - `A` `apps/dev-api/src/catalog-visibility.mjs`
 - `A` `apps/dev-api/src/commerce-rules.mjs`
@@ -241,6 +247,9 @@ The manifest below is relative to the repository root and compares the complete 
 - `M` `apps/gowayy-admin/web/src/App.tsx`
 - `M` `apps/gowayy-admin/web/src/lib/client.ts`
 - `M` `apps/gowayy-customer/mobile/app/auth/register.tsx`
+- `M` `apps/gowayy-customer/web/public/images/posters/food-2.svg`
+- `M` `apps/gowayy-customer/web/public/images/posters/grocery-1.svg`
+- `M` `apps/gowayy-customer/web/public/images/posters/grocery-2.svg`
 - `M` `apps/gowayy-customer/web/src/components/PosterCarousel.tsx`
 - `A` `apps/gowayy-customer/web/src/components/UniversalSearch.tsx`
 - `M` `apps/gowayy-customer/web/src/lib/client.ts`
@@ -273,6 +282,7 @@ The manifest below is relative to the repository root and compares the complete 
 - `M` `packages/api-client/src/http.ts`
 - `M` `packages/api-client/src/supabase.ts`
 - `M` `packages/types/src/index.ts`
+- `M` `packages/ui/src/index.tsx`
 - `M` `packages/ui/src/web.css`
 - `M` `packages/validation/src/index.ts`
 - `A` `scripts/provision-owner-accounts.mjs`

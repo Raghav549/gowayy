@@ -603,6 +603,19 @@ test('notifications are deduplicated, readable, and support tickets persist', as
   assert.equal(afterRead.json.unreadCount, 0);
 });
 
+// --------------------------------------------------------- admin contract --
+test('admin overview exposes the camelCased audit timestamp contract', async () => {
+  const login = await post('/api/auth/login', { email: 'admin@gowayy.app', password: 'Gw@yAdmin2026' });
+  assert.equal(login.status, 200);
+  const overview = await get('/api/admin/overview', { token: login.json.session.token });
+  assert.equal(overview.status, 200);
+  assert.ok(overview.json.recentActivity.length > 0);
+  for (const entry of overview.json.recentActivity) {
+    assert.equal(typeof entry.createdAt, 'string');
+    assert.ok(Number.isFinite(Date.parse(entry.createdAt)), `invalid audit timestamp: ${entry.createdAt}`);
+  }
+});
+
 // ----------------------------------------------------- login / account -----
 test('login, logout, forgot/reset password and account deletion work', async () => {
   const forgot = await post('/api/auth/forgot-password', { email: state.email });
