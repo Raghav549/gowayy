@@ -66,6 +66,10 @@ Set Edge Function secrets (server-side only, never in a client bundle):
 | `GOWAYY_VAPID_SUBJECT`, `GOWAYY_VAPID_PUBLIC_KEY`, `GOWAYY_VAPID_PRIVATE_KEY` | Web Push VAPID credentials (`npx web-push generate-vapid-keys`); without them browser push retries honestly and `pushConfig` omits the public key |
 | `GOWAYY_PUSH_DISPATCH_SECRET` | bearer for `push-dispatcher` (`x-gowayy-push-key` or `Authorization: Bearer`); required to claim deliveries |
 | `SUPABASE_AUTH_SMS` | configure Supabase Auth SMS (Twilio) in the Supabase dashboard; phone OTP uses `supabase.auth.signInWithOtp` + `verifyOtp` — no custom SMS code is needed |
+| `VITE_GEOCODING_REVERSE_URL` | optional browser reverse-geocode endpoint with `{lat}`, `{lng}`, `{key}` placeholders; without it the customer web falls back to offline nearest-place (never invents a location) |
+| `VITE_GEOCODING_API_KEY` | optional private key for the reverse-geocode endpoint; never commit a real key |
+
+For the customer web, location permission is requested only on explicit user action. The UI explains why location is needed (ranking nearby services, PIN-code checks, cab/parcel pickup), handles denied permissions, GPS disabled, timeouts and retry, and shows the last saved GPS/manual choice. Without permission the app still works by choosing a destination manually. See `apps/gowayy-customer/web/src/lib/location.ts`. Mobile uses `expo-location` with the same explanatory flow (`apps/gowayy-customer/mobile/src/lib/location.ts`); background tracking is not enabled.
 
 `supabase/config.toml` disables gateway `verify_jwt` because `gowayy-api` verifies the
 caller's JWT itself against `/auth/v1/user`, then forwards that JWT to PostgREST/RPC so
