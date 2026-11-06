@@ -8,10 +8,16 @@ import { client, restoreToken } from '../src/lib/client';
 import { checkForStartupUpdate } from '../src/lib/app-updates';
 import { useSession } from '../src/store';
 import { colors } from '../src/theme';
+import { usePartnerPushRegistration } from '../src/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 15_000 } } });
 
+
+function PushRuntime() {
+  usePartnerPushRegistration();
+  return null;
+}
 
 function StartupUpdatePrompt() {
   const router = useRouter();
@@ -56,6 +62,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar style="dark" />
+      <PushRuntime />
       <StartupUpdatePrompt />
       <Stack screenOptions={{ headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />

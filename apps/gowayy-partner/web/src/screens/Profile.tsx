@@ -5,7 +5,7 @@ import { FileCheck, LifeBuoy, LogOut, Trash2 } from 'lucide-react';
 import { client } from '../lib/client';
 import { useSession } from '../store';
 import { useUI } from '../store';
-import { Field, SectionHead, Skeleton, Badge } from '@gowayy/ui';
+import { Field, SectionHead, Skeleton, Badge, PushPreferences } from '@gowayy/ui';
 
 export function Profile() {
   const nav = useNavigate(); const qc = useQueryClient();
@@ -74,6 +74,8 @@ export function Profile() {
           </>
         )}
       </div>
+
+      <PushPreferences client={client} installationKey="gowayy.partner.push.installation" onStatus={(message, kind) => showToast(message, kind)} />
 
       <div className="card stack" style={{ gap: 10 }}>
         <h3 style={{ fontSize: 16 }}>Support & account</h3>

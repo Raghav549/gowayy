@@ -547,6 +547,11 @@ async function route(req, res, url) {
     audit(user.id, 'auth.verified', { adapter: 'demo-otp' });
     return ok(res, { verified: true, user: publicUser(user), session });
   }
+  if (method === 'POST' && (path === '/api/auth/phone/otp' || path === '/api/auth/phone/verify')) {
+    // The file-backed development API has no SMS provider and must never issue a
+    // development code or claim a phone was verified. Use the Supabase transport.
+    bad('SUPABASE_PHONE_AUTH_REQUIRED', 'Phone OTP requires the Supabase backend with Phone Auth and an SMS provider configured. No code was sent or verified.', 503);
+  }
   if (method === 'POST' && path === '/api/auth/login') {
     rateLimit(req, 'login', 30);
     const d = zod(loginSchema, body);
@@ -934,6 +939,11 @@ async function route(req, res, url) {
   if (method === 'GET' && path === '/api/notifications') { const { user } = auth(req); const items = db.notifications.filter((n) => n.userId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)); return send(res, 200, { items, unreadCount: items.filter((n) => !n.readAt).length }); }
   if (method === 'POST' && tail[0] === 'notifications' && tail[1] === 'read-all') { const { user } = auth(req); db.notifications.filter((n) => n.userId === user.id).forEach((n) => { n.readAt ??= nowIso(); }); return ok(res, { read: true }); }
   if (method === 'POST' && tail[0] === 'notifications' && tail[2] === 'read') { const { user } = auth(req); const n = db.notifications.find((x) => x.id === tail[1] && x.userId === user.id); if (!n) bad('NOT_FOUND', 'Notification not found', 404); n.readAt ??= nowIso(); return ok(res, { notification: n }); }
+  if (tail[0] === 'push') {
+    auth(req);
+    if (method === 'GET' && tail[1] === 'config') return ok(res, { expoEnabled: false, webPushEnabled: false });
+    bad('SUPABASE_PUSH_REQUIRED', 'Device push registration and preferences require the Supabase backend and configured push providers. Nothing was registered or changed.', 503);
+  }
   if (tail[0] === 'support' && tail[1] === 'tickets') {
     const { user } = auth(req);
     if (method === 'GET') return send(res, 200, { items: db.tickets.filter((t) => t.userId === user.id) });

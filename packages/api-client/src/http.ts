@@ -3,6 +3,7 @@ import type {
   Place, SearchHit, Session, SupportTicket, Transaction, User, VehicleClass, SharedTaxiRoute,
   Property, Restaurant, GroceryStore, TourPackage, Experience, Attraction, HiddenGem,
   ExperienceOffering, ExperienceSlot, ExperienceQuote,
+  PhoneOtpRequestResult, PhoneOtpVerificationResult, PushConfig, PushTokenRegistration, NotificationPreferences,
 } from '@gowayy/types';
 import type { PaymentMethodOption } from '@gowayy/commerce';
 
@@ -64,6 +65,8 @@ export interface GowayyClient {
   resendOtp(registrationId: string): Promise<RegisterResult>;
   verifyOtp(registrationId: string, code: string, password?: string): Promise<VerifyResult>;
   login(email: string, password: string): Promise<AuthResult>;
+  requestPhoneOtp(phone: string): Promise<PhoneOtpRequestResult>;
+  verifyPhoneOtp(phone: string, code: string, name?: { firstName?: string; lastName?: string }): Promise<PhoneOtpVerificationResult>;
   forgotPassword(email: string): Promise<{ accepted: boolean; resetId: string; demoCode?: string; demoNotice: string }>;
   resetPassword(resetId: string, code: string, password: string): Promise<{ reset: boolean }>;
   me(): Promise<User>;
@@ -99,6 +102,11 @@ export interface GowayyClient {
   notifications(): Promise<{ items: Notification[]; unreadCount: number }>;
   markNotificationRead(id: string): Promise<void>;
   markAllNotificationsRead(): Promise<void>;
+  pushConfig(): Promise<PushConfig>;
+  registerPushToken(input: PushTokenRegistration): Promise<{ registered: boolean; installationId: string }>;
+  unregisterPushToken(installationId: string): Promise<{ registered: boolean }>;
+  notificationPreferences(): Promise<NotificationPreferences>;
+  updateNotificationPreferences(input: Partial<NotificationPreferences>): Promise<NotificationPreferences>;
   tickets(): Promise<SupportTicket[]>;
   createTicket(input: { subject: string; body: string }): Promise<SupportTicket>;
   addresses(): Promise<unknown[]>;
@@ -268,6 +276,8 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     resendOtp: (registrationId) => post('/auth/otp/send', { registrationId }),
     verifyOtp: (registrationId, code, password) => post('/auth/otp/verify', { registrationId, code, ...(password ? { password } : {}) }),
     login: (email, password) => post('/auth/login', { email, password }),
+    requestPhoneOtp: (phone) => post('/auth/phone/otp', { phone }),
+    verifyPhoneOtp: (phone, code, name) => post('/auth/phone/verify', { phone, code, ...name }),
     forgotPassword: (email) => post('/auth/forgot-password', { email }),
     resetPassword: (resetId, code, password) => post('/auth/reset-password', { resetId, code, password }),
     me: async () => unwrapUser(get<{ user: User }>('/auth/me')),
@@ -308,6 +318,11 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     notifications: () => get('/notifications'),
     markNotificationRead: async (id) => { await post(`/notifications/${id}/read`, {}); },
     markAllNotificationsRead: async () => { await post('/notifications/read-all', {}); },
+    pushConfig: () => get('/push/config'),
+    registerPushToken: (input) => post('/push/register', input),
+    unregisterPushToken: (installationId) => post('/push/unregister', { installationId }),
+    notificationPreferences: () => get('/push/preferences'),
+    updateNotificationPreferences: (input) => patch('/push/preferences', input),
     tickets: async () => (await get<{ items: SupportTicket[] }>('/support/tickets')).items,
     createTicket: async (input) => (await post<{ ticket: SupportTicket }>('/support/tickets', input)).ticket,
     addresses: async () => (await get<{ items: unknown[] }>('/addresses')).items,

@@ -11,7 +11,7 @@ import { checkForStartupUpdate } from '../src/lib/app-updates';
 import { useUI } from '../src/store/useUI';
 import { useSession } from '../src/store/useSession';
 import { useTheme, spacing, radius, font } from '../src/theme';
-import { requestPushPermission, useNotificationPolling } from '../src/lib/notifications';
+import { useNativePushRegistration, useNotificationPolling } from '../src/lib/notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false } },
@@ -58,6 +58,7 @@ function StartupUpdatePrompt() {
 function Shell() {
   const { c } = useTheme();
   useNotificationPolling();
+  useNativePushRegistration();
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="dark" />
@@ -110,7 +111,6 @@ export default function RootLayout() {
         await hydrateStorage();
         useUI.getState().rehydrate();
         await useSession.getState().hydrate();
-        void requestPushPermission();
       } finally {
         if (live) setHydrated(true);
       }

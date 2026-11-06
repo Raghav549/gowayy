@@ -16,6 +16,7 @@ import type {
   Place, SearchHit, Session, SupportTicket, Transaction, User, VehicleClass, SharedTaxiRoute,
   Property, Restaurant, GroceryStore, TourPackage, Experience, Attraction, HiddenGem,
   ExperienceOffering, ExperienceSlot, ExperienceQuote,
+  PhoneOtpRequestResult, PhoneOtpVerificationResult, PushConfig, PushTokenRegistration, NotificationPreferences,
 } from '@gowayy/types';
 import type { GowayyClient, TokenStore, RegisterResult, VerifyResult, AuthResult, CatalogBundle, RouteEstimate, JourneyComponents, RecommendationGroups, Review } from './http.ts';
 import { ApiError } from './http.ts';
@@ -73,6 +74,8 @@ export function createSupabaseTransport(config: SupabaseConfig): GowayyClient {
     resendOtp: (id) => call<RegisterResult>('resendOtp', { registrationId: id }),
     verifyOtp: (id, code, password) => call<VerifyResult>('verifyOtp', { registrationId: id, code, ...(password ? { password } : {}) }),
     login: (email, password) => call<AuthResult>('login', { email, password }),
+    requestPhoneOtp: (phone) => call<PhoneOtpRequestResult>('requestPhoneOtp', { phone }),
+    verifyPhoneOtp: (phone, code, name) => call<PhoneOtpVerificationResult>('verifyPhoneOtp', { phone, code, ...name }),
     forgotPassword: (email) => call<{ accepted: boolean; resetId: string; demoCode?: string; demoNotice: string }>('forgotPassword', { email }),
     resetPassword: (resetId, code, password) => call<{ reset: boolean }>('resetPassword', { resetId, code, password }),
     me: () => call<User>('me'),
@@ -113,6 +116,11 @@ export function createSupabaseTransport(config: SupabaseConfig): GowayyClient {
     notifications: () => call<{ items: Notification[]; unreadCount: number }>('notifications'),
     markNotificationRead: async (id) => { await withId<unknown>('markNotificationRead')(id); },
     markAllNotificationsRead: async () => { await op<unknown>('markAllNotificationsRead')(); },
+    pushConfig: () => call<PushConfig>('pushConfig'),
+    registerPushToken: (input) => call<{ registered: boolean; installationId: string }>('registerPushToken', { input }),
+    unregisterPushToken: (installationId) => call<{ registered: boolean }>('unregisterPushToken', { installationId }),
+    notificationPreferences: () => call<NotificationPreferences>('notificationPreferences'),
+    updateNotificationPreferences: (input) => call<NotificationPreferences>('updateNotificationPreferences', { input }),
     tickets: () => call<SupportTicket[]>('tickets'),
     createTicket: (input) => call<SupportTicket>('createTicket', input as Record<string, unknown>),
     addresses: () => call<unknown[]>('addresses'),

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Home, CarFront, Inbox, Wallet, Settings, LayoutDashboard } from 'lucide-react';
-import { AppShell, Brand, SplashScreen, ThemeProvider } from '@gowayy/ui';
+import { AppShell, Brand, SplashScreen, ThemeProvider, useBrowserPushRegistration } from '@gowayy/ui';
+import { client } from './lib/client';
 import { useSession, useUI } from './store';
 import { Login, Register } from './screens/Auth';
 import { Onboarding } from './screens/Onboarding';
@@ -39,6 +40,7 @@ export default function App() {
   });
   const { loading } = useSession();
   const user = useSession((s) => s.user);
+  useBrowserPushRegistration({ client, installationKey: 'gowayy.partner.push.installation', enabled: Boolean(user) });
   const toast = useUI((s) => s.toast);
   const clearToast = useUI((s) => s.clearToast);
   const location = useLocation();

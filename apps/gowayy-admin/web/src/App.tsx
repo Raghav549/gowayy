@@ -10,7 +10,7 @@ import type { User } from '@gowayy/types';
 import { admin, client, errorText } from './lib/client';
 import { useSession, useUI } from './store';
 import { Badge, Card, DataTable, Field, Modal, Stat, ToastHost, type Column } from './components/ui';
-import { SplashScreen } from '@gowayy/ui';
+import { SplashScreen, PushPreferences, useBrowserPushRegistration } from '@gowayy/ui';
 import { Posters, ServiceAreas, Destinations } from './sections/content';
 import './styles.css';
 
@@ -633,6 +633,7 @@ function Settings() {
           <div className="form-actions"><button className="btn btn--primary">Save configuration</button></div>
         </form>
       </Card>
+      <div style={{ gridColumn: '1 / -1' }}><PushPreferences client={client} installationKey="gowayy.admin.push.installation" onStatus={(message, kind) => showToast(message, kind)} /></div>
     </div>
   );
 }
@@ -645,6 +646,7 @@ const SECTIONS: Record<SectionId, ComponentType> = {
 
 export default function App() {
   const { user, loading, hydrate } = useSession();
+  useBrowserPushRegistration({ client, installationKey: 'gowayy.admin.push.installation', enabled: Boolean(user) });
   const [splash, setSplash] = useState(() => {
     try { return window.sessionStorage.getItem('gowayy.admin.splashSeen') !== 'true'; }
     catch { return true; }

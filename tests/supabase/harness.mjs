@@ -20,6 +20,7 @@ export const REQUIRED_TABLES = [
   'room_availability','hotel_bookings','tour_packages','tour_activities','experience_bookings',
   'payments','transactions','refunds','commissions','settlements','notifications','reviews',
   'support_tickets','coupons','promotions','journeys','journey_services','saved_places',
+  'phone_otp_requests','notification_preferences','device_push_tokens','push_deliveries',
 ];
 
 export function migrationFiles() {

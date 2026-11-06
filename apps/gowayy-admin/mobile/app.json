@@ -31,6 +31,8 @@
       "accentSoft": "#EDE3F7"
     },
     "plugins": [
+      "expo-notifications",
+      "expo-secure-store",
       [
         "expo-splash-screen",
         {

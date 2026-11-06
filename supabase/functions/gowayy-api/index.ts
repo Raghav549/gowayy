@@ -11,13 +11,13 @@ import { config, jsonResponse, errorResponse, HttpError, readJson } from '../_sh
 import { preparePayment, processRefundResult } from '../_shared/payments.ts';
 import {
   requireCaller, select, insert, patch, rpc, serviceRpc, publicRpc, authAdmin,
-  passwordLogin, authLogout, type Caller,
+  passwordLogin, requestPhoneOtp, verifyPhoneOtp, authLogout, type Caller,
 } from '../_shared/supabase.ts';
 import {
   camelize, bookingPayload, orderPayload, vehicleShape, journeyShape, driverShape, jobShape,
 } from '../_shared/normalize.ts';
 import {
-  parse, registerSchema, loginSchema, forgotSchema, resetSchema, otpSchema, resendSchema, idemSchema,
+  parse, registerSchema, loginSchema, forgotSchema, resetSchema, otpSchema, phoneRequestSchema, phoneVerifySchema, resendSchema, idemSchema,
 } from '../_shared/validation.ts';
 
 type A = Record<string, unknown>;
@@ -52,7 +52,7 @@ const PUBLIC = new Set([
   'serviceAreas', 'serviceAreaCheck', 'commerceCategories', 'commerceProducts',
   'experienceOfferings', 'experienceSlots', 'experienceQuote',
   'productDetail', 'recommendedStores', 'paymentMethods',
-  'register', 'resendOtp', 'verifyOtp', 'login', 'forgotPassword', 'resetPassword',
+  'register', 'resendOtp', 'verifyOtp', 'requestPhoneOtp', 'verifyPhoneOtp', 'login', 'forgotPassword', 'resetPassword',
 ]);
 
 function orderView(row: unknown): A {
@@ -225,6 +225,25 @@ const handlers: Record<string, Handler> = {
       session: { token: session.access_token, userId, expiresAt: new Date(Date.now() + session.expires_in * 1000).toISOString() },
     };
   },
+  requestPhoneOtp: async (_c, a) => {
+    const d = parse(phoneRequestSchema, a);
+    const guard = await publicRpc<A>('rpc_phone_otp_request_guard', { p_phone: d.phone });
+    await requestPhoneOtp(d.phone);
+    return { accepted: true, resendAfterSeconds: guard.resendAfterSeconds ?? 60 };
+  },
+  verifyPhoneOtp: async (_c, a) => {
+    const d = parse(phoneVerifySchema, a);
+    await publicRpc<A>('rpc_phone_otp_verify_guard', { p_phone: d.phone });
+    const session = await verifyPhoneOtp(d.phone, d.code);
+    await serviceRpc('rpc_finalize_phone_auth', {
+      p_payload: { authUserId: session.user.id, phone: d.phone, firstName: d.firstName ?? null, lastName: d.lastName ?? null },
+    });
+    const user = await me(session.access_token);
+    return {
+      user,
+      session: { token: session.access_token, userId: session.user.id, expiresAt: new Date(Date.now() + session.expires_in * 1000).toISOString() },
+    };
+  },
   login: async (_c, a) => {
     const d = parse(loginSchema, a);
     const session = await passwordLogin(d.email, d.password);
@@ -348,6 +367,15 @@ const handlers: Record<string, Handler> = {
   },
   markNotificationRead: async (c, a) => rpc('rpc_notifications_read', { p_id: s(a, 'id') }, tokenOf(c)),
   markAllNotificationsRead: async (c) => rpc('rpc_notifications_read_all', {}, tokenOf(c)),
+  pushConfig: async () => ({
+    expoEnabled: config().expoPushEnabled,
+    webPushEnabled: config().webPushEnabled,
+    ...(config().webPushEnabled ? { vapidPublicKey: config().vapidPublicKey } : {}),
+  }),
+  registerPushToken: async (c, a) => rpc('rpc_register_push_token', { p_payload: obj(a, 'input') }, tokenOf(c)),
+  unregisterPushToken: async (c, a) => rpc('rpc_unregister_push_token', { p_installation_id: s(a, 'installationId') }, tokenOf(c)),
+  notificationPreferences: async (c) => rpc('rpc_notification_preferences', { p_payload: null }, tokenOf(c)),
+  updateNotificationPreferences: async (c, a) => rpc('rpc_notification_preferences', { p_payload: obj(a, 'input') }, tokenOf(c)),
   tickets: async (c) => camel(await select('support_tickets', 'select=*&order=created_at.desc', tokenOf(c))),
   createTicket: async (c, a) => camel(await insert('support_tickets', {
     user_id: c!.id, subject: s(a, 'subject'), body: s(a, 'body'),

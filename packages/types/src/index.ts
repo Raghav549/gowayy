@@ -22,7 +22,7 @@ export type PaymentStatus =
   | 'refunded' | 'partially_refunded';
 
 export type PaymentMethod = 'upi' | 'upi_intent' | 'gateway' | 'cash';
-export type Role = 'customer' | 'driver' | 'restaurant' | 'grocery' | 'property' | 'tour_operator';
+export type Role = 'customer' | 'driver' | 'restaurant' | 'grocery' | 'property' | 'tour_operator' | 'admin';
 export type VerificationState = 'unverified' | 'pending' | 'verified' | 'rejected';
 export type ThemeMode = 'light' | 'dark';
 
@@ -370,6 +370,32 @@ export interface User {
 }
 
 export interface Session { token: string; userId: string; expiresAt: string }
+
+export interface PhoneOtpRequestResult { accepted: true; resendAfterSeconds: number }
+export interface PhoneOtpVerificationResult { user: User; session: Session }
+export type PushPlatform = 'android' | 'ios' | 'web';
+export interface WebPushSubscriptionInput {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: { auth: string; p256dh: string };
+}
+export interface PushTokenRegistration {
+  provider: 'expo' | 'web_push';
+  platform: PushPlatform;
+  installationId: string;
+  token: string;
+  subscription?: WebPushSubscriptionInput;
+}
+export interface PushConfig { expoEnabled: boolean; webPushEnabled: boolean; vapidPublicKey?: string }
+export interface NotificationPreferences {
+  pushEnabled: boolean;
+  bookingUpdates: boolean;
+  orderUpdates: boolean;
+  paymentUpdates: boolean;
+  partnerUpdates: boolean;
+  marketing: boolean;
+  updatedAt?: string;
+}
 
 export interface DriverProfile {
   id: string;

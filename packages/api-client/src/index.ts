@@ -1,6 +1,7 @@
 export * from './http.ts';
 export * from './token-store.ts';
 export * from './supabase.ts';
+export * from './web-push.ts';
 
 import { createHttpTransport, type GowayyClient, type TokenStore } from './http.ts';
 import { createSupabaseTransport } from './supabase.ts';
