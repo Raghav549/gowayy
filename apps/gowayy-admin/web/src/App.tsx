@@ -132,7 +132,7 @@ function Overview() {
       await qc.invalidateQueries({ queryKey: ['admin'] });
     } catch (e) { showToast(errorText(e), 'error'); }
   };
-  if (q.isLoading) return <p className="muted">Loading the control centre…</p>;
+  if (q.isLoading) return <div className="stack-lg" aria-hidden="true" aria-label="Loading overview"><div className="stat-grid"><div className="skeleton" style={{ height: 90, borderRadius: 14 }} /><div className="skeleton" style={{ height: 90, borderRadius: 14 }} /><div className="skeleton" style={{ height: 90, borderRadius: 14 }} /><div className="skeleton" style={{ height: 90, borderRadius: 14 }} /></div><div className="grid-2"><div className="skeleton" style={{ height: 180, borderRadius: 16 }} /><div className="skeleton" style={{ height: 180, borderRadius: 16 }} /></div><div className="skeleton" style={{ height: 220, borderRadius: 16 }} /></div>;
   if (q.isError) return <div className="notice" role="alert">Overview could not be loaded: {errorText(q.error)}</div>;
   const t = q.data!.totals;
   return (
@@ -531,7 +531,7 @@ function Support() {
 
 function Analytics() {
   const q = useQuery({ queryKey: ['admin', 'analytics'], queryFn: () => admin<{ days: Array<{ date: string; revenuePaise: number; orders: number; bookings: number }>; byService: Record<string, { count: number; valuePaise: number }>; byDestination: Record<string, number> }>('/analytics') });
-  if (q.isLoading) return <p className="muted">Loading analytics…</p>;
+  if (q.isLoading) return <div className="stack-lg" aria-hidden="true" aria-label="Loading analytics"><div className="skeleton" style={{ height: 160, borderRadius: 16 }} /><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /></div>;
   if (!q.data) return <div className="notice">Analytics unavailable: {errorText(q.error)}</div>;
   const max = Math.max(1, ...q.data.days.map((d) => d.revenuePaise));
   return (
@@ -616,7 +616,7 @@ function Settings() {
     try { await admin('/settings', { method: 'PATCH', body: { services: { [name]: enabled } } }); await qc.invalidateQueries({ queryKey: ['admin'] }); showToast('Service availability updated', 'success'); }
     catch (e) { showToast(errorText(e), 'error'); }
   };
-  if (q.isLoading) return <p className="muted">Loading settings…</p>;
+  if (q.isLoading) return <div className="stack" aria-hidden="true" aria-label="Loading settings"><div className="skeleton" style={{ height: 24, width: 160, borderRadius: 8 }} /><div className="skeleton" style={{ height: 180, borderRadius: 16 }} /><div className="skeleton" style={{ height: 120, borderRadius: 16 }} /></div>;
   return (
     <div className="grid-2">
       <Card title="Service availability">

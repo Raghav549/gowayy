@@ -87,8 +87,46 @@ a { color: inherit; }
 }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--gw-raised); color: var(--gw-text); border: 1px solid var(--gw-border); padding: 12px 20px; border-radius: 12px; font-size: 14px; box-shadow: var(--gw-shadow-md); }
 .toast--success { background: var(--gw-success); color: #fff; } .toast--error { background: var(--gw-danger); color: #fff; }
-.skeleton { background: linear-gradient(100deg, var(--gw-surface-alt) 40%, var(--gw-raised) 50%, var(--gw-surface-alt) 60%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; border-radius: 8px; }
-@keyframes shimmer { to { background-position: -200% 0; } }
+/* ===== GOWAYY Professional Skeleton System — Flipkart-inspired, content-aware ===== */
+.skeleton {
+  --sk-from: var(--gw-surface-alt);
+  --sk-shine: var(--gw-surface);
+  background: linear-gradient(100deg, var(--sk-from) 30%, var(--sk-shine) 50%, var(--sk-from) 70%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton--text { height: 13px; border-radius: 6px; }
+.skeleton--title { height: 20px; border-radius: 8px; min-width: 120px; }
+.skeleton--subtitle { height: 14px; width: 60%; border-radius: 6px; }
+.skeleton--avatar { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; }
+.skeleton--avatar-sm { width: 36px; height: 36px; border-radius: 10px; }
+.skeleton--avatar-lg { width: 56px; height: 56px; border-radius: 16px; }
+.skeleton--image { width: 100%; aspect-ratio: 4/3; border-radius: 14px; }
+.skeleton--image-16-9 { aspect-ratio: 16/9; }
+.skeleton--image-1-1 { aspect-ratio: 1; }
+.skeleton--banner { width: 100%; aspect-ratio: 16/5; border-radius: 18px; }
+.skeleton--btn { height: 42px; border-radius: 12px; min-width: 96px; }
+.skeleton--btn-sm { height: 34px; border-radius: 10px; min-width: 76px; }
+.skeleton--pill { height: 28px; border-radius: 999px; min-width: 64px; }
+.skeleton--card { padding: 18px; border: 1px solid var(--gw-border); border-radius: 16px; background: var(--gw-surface); display: flex; flex-direction: column; gap: 12px; }
+@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; background: var(--gw-surface-alt); } }
+.sk-stack { display: flex; flex-direction: column; gap: 10px; }
+.sk-row { display: flex; align-items: center; gap: 12px; }
+.sk-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.sk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 900px) { .sk-grid-2, .sk-grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .sk-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.sk-section { display: flex; flex-direction: column; gap: 16px; margin-top: 34px; }
+.sk-card-skeleton { background: var(--gw-surface); border: 1px solid var(--gw-border); border-radius: 18px; overflow: hidden; }
+.sk-card-skeleton__media { background: var(--gw-surface-alt); }
+.sk-card-skeleton__body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.skeleton-section { display: flex; flex-direction: column; gap: 12px; }
+.skeleton-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .chip { border: 1px solid var(--gw-border); background: var(--gw-surface); color: var(--gw-text); border-radius: 999px; padding: 7px 14px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .chip--active { background: var(--gw-accent); color: var(--gw-accent-contrast); border-color: var(--gw-accent); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }

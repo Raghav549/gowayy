@@ -96,7 +96,7 @@ export function SearchPage() {
                   <span className="list-row__body"><span className="list-row__title small">{s.name}</span><span className="list-row__sub tiny muted">{s.productCount ?? 0} products{s.deliveryCoverageKm ? ` · ${s.deliveryCoverageKm} km` : ''}</span></span>
                 </Link>
               ))}
-              {stores.isLoading && <p className="small muted">Loading stores…</p>}
+              {stores.isLoading && <div className="grid-2" style={{ marginTop: 12 }}><div className="skeleton" style={{ height: 120, borderRadius: 16 }} /><div className="skeleton" style={{ height: 120, borderRadius: 16 }} /></div>}
               {stores.data && (stores.data.items?.length ?? 0) === 0 && <p className="small muted">No stores listed yet.</p>}
             </div>
           </section>
@@ -107,12 +107,7 @@ export function SearchPage() {
         <section aria-live="polite">
           <h3 style={{ fontSize: 16 }}>Results for “{q}”{results.data ? ` · ${results.data.length}` : ''}</h3>
 
-          {results.isLoading && (
-            <div className="stack" style={{ marginTop: 12 }}>
-              {[0, 1, 2].map((i) => <div key={i} className="card skeleton-row" aria-hidden="true" />)}
-              <p className="small muted">Searching GOWAYY…</p>
-            </div>
-          )}
+          {results.isLoading && (<div style={{ marginTop: 12 }}><div className="skeleton" style={{ height: 14, width: 160, borderRadius: 6, marginBottom: 12 }} /><div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><div className="skeleton" style={{ height: 64, borderRadius: 12 }} /><div className="skeleton" style={{ height: 64, borderRadius: 12 }} /><div className="skeleton" style={{ height: 64, borderRadius: 12 }} /></div></div>)}
           {results.isError && (
             <div className="notice notice--info" style={{ marginTop: 12 }} role="alert">
               Search is temporarily unavailable. {apiErrorText(results.error)} <button className="link" onClick={() => void results.refetch()}>Try again</button>

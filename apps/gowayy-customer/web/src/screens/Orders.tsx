@@ -7,7 +7,7 @@ import { client } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useUI } from '../store/useUI';
 import { downloadInvoice } from '../lib/invoice';
-import { SectionHead, StatusBadge, EmptyState, Spinner, PriceLines } from '../components/ui';
+import { SectionHead, StatusBadge, EmptyState, Spinner, PriceLines, SkeletonList, Skeleton, SkeletonOrderCard } from '../components/ui';
 
 interface OrderView {
   id: string; reference: string; service: string; status: string; createdAt: string;
@@ -122,7 +122,7 @@ export function Orders() {
   return (
     <div>
       <SectionHead eyebrow="Order history" title="Your orders" action={<Link className="btn btn--secondary" to="/categories">Shop <ArrowRight size={16} /></Link>} />
-      {q.isLoading && <Spinner />}
+      {q.isLoading && <SkeletonList rows={4} />}
       {q.isError && <div className="notice notice--info" role="alert">Orders could not be loaded. <button className="link" onClick={() => void q.refetch()}>Retry</button></div>}
       {q.data?.length === 0 && <EmptyState title="No orders yet" body="Food, groceries and shop orders will appear here with tracking, invoices and delivery codes." action={<Link className="btn btn--primary" to="/categories"><ShoppingBag size={16} /> Start shopping</Link>} />}
       <div className="stack">
@@ -137,7 +137,7 @@ export function OrderDetail() {
   usePageMeta('Order details');
   const q = useQuery({ queryKey: ['order-detail', id], queryFn: async () => (await client.orderDetail?.(id)) as unknown as { order: OrderView; payment: { status: string; method: string } | null } , enabled: Boolean(id) });
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, [id]);
-  if (q.isLoading) return <Spinner label="Loading order…" />;
+  if (q.isLoading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}><Skeleton style={{ height: 20, width: 140 }} /><SkeletonOrderCard /><Skeleton style={{ height: 180, borderRadius: 16 }} /></div>;
   if (!q.data?.order) return <EmptyState title="Order not found" body="This order is not available on your account." action={<Link className="btn btn--primary" to="/orders"><ArrowLeft size={16} /> All orders</Link>} />;
   return (
     <div className="stack">

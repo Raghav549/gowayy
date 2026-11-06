@@ -181,7 +181,7 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
             );
           })}
         </div>
-        {products.isLoading && <p className="small muted" style={{ marginTop: 14 }}>Loading listings…</p>}
+        {products.isLoading && <div className="grid-3" style={{ marginTop: 14 }}><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /><div className="skeleton" style={{ height: 240, borderRadius: 16 }} /></div>}
         {!products.isLoading && visible.length === 0 && (
           <EmptyState title="No listings match yet" body="Partners publish new products from the GOWAYY Partner app. Try clearing the category or search."
             action={<button className="btn btn--secondary" onClick={() => { setText(''); setCategory(''); }}>Clear filters</button>} />
