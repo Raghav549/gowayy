@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { applyTheme, resolveInitialTheme, type ThemeMode } from '@gowayy/design-system';
-import { readStored, writeStored } from '../lib/client';
+import { readLaunchStored, readStored, writeLaunchStored, writeStored } from '../lib/client';
 
 interface UIState {
   theme: ThemeMode;
@@ -21,11 +21,11 @@ interface UIState {
 export const useUI = create<UIState>((set) => ({
   theme: resolveInitialTheme(),
   onboarded: readStored<boolean>('gowayy.onboarded', false),
-  splashDone: readStored<boolean>('gowayy.splashSeen', false),
+  splashDone: readLaunchStored<boolean>('gowayy.splashSeen', false),
   notificationsOpen: false, searchOpen: false, toast: null,
   setTheme: (theme) => { applyTheme(theme); set({ theme }); },
   setOnboarded: (onboarded) => { writeStored('gowayy.onboarded', onboarded); set({ onboarded }); },
-  setSplashDone: (splashDone) => { writeStored('gowayy.splashSeen', splashDone); set({ splashDone }); },
+  setSplashDone: (splashDone) => { writeLaunchStored('gowayy.splashSeen', splashDone); set({ splashDone }); },
   setNotificationsOpen: (notificationsOpen) => set({ notificationsOpen }),
   setSearchOpen: (searchOpen) => set({ searchOpen }),
   showToast: (message, kind = 'info') => set({ toast: { id: Date.now(), message, kind } }),

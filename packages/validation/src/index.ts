@@ -125,9 +125,18 @@ export const orderSchema = z.object({
 export const tourismBookingSchema = z.object({
   offeringId: z.string().min(1),
   service: z.enum(['tourism', 'experience', 'package']),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  slotId: z.string().min(1).nullable().optional(),
   guests: z.number().int().min(1).max(20),
+  answers: z.record(z.string(), z.string().trim().max(1000)).optional(),
   journeyId: z.string().nullable(),
+}).superRefine((value, ctx) => {
+  if (value.service === 'experience' && !value.slotId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['slotId'], message: 'Choose an available time slot' });
+  }
+  if (!value.slotId && !value.date) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['date'], message: 'Choose a travel date' });
+  }
 });
 
 export const parcelBookingSchema = z.object({

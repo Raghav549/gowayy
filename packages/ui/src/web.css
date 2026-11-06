@@ -188,3 +188,25 @@ body { background: var(--gw-gradient-page); color: var(--gw-text); }
 @media (prefers-reduced-motion: reduce) { .splash-page__mark { animation: none; opacity: 1; transform: none; } }
 /* No role-specific legacy palettes: the shared purple/orange mark and lilac foundation remain consistent. */
 .app-customer, .app-partner, .app-explore { --gw-accent:#421080; --gw-accent-contrast:#FFFFFF; --gw-champagne:#FFA500; --gw-champagne-deep:#421080; --gw-champagne-light:#FFC44D; }
+
+/* Responsive authentication and launch consistency (Partner + Admin). */
+.auth-stack {
+  width: 100%;
+  max-width: 440px;
+  min-width: 0;
+  margin: clamp(16px, 6vh, 64px) auto;
+  padding: clamp(4px, 2vw, 16px);
+}
+.auth-stack > *, .auth-stack .row, .auth-stack .input, .auth-stack .icon-btn { min-width: 0; }
+.auth-stack .row { width: 100%; }
+.auth-stack .icon-btn { flex: 0 0 48px; height: 48px; }
+.splash-page { background: radial-gradient(120% 120% at 50% 20%, #5B2A93 0%, #421080 42%, #2A1740 100%); }
+.bottom-nav a { min-width: 0; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+.shell__main, .shell__main > *, .grid-2 > *, .grid-3 > *, .card { min-width: 0; }
+.list-row__title, .list-row__sub { overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .shell__main { padding-inline: 14px; }
+  .auth-stack { padding-inline: 2px; }
+  .bottom-nav { left: 6px; right: 6px; padding-inline: 4px; }
+  .bottom-nav a { font-size: 9px; }
+}

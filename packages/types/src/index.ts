@@ -217,6 +217,44 @@ export interface Experience {
   host: string;
 }
 
+/** A verified host's real, bookable offering (not a static catalogue suggestion). */
+export interface ExperienceOffering {
+  id: string;
+  kind: 'experience' | 'package';
+  destinationId: string;
+  destinationName: string | null;
+  name: string;
+  description: string;
+  durationHours: number;
+  durationMinutes: number;
+  pricePaise: number;
+  capacity: number;
+  meetingPoint: string;
+  requirements: string;
+  host: { id: string; name: string | null };
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ExperienceSlot {
+  id: string;
+  offeringId: string;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  booked: number;
+  available: number;
+  active?: boolean;
+}
+
+export interface ExperienceQuote {
+  offering: ExperienceOffering;
+  slot: ExperienceSlot;
+  guests: number;
+  service: 'experience' | 'package';
+  price: PriceBreakdown;
+}
+
 export interface Journey {
   id: string;
   userId: string;
@@ -257,6 +295,9 @@ export interface Booking {
   paymentId: string | null;
   createdAt: string;
   updatedAt: string;
+  guests?: number | null;
+  visitDate?: string | null;
+  slotId?: string | null;
   statusHistory: Array<{ status: BookingStatus; at: string; by: string; note?: string }>;
 }
 
@@ -288,7 +329,7 @@ export interface Payment {
   method: PaymentMethod;
   status: PaymentStatus;
   amountPaise: number;
-  provider: 'sandbox';
+  provider: 'sandbox' | 'razorpay' | (string & {});
   providerReference: string | null;
   idempotencyKey: string;
   createdAt: string;

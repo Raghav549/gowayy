@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Search, X, ArrowRight, MapPin, BedDouble, UtensilsCrossed, ShoppingBasket, Sparkles,
+  ArrowRight, MapPin, BedDouble, UtensilsCrossed, ShoppingBasket, Sparkles,
   Ticket, CarFront, Store, BadgePercent, Clock,
 } from 'lucide-react';
 import { catalogue } from '@gowayy/catalog';
@@ -15,6 +15,7 @@ import { ImageFrame, SectionHead, Spinner } from '../components/ui';
 import { CategoryArt, CATEGORY_ART } from '../components/CategoryArt';
 import { DestinationCard } from './shared';
 import { PosterCarousel, type Poster } from '../components/PosterCarousel';
+import { UniversalSearch } from '../components/UniversalSearch';
 
 interface StorefrontBanner { id: string; title: string; subtitle?: string; href: string; image?: { assetPath?: string; thumbPath?: string; alt?: string } | null }
 interface StorefrontProduct { id: string; slug: string; name: string; brand?: string; category?: string; storeId?: string; images?: Array<{ status: string; path?: string; alt: string; assetPath?: string }>; variants?: Array<{ pricePaise: number; mrpPaise?: number }> }
@@ -34,15 +35,12 @@ const FALLBACK: Storefront = {
 
 export function Home() {
   usePageMeta('GOWAYY — one journey for travel, stays, food and local shops', 'Book cabs, stays, food, groceries, tourism and local experiences across the Darjeeling Himalaya.');
-  const navigate = useNavigate();
   const journey = useJourney((s) => s.journey);
   const ensureJourney = useJourney((s) => s.ensure);
   const user = useSession((s) => s.user);
   const [query, setQuery] = useState('');
-  const [focused, setFocused] = useState(false);
   const [slide, setSlide] = useState(0);
   const [paused, setPaused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { void ensureJourney().catch(() => { /* offline: catalogue still renders */ }); }, [ensureJourney]);
 
@@ -63,7 +61,6 @@ export function Home() {
     queryFn: async () => (await client.commerceProducts()).items as Array<{ id: string; slug: string; name: string; brand: string; category: string; storeId: string; images?: Array<{ status: string; path?: string; assetPath?: string; alt: string }>; variants: Array<{ pricePaise: number; stock: number; mrpPaise?: number }> }>,
     staleTime: 60_000,
   });
-  const hits = useQuery({ queryKey: ['home-search', query], queryFn: () => client.search(query), enabled: query.trim().length > 1 });
   const recentSearches = useQuery({ queryKey: ['recent-searches'], queryFn: () => client.recentSearches(), enabled: Boolean(user) });
 
   const activeDestination = journey?.destinationId ? catalogue.destinations.find((d) => d.id === journey.destinationId) : null;
@@ -94,55 +91,15 @@ export function Home() {
   const popularFood = useMemo(() => [...foodProducts].sort((a, b) => (a.variants?.[0]?.pricePaise ?? 0) - (b.variants?.[0]?.pricePaise ?? 0)).slice(0, 6), [foodProducts]);
   const groceryPosters = posters.data?.grocery?.length ? posters.data.grocery : (storefront.posters?.grocery ?? []);
   const foodPosters = posters.data?.food?.length ? posters.data.food : (storefront.posters?.food ?? []);
-  const submitSearch = () => {
-    const term = query.trim();
-    if (!term) { inputRef.current?.focus(); return; }
-    if (hits.data?.[0]) navigate(hits.data[0].href);
-    else navigate(`/search?q=${encodeURIComponent(term)}`);
-  };
-
   return (
     <div className="home">
       <section className="home-hero">
         <div className="home-hero__copy">
           <div className="eyebrow">Good to see you{user ? `, ${user.firstName}` : ''}</div>
           <h1>Where to next?</h1>
-          <p className="muted">Plan a Darjeeling Himalaya journey — stays, cabs, food and local shops in one place.</p>
         </div>
 
-        <div className="search-field" role="search">
-          <Search size={18} aria-hidden="true" className="search-field__icon" />
-          <input
-            ref={inputRef}
-            className="search-field__input"
-            type="search"
-            value={query}
-            placeholder="Search destinations, hotels, shops, dishes…"
-            aria-label="Search GOWAYY"
-            autoComplete="off"
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => window.setTimeout(() => setFocused(false), 160)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submitSearch(); if (e.key === 'Escape') setFocused(false); }}
-          />
-          {query && <button type="button" className="search-field__clear" aria-label="Clear search" onClick={() => { setQuery(''); inputRef.current?.focus(); }}><X size={16} /></button>}
-          <button type="button" className="search-field__submit" onClick={submitSearch}>Search</button>
-
-          {focused && query.trim().length > 1 && (
-            <div className="search-suggestions" role="listbox" aria-label="Search suggestions">
-              {hits.isLoading && <div className="search-suggestions__state"><Spinner label="Searching…" /></div>}
-              {hits.isError && <div className="search-suggestions__state small">Search is unavailable right now. Try again in a moment.</div>}
-              {hits.data?.length === 0 && <div className="search-suggestions__state small muted">No matches yet — try a destination, dish or shop.</div>}
-              {hits.data?.slice(0, 6).map((h) => (
-                <button key={`${h.kind}-${h.id}`} type="button" className="search-suggestion" onClick={() => navigate(h.href)}>
-                  <Search size={14} aria-hidden="true" />
-                  <span className="search-suggestion__body"><span className="search-suggestion__title">{h.title}</span><span className="search-suggestion__sub">{h.subtitle}</span></span>
-                  <span className="badge">{h.kind.replace(/_/g, ' ')}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <UniversalSearch value={query} onChange={setQuery} placeholder="Search destinations, hotels, shops, dishes…" />
 
         <div className="home-hero__chips">
           {(recentSearches.data?.items.length ? recentSearches.data.items.slice(0, 4) : ['Darjeeling', 'Mirik', 'Momos', 'Homestay']).map((term) => (
@@ -192,12 +149,12 @@ export function Home() {
       )}
 
       <section className="section">
-        <SectionHead eyebrow={`Near ${activeDestination?.name ?? 'Darjeeling'}`} title="Popular destinations" action={<Link className="link" to="/explore">Explore all →</Link>} />
+        <SectionHead eyebrow={`Near ${activeDestination?.name ?? 'Darjeeling'}`} title="Popular destinations" action={<Link className="btn btn--secondary btn--sm" to="/explore">Explore all <ArrowRight size={14} /></Link>} />
         <div className="h-scroll">{destinations.map((d) => <DestinationCard key={d.id} destination={d} />)}</div>
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Verified stays" title="Recommended hotels & homestays" action={<Link className="link" to="/hotels">All stays →</Link>} />
+        <SectionHead eyebrow="Verified stays" title="Recommended hotels & homestays" action={<Link className="btn btn--secondary btn--sm" to="/hotels">All stays <ArrowRight size={14} /></Link>} />
         <div className="grid-3">
           {nearbyHotels.map((p) => (
             <Link key={p.id} to={`/hotels/${p.id}`} className="card card--pad0 card--hover listing-card">
@@ -214,7 +171,7 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Local kitchens" title="Food from hill stores" action={<Link className="link" to="/food">All food →</Link>} />
+        <SectionHead eyebrow="Local kitchens" title="Food from hill stores" action={<Link className="btn btn--secondary btn--sm" to="/food">All food <ArrowRight size={14} /></Link>} />
         <div className="grid-3">
           {foodProducts.slice(0, 3).map((p) => {
             const img = p.images?.find((i) => i.status !== 'unavailable' && (i.path || i.assetPath));
@@ -236,7 +193,7 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Everyday needs" title="Grocery & convenience stores near you" action={<Link className="link" to="/groceries">All stores →</Link>} />
+        <SectionHead eyebrow="Everyday needs" title="Grocery & convenience stores near you" action={<Link className="btn btn--secondary btn--sm" to="/groceries">All stores <ArrowRight size={14} /></Link>} />
         <div className="grid-3">
           {nearbyStores.map((s) => (
             <Link key={s.id} to={`/groceries/${s.id}`} className="card card--hover">
@@ -251,7 +208,7 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Shop" title={shopStores.length ? 'Shops & their products' : 'Local shops'} subtitle="Browse a store and add its actual products to your cart." action={<Link className="link" to="/categories">Open Shop →</Link>} />
+        <SectionHead eyebrow="Shop" title={shopStores.length ? 'Shops & their products' : 'Local shops'} action={<Link className="btn btn--secondary btn--sm" to="/categories">All shops <ArrowRight size={14} /></Link>} />
         {storefrontQuery.isLoading && <Spinner label="Loading shops…" />}
         <div className="grid-2 store-grid">
           {shopStores.map((s) => {
@@ -303,7 +260,7 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Most ordered" title="Popular food items" action={<Link className="link" to="/food">Order food →</Link>} />
+        <SectionHead eyebrow="Most ordered" title="Popular food items" action={<Link className="btn btn--secondary btn--sm" to="/food">See all <ArrowRight size={14} /></Link>} />
         <div className="food-grid">
           {popularFood.map((p) => {
             const img = p.images?.find((i) => i.status !== 'unavailable' && (i.path || i.assetPath));
@@ -326,7 +283,7 @@ export function Home() {
 
       <section className="section grid-2 home-two-col">
         <div>
-          <SectionHead eyebrow="Do something local" title="Local experiences" action={<Link className="link" to="/experiences">All →</Link>} />
+          <SectionHead eyebrow="Do something local" title="Local experiences" action={<Link className="btn btn--secondary btn--sm" to="/experiences">See all <ArrowRight size={14} /></Link>} />
           <div className="experience-grid">
             {experiences.map((e) => {
               const dest = catalogue.destinations.find((d) => d.id === e.destinationId);
@@ -348,7 +305,7 @@ export function Home() {
           </div>
         </div>
         <div>
-          <SectionHead eyebrow="Curated" title="Tour packages" action={<Link className="link" to="/packages">All →</Link>} />
+          <SectionHead eyebrow="Curated" title="Tour packages" action={<Link className="btn btn--secondary btn--sm" to="/packages">See all <ArrowRight size={14} /></Link>} />
           <div className="list">
             {packages.map((p) => (
               <Link key={p.id} to={`/packages?offering=${p.id}`} className="list-row">
@@ -363,7 +320,7 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Getting around" title="Available transport" action={<Link className="link" to="/cabs">Book a cab →</Link>} />
+        <SectionHead eyebrow="Getting around" title="Available transport" action={<Link className="btn btn--secondary btn--sm" to="/cabs">Book a cab <ArrowRight size={14} /></Link>} />
         <div className="grid-3">
           <Link to="/cabs" className="card card--hover transport-card"><CarFront size={20} aria-hidden="true" /><div><strong>Private cabs</strong><span className="small muted">Airport transfers, outstation & tourist taxis</span></div></Link>
           <Link to="/cabs?tab=shared" className="card card--hover transport-card"><CarFront size={20} aria-hidden="true" /><div><strong>Shared taxis</strong><span className="small muted">Fixed routes, per-seat fares from designated stands</span></div></Link>

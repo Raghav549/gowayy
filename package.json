@@ -30,6 +30,7 @@
     "typecheck:mobile": "tsc --noEmit -p apps/gowayy-customer/mobile/tsconfig.json",
     "test:supabase": "node --test tests/supabase/*.test.mjs",
     "seed:supabase": "node scripts/generate-supabase-seed.mjs",
+    "provision:owners": "node scripts/provision-owner-accounts.mjs",
     "test:edge": "deno check --config supabase/functions/deno.json supabase/functions/gowayy-api/index.ts supabase/functions/payment-webhook/index.ts supabase/functions/tests/shared.test.ts && deno test --config supabase/functions/deno.json supabase/functions/tests/",
     "bundle:mobile:web": "cd apps/gowayy-customer/mobile && npx expo export --platform web --output-dir /tmp/gowayy-mobile-web",
     "bundle:mobile:android": "cd apps/gowayy-customer/mobile && npx expo export --platform android --output-dir /tmp/gowayy-mobile-android",

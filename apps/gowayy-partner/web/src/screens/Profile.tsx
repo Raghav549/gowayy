@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileCheck, LifeBuoy, LogOut, Trash2 } from 'lucide-react';
@@ -15,6 +15,15 @@ export function Profile() {
   const verification = useQuery({ queryKey: ['partner-verification'], queryFn: () => client.partnerVerification() });
   const profile = useQuery({ queryKey: ['partner-profile'], queryFn: () => client.partnerProfile() });
   const [biz, setBiz] = useState({ businessName: '', phone: '', address: '', gstin: '', description: '' });
+  const savedProfile = (profile.data as { profile?: typeof biz } | undefined)?.profile;
+  useEffect(() => {
+    if (!savedProfile) return;
+    setBiz({
+      businessName: savedProfile.businessName ?? '', phone: savedProfile.phone ?? '',
+      address: savedProfile.address ?? '', gstin: savedProfile.gstin ?? '',
+      description: savedProfile.description ?? '',
+    });
+  }, [savedProfile]);
   const saveProfile = useMutation({
     mutationFn: () => client.updatePartnerProfile(biz),
     onSuccess: async () => { showToast('Business profile saved', 'success'); await qc.invalidateQueries({ queryKey: ['partner-profile'] }); },

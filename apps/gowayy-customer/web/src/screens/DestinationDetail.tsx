@@ -74,7 +74,7 @@ export function DestinationDetail() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Stay here" title={`Hotels & homestays in ${destination.name}`} action={<Link className="link" to="/hotels">All stays →</Link>} />
+        <SectionHead eyebrow="Stay here" title={`Hotels & homestays in ${destination.name}`} action={<Link className="btn btn--secondary btn--sm" to="/hotels">All stays <ArrowRight size={14} /></Link>} />
         <div className="grid-3">
           {stays.map((p) => (
             <Link key={p.id} to={`/hotels/${p.id}?journey=${destination.id}`} className="card card--pad0 card--hover">
@@ -92,7 +92,7 @@ export function DestinationDetail() {
 
       <section className="section grid-2 home-two-col">
         <div>
-          <SectionHead eyebrow="Eat" title="Restaurants & food delivery" action={<Link className="link" to="/food">All →</Link>} />
+          <SectionHead eyebrow="Eat" title="Restaurants & food delivery" action={<Link className="btn btn--secondary btn--sm" to="/food">All food <ArrowRight size={14} /></Link>} />
           <div className="list">
             {restaurants.map((r) => (
               <Link key={r.id} to={`/food/${r.id}`} className="list-row">
@@ -105,7 +105,7 @@ export function DestinationDetail() {
           </div>
         </div>
         <div>
-          <SectionHead eyebrow="Stock up" title="Grocery & local stores" action={<Link className="link" to="/groceries">All →</Link>} />
+          <SectionHead eyebrow="Stock up" title="Grocery & local stores" action={<Link className="btn btn--secondary btn--sm" to="/groceries">All stores <ArrowRight size={14} /></Link>} />
           <div className="list">
             {stores.map((s) => (
               <Link key={s.id} to={`/groceries/${s.id}`} className="list-row">
@@ -121,7 +121,7 @@ export function DestinationDetail() {
 
       <section className="section grid-2 home-two-col">
         <div>
-          <SectionHead eyebrow="Sightseeing" title="Tour packages" action={<Link className="link" to="/packages">All →</Link>} />
+          <SectionHead eyebrow="Sightseeing" title="Tour packages" action={<Link className="btn btn--secondary btn--sm" to="/packages">See all <ArrowRight size={14} /></Link>} />
           <div className="list">
             {packages.map((p) => (
               <Link key={p.id} to={`/packages?offering=${p.id}`} className="list-row">
@@ -134,7 +134,7 @@ export function DestinationDetail() {
           </div>
         </div>
         <div>
-          <SectionHead eyebrow="Local" title="Experiences" action={<Link className="link" to="/experiences">All →</Link>} />
+          <SectionHead eyebrow="Local" title="Experiences" action={<Link className="btn btn--secondary btn--sm" to="/experiences">See all <ArrowRight size={14} /></Link>} />
           <div className="list">
             {experiences.map((e) => (
               <Link key={e.id} to={`/experiences?offering=${e.id}`} className="list-row">
@@ -149,7 +149,7 @@ export function DestinationDetail() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Getting here" title="Cabs & shared taxis" action={<Link className="link" to="/cabs">Book a cab →</Link>} />
+        <SectionHead eyebrow="Getting here" title="Cabs & shared taxis" action={<Link className="btn btn--secondary btn--sm" to="/cabs">Book a cab <ArrowRight size={14} /></Link>} />
         <div className="grid-2">
           <div className="card">
             <div className="row" style={{ gap: 10 }}><CarFront size={18} style={{ color: 'var(--gw-champagne)' }} aria-hidden="true" /><strong>Private cab & airport transfer</strong></div>

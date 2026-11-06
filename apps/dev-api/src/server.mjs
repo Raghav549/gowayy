@@ -41,6 +41,10 @@ import { renderOrderInvoicePdf, renderBookingInvoicePdf } from './invoice.mjs';
 import { seedDemoData, seedCatalogCollections } from './seed.mjs';
 import { quoteCheckout, assertVariantAvailable } from '@gowayy/commerce';
 import { getProduct } from '@gowayy/catalog';
+import { publicOffering, experienceQuote, kolkataDate } from './experiences.mjs';
+import { bookingActor, orderActor } from './partner-access.mjs';
+import { isPublicProduct, isPublicStore, isPublicOffer } from './catalog-visibility.mjs';
+import { cartCoupon, singleCartStoreId } from './commerce-rules.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const DATA_DIR = join(ROOT, 'apps/dev-api/data');
@@ -60,7 +64,7 @@ function emptyDb() {
     notifications: [], drivers: [], jobs: [], tickets: [], addresses: [], savedPlaces: [],
     reviews: [], inventory: {}, roomAvailability: {}, sharedSeats: {},
     carts: {}, wishlist: {}, productStock: {}, productViews: {}, searchHistory: {},
-    partners: [], partnerProfiles: {}, partnerDocuments: {}, menus: {}, rooms: {}, tours: {},
+    partners: [], partnerProfiles: {}, partnerDocuments: {}, menus: {}, rooms: {}, tours: {}, experienceSlots: [],
     settlements: [], wallet: {},
     categories: [], stores: [], catalogProducts: [], offers: [], banners: [], settings: {},
     featuredDestinations: [], deliveryCodes: {}, admins: [],
@@ -177,6 +181,7 @@ function auth(req, required = true) {
   const session = db.sessions.find((s) => s.token === token && s.expiresAt > nowIso());
   const user = session ? db.users.find((u) => u.id === session.userId && !u.deletedAt) : null;
   if (!user && required) bad('UNAUTHORIZED', 'Sign in to continue', 401);
+  if (user) req.authUserId = user.id;
   return { user, session };
 }
 function rateLimit(req, bucket = 'write', max = 120) {
@@ -196,20 +201,16 @@ function reference(prefix) {
 function idempotency(req, fn) {
   const key = req.headers['idempotency-key'];
   if (typeof key === 'string' && key.length >= 8) {
-    const prior = db.idempotency[key];
+    if (!req.authUserId) bad('UNAUTHORIZED', 'Sign in to continue', 401);
+    const scopedKey = `${req.authUserId}:${key}`;
+    const prior = db.idempotency[scopedKey];
     if (prior) return prior.body;
     const body = fn();
-    db.idempotency[key] = { at: nowIso(), body };
+    db.idempotency[scopedKey] = { at: nowIso(), body };
     return body;
   }
   return fn();
 }
-const actorFor = (user, service) => {
-  const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'], tour_operator: ['tourism', 'package', 'experience'] };
-  const isPartner = user.roles.some((r) => (partnerServices[r] ?? []).includes(service));
-  return isPartner ? 'partner' : 'customer';
-};
-
 // ------------------------------------------------------------- domain logic -
 function placeById(id) { return catalogue.places.find((p) => p.id === id) ?? null; }
 function routeQuote(pickupId, dropoffId, vehicleId, tripType, passengers) {
@@ -228,6 +229,8 @@ function makeBooking(user, input) {
     service: input.service, status: 'requested', journeyId: input.journeyId ?? null,
     listingId: input.listingId ?? null, title: input.title, details: input.details,
     price: input.price, paymentId: null, createdAt: nowIso(), updatedAt: nowIso(),
+    slotId: input.slotId ?? null, guests: input.guests ?? null, visitDate: input.visitDate ?? null,
+    hostId: input.hostId ?? null,
     statusHistory: [{ status: 'requested', at: nowIso(), by: 'system', note: 'Request created by server after validation' }],
   };
   db.bookings.push(b);
@@ -348,6 +351,10 @@ function verifyWebhook(rawBody, signature) {
 // ------------------------------------------------- marketplace checkout ----
 /** Server-priced marketplace checkout from the customer's cart. */
 function placeOrderFromCart(user, body) {
+  const idempotencyKey = String(body.idempotencyKey ?? '').trim();
+  if (!/^[a-zA-Z0-9._:-]{8,128}$/.test(idempotencyKey)) bad('IDEMPOTENCY_KEY_REQUIRED', 'Checkout requires a unique idempotency key', 422);
+  const previous = db.orders.find((order) => order.userId === user.id && order.idempotencyKey === idempotencyKey);
+  if (previous) return previous;
   const cart = db.carts[user.id] ?? { lines: [] };
   const lines = cart.lines.length ? cart.lines : (Array.isArray(body.lines) ? body.lines : []);
   if (!lines.length) bad('CART_EMPTY', 'Your cart is empty', 409);
@@ -363,13 +370,15 @@ function placeOrderFromCart(user, body) {
   const priced = lines.map((l) => {
     const p = db.catalogProducts.find((x) => x.id === l.productId || x.slug === l.productId) ?? getProduct(l.productId);
     const v = p?.variants.find((x) => x.id === l.variantId);
-    if (!p || !v) bad('ITEM_UNAVAILABLE', 'A cart item is no longer available', 409);
+    if (!isPublicProduct(db, p) || !v) bad('ITEM_UNAVAILABLE', 'A cart item is no longer available', 409);
     const stock = db.productStock[`${p.id}:${v.id}`] ?? v.stock;
     assertVariantAvailable({ ...v, stock }, Number(l.quantity));
     const plan = l.protectionPlanId ? p.protectionPlans.find((pl) => pl.id === l.protectionPlanId) : null;
     if (l.protectionPlanId && !plan) bad('PLAN_NOT_FOUND', 'Protection plan no longer offered', 409);
-    return { id: p.id, variantId: v.id, name: p.name, variantLabel: v.label, quantity: Number(l.quantity), unitPricePaise: v.pricePaise, mrpPaise: v.mrpPaise, protectionPlanId: plan?.id ?? null, protectionPaise: plan ? plan.pricePaise * Number(l.quantity) : 0 };
+    return { id: p.id, storeId: p.storeId, categoryId: p.categoryId, variantId: v.id, name: p.name, variantLabel: v.label, quantity: Number(l.quantity), unitPricePaise: v.pricePaise, mrpPaise: v.mrpPaise, protectionPlanId: plan?.id ?? null, protectionPaise: plan ? plan.pricePaise * Number(l.quantity) : 0 };
   });
+  const orderStoreId = singleCartStoreId(priced);
+  if (!orderStoreId) bad('MULTI_STORE_CART', 'Checkout one store at a time so fulfilment and coupons remain correct', 409);
   // Service coverage: food and grocery pins are configured independently by an
   // administrator. The server, not the client, refuses out-of-area orders.
   const areas = (db.serviceAreas ?? []).filter((a) => a.active !== false);
@@ -381,16 +390,16 @@ function placeOrderFromCart(user, body) {
     const pins = areas.flatMap((a) => (kind === 'food' ? a.foodPincodes : a.groceryPincodes) ?? []);
     if (!pins.includes(String(address.pincode))) bad('SERVICE_UNAVAILABLE', `We do not deliver ${kind} to ${address.pincode} yet.`, 422, { service: kind, pincode: address.pincode });
   }
-  const coupon = body.coupon ? (db.coupons ?? []).find((c) => c.code === String(body.coupon).trim().toUpperCase() && c.active) : null;
-  if (body.coupon && !coupon) bad('INVALID_COUPON', 'This coupon code is not valid');
+  const couponResult = cartCoupon(db, body.coupon, priced);
+  if (couponResult.error) bad(couponResult.error, couponResult.error === 'COUPON_NOT_APPLICABLE' ? 'This coupon does not apply to every item in the cart' : 'This coupon code is not valid', 422);
+  const { coupon, offer } = couponResult;
   const deliveryFeePaise = body.deliverySlot === 'express' ? 9900 : 0;
   const allPlans = catalogue.marketplaceProducts.flatMap((p) => p.protectionPlans);
   const quote = quoteCheckout({ lines: priced.map((l) => ({ unitPricePaise: l.unitPricePaise, quantity: l.quantity, protectionPlanId: l.protectionPlanId })), protectionPlans: allPlans, deliveryFeePaise, coupon });
   if (method === 'cod' && quote.totalPaise > 1_000_000) bad('COD_LIMIT', 'Cash on delivery is unavailable above ₹10,000', 422);
-  const orderStoreId = db.catalogProducts.find((p) => p.id === priced[0]?.id)?.storeId ?? null;
   const order = {
     id: makeId('ord'), reference: reference('order'), userId: user.id, service: 'marketplace',
-    status: 'created', journeyId: body.journeyId ?? null, listingId: orderStoreId,
+    status: 'created', journeyId: body.journeyId ?? null, listingId: orderStoreId, idempotencyKey,
     paymentStatus: method === 'cod' ? 'cod_due' : 'unpaid',
     items: priced.map((l) => ({ id: l.id, name: `${l.name} (${l.variantLabel})`, quantity: l.quantity, unitPricePaise: l.unitPricePaise, options: l.protectionPlanId ? [l.protectionPlanId] : [] })),
     protection: priced.filter((l) => l.protectionPlanId).map((l) => ({ planId: l.protectionPlanId, paise: l.protectionPaise })),
@@ -400,6 +409,7 @@ function placeOrderFromCart(user, body) {
   };
   for (const l of priced) db.productStock[`${l.id}:${l.variantId}`] = (db.productStock[`${l.id}:${l.variantId}`] ?? 0) - l.quantity;
   db.orders.push(order);
+  if (offer) offer.usedCount = (offer.usedCount ?? 0) + 1;
   db.carts[user.id] = { lines: [], updatedAt: nowIso() };
   db.jobs.push({ id: makeId('job'), service: 'marketplace', bookingId: null, orderId: order.id, status: 'open', driverId: null, createdAt: nowIso() });
   delivery.issue(order.id);
@@ -457,14 +467,14 @@ async function route(req, res, url) {
       // searchable alongside the seeded catalogue.
       const extra = [];
       for (const p of db.catalogProducts) {
-        if (p.active === false || p.published === false) continue;
+        if (!isPublicProduct(db, p)) continue;
         if (`${p.name} ${p.brand} ${p.category} ${(p.tags ?? []).join(' ')}`.toLowerCase().includes(term)) {
           const store = db.stores.find((s) => s.id === p.storeId);
           extra.push({ id: p.id, kind: 'product', title: p.name, subtitle: `${store?.name ?? p.brand} · ${p.category}`, service: 'marketplace', destinationId: store?.destinationId ?? null, href: `/products/${p.slug}` });
         }
       }
       for (const s of db.stores) {
-        if (s.status !== 'active') continue;
+        if (!isPublicStore(s)) continue;
         if (`${s.name} ${s.categoryName} ${s.description}`.toLowerCase().includes(term)) {
           extra.push({ id: s.id, kind: 'store', title: s.name, subtitle: `${s.categoryName} · ${db.catalogProducts.filter((p) => p.storeId === s.id).length} products`, service: 'marketplace', destinationId: s.destinationId, href: `/groceries/${s.id}` });
         }
@@ -486,7 +496,7 @@ async function route(req, res, url) {
     return send(res, 200, { route: estimateRoute(from, to), vehicle: catalogue.vehicles.find((v) => v.id === q.get('vehicle')) ?? null });
   }
   if (method === 'GET' && path === '/api/reviews') return send(res, 200, { items: db.reviews.filter((r) => !q.get('listingId') || r.listingId === q.get('listingId')) });
-  if (method === 'GET' && path === '/api/coupons') return send(res, 200, { items: (db.coupons ?? []).filter((c) => c.active).map((c) => ({ code: c.code, kind: c.kind, minSubtotalPaise: c.minSubtotalPaise })) });
+  if (method === 'GET' && path === '/api/coupons') return send(res, 200, { items: (db.coupons ?? []).filter((c) => c.active && (!c.offerId || (db.offers ?? []).some((offer) => offer.id === c.offerId && isPublicOffer(db, offer)))).map((c) => ({ code: c.code, kind: c.kind, minSubtotalPaise: c.minSubtotalPaise })) });
 
   // ------- authentication -------
   if (method === 'POST' && path === '/api/auth/register') {
@@ -666,6 +676,31 @@ async function route(req, res, url) {
   if (method === 'POST' && path === '/api/bookings/tourism') {
     const { user } = auth(req);
     const d = zod(tourismBookingSchema, body); attachJourneyContext(user, d);
+    const hostOffering = publicOffering(db, d.offeringId);
+    if (d.service === 'experience' || d.slotId || (d.service === 'package' && hostOffering)) {
+      if (!d.slotId) bad('SLOT_REQUIRED', 'Choose a real available time slot', 422);
+      return ok(res, { booking: idempotency(req, () => {
+        if (db.bookings.some((b) => b.userId === user.id && (b.slotId ?? b.details?.slotId) === d.slotId && ['requested', 'confirmed'].includes(b.status))) {
+          bad('BOOKING_ALREADY_EXISTS', 'You already have an active booking for this slot', 409);
+        }
+        // Quote and capacity check are repeated inside the atomic write, never trusted from review.
+        const quote = experienceQuote(db, d.slotId, d.guests, bad);
+        if (quote.offering.id !== d.offeringId || quote.service !== d.service) bad('OFFERING_NOT_FOUND', 'The slot does not belong to this offering', 404);
+        const booking = makeBooking(user, {
+          service: d.service, title: quote.offering.name, listingId: quote.offering.id, journeyId: d.journeyId,
+          slotId: d.slotId, guests: d.guests, visitDate: kolkataDate(quote.slot.startsAt), hostId: quote.offering.host.id,
+          details: {
+            offeringName: quote.offering.name, date: kolkataDate(quote.slot.startsAt), guests: d.guests,
+            kind: quote.service, slotId: d.slotId, startsAt: quote.slot.startsAt, endsAt: quote.slot.endsAt,
+            meetingPoint: quote.offering.meetingPoint, requirements: quote.offering.requirements,
+            answers: d.answers ?? {},
+          },
+          price: quote.price,
+        });
+        notify(quote.offering.host.id, { type: 'booking.created', reference: booking.reference, service: d.service });
+        return booking;
+      }) }, 201);
+    }
     const pkg = catalogue.tourPackages.find((p) => p.id === d.offeringId);
     const exp = catalogue.experiences.find((e) => e.id === d.offeringId);
     const att = catalogue.attractions.find((a) => a.id === d.offeringId);
@@ -675,6 +710,7 @@ async function route(req, res, url) {
     const price = priceTourism({ basePaise: base, guests: d.guests, service: d.service });
     return ok(res, { booking: idempotency(req, () => makeBooking(user, {
       service: d.service, title: offering.name, listingId: offering.id, journeyId: d.journeyId,
+      guests: d.guests, visitDate: d.date ?? null,
       details: { offeringName: offering.name, date: d.date, guests: d.guests, kind: pkg ? 'package' : exp ? 'experience' : 'attraction' }, price,
     })) }, 201);
   }
@@ -742,11 +778,12 @@ async function route(req, res, url) {
   }
   if (method === 'POST' && tail[0] === 'bookings' && tail[2] === 'transition') {
     const { user } = auth(req);
-    const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'], tour_operator: ['tourism', 'package', 'experience'] };
-    const partnerOf = new Set(user.roles.flatMap((r) => partnerServices[r] ?? []));
-    const b = db.bookings.find((x) => x.id === tail[1] && (x.userId === user.id || partnerOf.has(x.service)));
+    const b = db.bookings.find((x) => x.id === tail[1]);
     if (!b) bad('NOT_FOUND', 'Booking not found', 404);
-    const actor = actorFor(user, b.service);
+    const assignedActor = bookingActor(db, user, b);
+    if (b.userId !== user.id && !assignedActor) bad('FORBIDDEN', 'This booking is not assigned to you', 403);
+    if (b.userId === user.id && !assignedActor && body.status !== 'cancelled') bad('FORBIDDEN', 'Customers cannot advance fulfilment', 403);
+    const actor = assignedActor ?? 'customer';
     const result = transitionBooking(b, body.status, actor, body.note);
     if (!result.ok) bad('ILLEGAL_TRANSITION', result.error, 409);
     Object.assign(b, result.booking);
@@ -785,6 +822,11 @@ async function route(req, res, url) {
       if (p && p.status === 'captured') {
         const amount = refundableAmount(p.amountPaise, { kind: 'partial', percent: 80, flatFeePaise: 0 });
         p.status = 'refunded'; p.updatedAt = nowIso();
+        for (const partner of db.users.filter((candidate) => bookingActor(db, candidate, b))) {
+          for (const settlement of (db.settlements ?? []).filter((item) => item.userId === partner.id && item.status === 'requested')) {
+            settlement.status = 'cancelled'; settlement.cancelledAt = nowIso(); settlement.cancellationReason = `Refund for ${b.reference}`;
+          }
+        }
         db.transactions.push({ id: makeId('txn'), paymentId: p.id, type: 'refund', amountPaise: amount, note: 'Automatic cancellation refund (80%)', createdAt: nowIso() });
         notify(user.id, { type: 'refund.issued', reference: b.reference, amount: formatINR(amount) });
       }
@@ -805,10 +847,12 @@ async function route(req, res, url) {
   }
   if (method === 'POST' && tail[0] === 'orders' && tail[2] === 'transition') {
     const { user } = auth(req);
-    const o = db.orders.find((x) => x.id === tail[1] && x.userId === user.id);
+    const o = db.orders.find((x) => x.id === tail[1]);
     if (!o) bad('NOT_FOUND', 'Order not found', 404);
+    const actor = orderActor(db, user, o);
+    if (o.userId !== user.id && !actor) bad('FORBIDDEN', 'This order is not assigned to you', 403);
     if (!transitionOrderStatus(o.status, body.status)) bad('ILLEGAL_TRANSITION', `Illegal order status change ${o.status} → ${body.status}`, 409);
-    if (actorFor(user, o.service) !== 'partner' && body.status !== 'cancelled') bad('FORBIDDEN', 'Only the partner can advance an order', 403);
+    if (o.userId === user.id && !actor && body.status !== 'cancelled') bad('FORBIDDEN', 'Customers cannot advance fulfilment', 403);
     if (body.status === 'cancelled' && o.service === 'grocery') {
       for (const it of o.items) db.inventory[`${o.listingId}:${it.id}`] = (db.inventory[`${o.listingId}:${it.id}`] ?? 0) + it.quantity;
     }
@@ -971,11 +1015,9 @@ async function route(req, res, url) {
   }
   if (method === 'GET' && path === '/api/partners/requests') {
     const { user } = auth(req);
-    const partnerServices = { driver: ['cab', 'shared_taxi', 'parcel'], restaurant: ['food'], grocery: ['grocery'], property: ['hotel', 'homestay', 'tourism', 'experience', 'package'], tour_operator: ['tourism', 'package', 'experience'] };
-    const services = new Set(user.roles.flatMap((r) => partnerServices[r] ?? []));
     return send(res, 200, {
-      bookings: db.bookings.filter((b) => services.has(b.service) && ['requested', 'awaiting_payment', 'confirmed'].includes(b.status)),
-      orders: db.orders.filter((o) => services.has(o.service) && ['created', 'accepted', 'preparing'].includes(o.status)),
+      bookings: db.bookings.filter((b) => ['requested', 'awaiting_payment', 'confirmed', 'assigned', 'in_progress'].includes(b.status) && bookingActor(db, user, b)),
+      orders: db.orders.filter((o) => !['delivered', 'cancelled', 'refunded'].includes(o.status) && orderActor(db, user, o)),
       claimedListings: (db.partners ?? []).filter((p) => p.userId === user.id),
     });
   }

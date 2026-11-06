@@ -15,6 +15,7 @@ import type {
   Booking, Destination, DispatchJob, DriverProfile, Journey, Notification, Order, Payment,
   Place, SearchHit, Session, SupportTicket, Transaction, User, VehicleClass, SharedTaxiRoute,
   Property, Restaurant, GroceryStore, TourPackage, Experience, Attraction, HiddenGem,
+  ExperienceOffering, ExperienceSlot, ExperienceQuote,
 } from '@gowayy/types';
 import type { GowayyClient, TokenStore, RegisterResult, VerifyResult, AuthResult, CatalogBundle, RouteEstimate, JourneyComponents, RecommendationGroups, Review } from './http.ts';
 import { ApiError } from './http.ts';
@@ -88,6 +89,9 @@ export function createSupabaseTransport(config: SupabaseConfig): GowayyClient {
     bookSharedTaxi: (input, key) => call<Booking>('bookSharedTaxi', { input, idempotencyKey: key }),
     bookStay: (input, key) => call<Booking>('bookStay', { input, idempotencyKey: key }),
     bookTourism: (input, key) => call<Booking>('bookTourism', { input, idempotencyKey: key }),
+    experienceOfferings: (destinationId, kind) => call<{ items: ExperienceOffering[] }>('experienceOfferings', { destinationId: destinationId ?? null, kind: kind ?? null }),
+    experienceSlots: (offeringId, date) => call<{ offering: ExperienceOffering; items: ExperienceSlot[] }>('experienceSlots', { offeringId, date }),
+    experienceQuote: (slotId, guests) => call<ExperienceQuote>('experienceQuote', { slotId, guests }),
     bookParcel: (input, key) => call<Booking>('bookParcel', { input, idempotencyKey: key }),
     placeOrder: (input, key) => call<Order>('placeOrder', { input, idempotencyKey: key }),
 
@@ -169,10 +173,63 @@ export function createSupabaseTransport(config: SupabaseConfig): GowayyClient {
     partnerTours: () => call('partnerTours'),
     addTour: (input) => call('addTour', { input }),
     updateTour: (id, input) => call('updateTour', { id, input }),
+    partnerExperienceSlots: (offeringId) => call<{ items: ExperienceSlot[] }>('partnerExperienceSlots', { offeringId }),
+    addExperienceSlot: (input) => call<{ slot: ExperienceSlot }>('addExperienceSlot', { input }),
+    deleteExperienceSlot: (id) => call<{ deactivated: boolean }>('deleteExperienceSlot', { id }),
     partnerEarnings: () => call('partnerEarnings'),
     partnerSettlements: () => call('partnerSettlements'),
     requestSettlement: () => call('requestSettlement'),
     partnerInbox: () => call('partnerInbox'),
+
+    // Storefront, managed content and uploads.
+    storefront: () => call('storefront'),
+    storeDetail: (id) => call('storeDetail', { id }),
+    banners: () => call('banners'),
+    orderDetail: (id) => call('orderDetail', { id }),
+    uploadImage: (input) => call('uploadImage', { input }),
+    updateAddress: (id, input) => call('updateAddress', { id, input }),
+    posters: (kind) => call('posters', { kind: kind ?? null }),
+    destinations: () => call('destinations'),
+    destination: (slug) => call('destination', { slug }),
+    serviceAreas: () => call('serviceAreas'),
+    serviceAreaCheck: (pincode) => call('serviceAreaCheck', { pincode }),
+
+    // Partner-owned catalogue and fulfilment.
+    partnerCategories: () => call('partnerCategories'),
+    createPartnerCategory: (input) => call('createPartnerCategory', { input }),
+    partnerProducts: () => call('partnerProducts'),
+    createPartnerProduct: (input) => call('createPartnerProduct', { input }),
+    updatePartnerProduct: (id, input) => call('updatePartnerProduct', { id, input }),
+    partnerStores: () => call('partnerStores'),
+    createPartnerStore: (input) => call('createPartnerStore', { input }),
+    updatePartnerStore: (id, input) => call('updatePartnerStore', { id, input }),
+    partnerOffers: () => call('partnerOffers'),
+    createPartnerOffer: (input) => call('createPartnerOffer', { input }),
+    updatePartnerOffer: (id, input) => call('updatePartnerOffer', { id, input }),
+    partnerCoupons: () => call('partnerCoupons'),
+    updatePartnerOrderStatus: (id, status) => call('updatePartnerOrderStatus', { id, status }),
+    partnerDeliveries: () => call('partnerDeliveries'),
+    verifyDelivery: (orderId, code) => call('verifyDelivery', { orderId, code }),
+
+    // Admin managed content; every operation is role-checked again by the RPC.
+    adminPosters: () => call('adminPosters'),
+    createPoster: (input) => call('createPoster', { input }),
+    updatePoster: (id, input) => call('updatePoster', { id, input }),
+    deletePoster: async (id) => { await call('deletePoster', { id }); },
+    reorderPosters: (ids) => call('reorderPosters', { ids }),
+    adminServiceAreas: () => call('adminServiceAreas'),
+    createServiceArea: (input) => call('createServiceArea', { input }),
+    updateServiceArea: (id, input) => call('updateServiceArea', { id, input }),
+    deleteServiceArea: async (id) => { await call('deleteServiceArea', { id }); },
+    adminDestinations: () => call('adminDestinations'),
+    createDestination: (input) => call('createDestination', { input }),
+    updateDestination: (id, input) => call('updateDestination', { id, input }),
+    deleteDestination: async (id) => { await call('deleteDestination', { id }); },
+    addDestinationImage: (id, input) => call('addDestinationImage', { id, input }),
+    updateDestinationImage: (id, imageId, input) => call('updateDestinationImage', { id, imageId, input }),
+    deleteDestinationImage: (id, imageId) => call('deleteDestinationImage', { id, imageId }),
+    adminRequest: <T = unknown>(path: string, options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown } = {}) =>
+      call<T>('adminRequest', { path, method: options.method ?? 'GET', input: options.body ?? {} }),
   };
 }
 

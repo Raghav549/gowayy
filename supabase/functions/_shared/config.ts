@@ -5,6 +5,9 @@ export interface EdgeConfig {
   serviceKey: string;
   webhookSecret: string;
   otpProviderUrl: string;
+  paymentProvider: string;
+  razorpayKeyId: string;
+  razorpayKeySecret: string;
 }
 
 export function config(): EdgeConfig {
@@ -18,6 +21,9 @@ export function config(): EdgeConfig {
     url: url.replace(/\/$/, ''), anonKey, serviceKey,
     webhookSecret: Deno.env.get('GOWAYY_PAYMENT_WEBHOOK_SECRET') ?? '',
     otpProviderUrl: Deno.env.get('GOWAYY_EMAIL_PROVIDER_URL') ?? '',
+    paymentProvider: Deno.env.get('GOWAYY_PAYMENT_PROVIDER') ?? 'unconfigured',
+    razorpayKeyId: Deno.env.get('GOWAYY_RAZORPAY_KEY_ID') ?? '',
+    razorpayKeySecret: Deno.env.get('GOWAYY_RAZORPAY_KEY_SECRET') ?? '',
   };
 }
 

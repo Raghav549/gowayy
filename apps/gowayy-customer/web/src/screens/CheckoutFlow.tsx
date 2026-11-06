@@ -10,6 +10,7 @@ import { client, idemKey } from '../lib/client';
 import { useUI } from '../store/useUI';
 import { usePageMeta, apiErrorText } from '../lib/guards';
 import { downloadInvoice } from '../lib/invoice';
+import { completePayment, type PaymentAction } from '../lib/payments';
 import { Skeleton, MascotState } from '../components/Mascot';
 import { Stepper } from '../components/ui';
 
@@ -81,6 +82,7 @@ export function CheckoutFlow() {
     queryKey: ['order-detail', placedId],
     queryFn: async () => (await client.orderDetail?.(placedId)) as unknown as { order: OrderView; payment: { status: string } | null },
     enabled: Boolean(placedId) && step === 'success',
+    refetchInterval: (query) => ['captured', 'failed', 'refunded'].includes(query.state.data?.payment?.status ?? '') || query.state.data?.order.paymentMethod === 'cod' ? false : 5000,
   });
 
   const addressList = (addresses.data as AddressView[] | undefined) ?? [];
@@ -147,8 +149,8 @@ export function CheckoutFlow() {
           bookingId: null, orderId: order.id, method: method === 'card' ? 'card' : method === 'netbanking' ? 'netbanking' : 'upi',
           amountPaise: order.price.totalPaise, idempotencyKey: idemKey(),
         });
-        const captured = await client.captureSandboxPayment(payment.id);
-        if (!captured.payment || captured.payment.status !== 'captured') throw new Error('Payment was not confirmed by the server. Your order is saved — you can retry payment from Orders.');
+        const outcome = await completePayment(payment as PaymentAction, 'GOWAYY marketplace order');
+        if (outcome === 'pending') showToast('Payment submitted. Waiting for signed provider confirmation.', 'info');
       }
       await qc.invalidateQueries();
       const next = new URLSearchParams(); next.set('step', 'success'); next.set('order', order.id);
@@ -169,6 +171,7 @@ export function CheckoutFlow() {
   if (step === 'success') {
     const order = placed.data?.order;
     const paid = placed.data?.payment?.status === 'captured';
+    const failed = placed.data?.payment?.status === 'failed';
     return (
       <div className="checkout-page">
         <div className="order-success">
@@ -178,8 +181,8 @@ export function CheckoutFlow() {
             <span className="success-animation__logo"><img src="/brand/g-symbol.svg" alt="" /></span>
             <span className="success-animation__check"><Check size={26} /></span>
           </div>
-          <h1>Order confirmed</h1>
-          <p className="muted">{paid ? 'Payment verified by the payment provider.' : order?.paymentMethod === 'cod' ? 'Cash on delivery — pay when your order arrives.' : 'Your order is saved. Complete payment from Orders if needed.'}</p>
+          <h1>{failed ? 'Payment not completed' : paid || order?.paymentMethod === 'cod' ? 'Order confirmed' : 'Order placed — payment pending'}</h1>
+          <p className="muted">{failed ? 'The provider reported a failed payment. Your order is saved; retry from Orders.' : paid ? 'Payment verified by the payment provider.' : order?.paymentMethod === 'cod' ? 'Cash on delivery — pay when your order arrives.' : 'Payment has been submitted. We are waiting for signed provider confirmation; this page updates automatically.'}</p>
           {placed.isLoading && <Skeleton style={{ height: 120, borderRadius: 16, marginTop: 20 }} />}
           {order && (
             <>

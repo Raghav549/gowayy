@@ -7,6 +7,7 @@ type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 /** Thin wrapper over the secured /api/admin surface. Every call carries the admin bearer token. */
 export async function admin<T = unknown>(path: string, options: { method?: Method; body?: unknown } = {}): Promise<T> {
+  if (client.adminRequest) return client.adminRequest<T>(path, options);
   const token = tokenStore.get();
   const response = await fetch(`${client.baseUrl}/admin${path}`, {
     method: options.method ?? 'GET',

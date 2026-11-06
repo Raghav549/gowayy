@@ -6,6 +6,9 @@
  */
 import { catalogue } from '@gowayy/catalog';
 import { makeId, nowIso, formatINR } from '@gowayy/shared-utils';
+import { COMMISSION_RATES } from '@gowayy/pricing-engine';
+import { slotBooked, slotView } from './experiences.mjs';
+import { bookingActor, orderActor } from './partner-access.mjs';
 
 const PARTNER_SERVICES = {
   driver: ['cab', 'shared_taxi', 'parcel', 'food', 'grocery'],
@@ -34,8 +37,8 @@ export function createPartnerHub(ctx) {
     // ---- overview dashboard ----
     if (method === 'GET' && tail[1] === 'overview') {
       const services = partnerServicesOf(user);
-      const myBookings = db().bookings.filter((b) => services.includes(b.service));
-      const myOrders = db().orders.filter((o) => services.includes(o.service) || o.service === 'marketplace');
+      const myBookings = db().bookings.filter((b) => ['requested', 'awaiting_payment', 'confirmed', 'assigned', 'in_progress'].includes(b.status) && bookingActor(db(), user, b));
+      const myOrders = db().orders.filter((o) => !['delivered', 'cancelled', 'refunded'].includes(o.status) && orderActor(db(), user, o));
       const driver = db().drivers.find((d) => d.userId === user.id) ?? null;
       const openJobs = driver ? db().jobs.filter((j) => j.status === 'open' && (driver.services.includes(j.service))) : [];
       const earnings = earningsSummary(user.id);
@@ -152,20 +155,76 @@ export function createPartnerHub(ctx) {
       }
     }
 
-    // ---- tour packages (tour operator partner) ----
+    // ---- host-owned experiences/packages and their real schedules ----
+    if (tail[1] === 'experience-slots' && method === 'DELETE' && tail[2]) {
+      requireRole(user, 'tour_operator');
+      const slot = (db().experienceSlots ?? []).find((item) => item.id === tail[2]);
+      const offering = slot ? (db().tours[user.id] ?? []).find((tour) => tour.id === slot.offeringId) : null;
+      if (!slot || !offering) bad('SLOT_NOT_FOUND', 'Slot not found in your offerings', 404);
+      if (db().bookings.some((b) => (b.slotId ?? b.details?.slotId) === slot.id && ['requested', 'confirmed'].includes(b.status))) {
+        bad('SLOT_HAS_BOOKINGS', 'Cancel or complete the active bookings before deactivating this slot', 409);
+      }
+      slot.active = false; slot.updatedAt = nowIso();
+      audit(user.id, 'partner.experience.slot.deactivated', { slotId: slot.id, offeringId: offering.id });
+      return ok(res, { deactivated: true });
+    }
     if (tail[1] === 'tours') {
       requireRole(user, 'tour_operator');
-      db().tours ??= {}; db().tours[user.id] ??= [];
-      if (method === 'GET') return send(res, 200, { items: db().tours[user.id] });
-      if (method === 'POST') {
-        const t = { id: makeId('tur'), name: String(body.name ?? '').slice(0, 80), destinationId: String(body.destinationId ?? ''), pricePaise: Math.max(0, Number(body.pricePaise ?? 0)), durationHours: Math.max(0.5, Number(body.durationHours ?? 1)), capacity: Math.max(1, Number(body.capacity ?? 1)), active: body.active !== false, createdAt: nowIso() };
-        if (!t.name || !catalogue.destinations.some((d) => d.id === t.destinationId)) bad('VALIDATION_FAILED', 'Tour needs a name and a known destination');
-        db().tours[user.id].push(t); return ok(res, { tour: t }, 201);
+      db().tours ??= {}; db().tours[user.id] ??= []; db().experienceSlots ??= [];
+      const selected = tail[2] ? db().tours[user.id].find((tour) => tour.id === tail[2]) : null;
+      if (tail[2] && tail[3] === 'slots') {
+        if (!selected) bad('OFFERING_NOT_FOUND', 'Offering not found in your account', 404);
+        if (method === 'GET') {
+          const items = db().experienceSlots.filter((slot) => slot.offeringId === selected.id)
+            .sort((a, b) => b.startsAt.localeCompare(a.startsAt)).map((slot) => slotView(db(), slot, true));
+          return send(res, 200, { items });
+        }
+        if (method === 'POST') {
+          rateLimit(req, 'partner-slots', 60);
+          const start = new Date(String(body.startAt ?? ''));
+          const capacity = Number(body.capacity);
+          if (!Number.isFinite(start.getTime()) || start.getTime() <= Date.now()) bad('INVALID_SLOT_TIME', 'Choose a future start time', 422);
+          if (!Number.isInteger(capacity) || capacity < 1 || capacity > selected.capacity) bad('INVALID_SLOT_CAPACITY', `Capacity must be between 1 and ${selected.capacity}`, 422);
+          const startsAt = start.toISOString();
+          const endsAt = new Date(start.getTime() + Number(selected.durationHours) * 3_600_000).toISOString();
+          let slot = db().experienceSlots.find((item) => item.offeringId === selected.id && item.startsAt === startsAt);
+          if (slot && slotBooked(db(), slot.id) > capacity) bad('INVALID_SLOT_CAPACITY', 'Capacity cannot be lower than the guests already booked', 409);
+          if (slot) Object.assign(slot, { endsAt, capacity, active: true, updatedAt: nowIso() });
+          else {
+            slot = { id: makeId('slt'), offeringId: selected.id, startsAt, endsAt, capacity, active: true, createdAt: nowIso(), updatedAt: nowIso() };
+            db().experienceSlots.push(slot);
+          }
+          audit(user.id, 'partner.experience.slot.saved', { slotId: slot.id, offeringId: selected.id });
+          return ok(res, { slot: slotView(db(), slot, true) }, 201);
+        }
       }
-      if (method === 'PATCH' && tail[2]) {
-        const t = db().tours[user.id].find((x) => x.id === tail[2]);
-        if (!t) bad('NOT_FOUND', 'Tour not found', 404);
-        Object.assign(t, Object.fromEntries(Object.entries(body).filter(([k]) => ['name', 'pricePaise', 'durationHours', 'capacity', 'active'].includes(k))));
+      if (method === 'GET' && tail.length === 2) return send(res, 200, { items: db().tours[user.id] });
+      if (method === 'POST' && tail.length === 2) {
+        const t = {
+          id: makeId('tur'), userId: user.id, kind: body.kind === 'package' ? 'package' : 'experience',
+          name: String(body.name ?? '').trim().slice(0, 100), destinationId: String(body.destinationId ?? ''),
+          description: String(body.description ?? '').trim().slice(0, 2000), meetingPoint: String(body.meetingPoint ?? '').trim().slice(0, 300),
+          requirements: String(body.requirements ?? '').trim().slice(0, 1000),
+          pricePaise: Number(body.pricePaise), durationHours: Number(body.durationHours), capacity: Number(body.capacity),
+          active: body.active !== false, createdAt: nowIso(), updatedAt: nowIso(),
+        };
+        if (!['experience', 'package'].includes(body.kind ?? 'experience') || t.name.length < 2 || !catalogue.destinations.some((d) => d.id === t.destinationId)
+          || !Number.isInteger(t.pricePaise) || t.pricePaise < 0 || !Number.isFinite(t.durationHours) || t.durationHours <= 0
+          || !Number.isInteger(t.capacity) || t.capacity < 1) bad('VALIDATION_FAILED', 'Provide a valid name, destination, price, duration and capacity', 422);
+        db().tours[user.id].push(t); audit(user.id, 'partner.experience.created', { offeringId: t.id, kind: t.kind });
+        return ok(res, { tour: t }, 201);
+      }
+      if (method === 'PATCH' && tail[2] && tail.length === 3) {
+        const t = selected;
+        if (!t) bad('OFFERING_NOT_FOUND', 'Offering not found in your account', 404);
+        const next = { ...t };
+        Object.assign(next, Object.fromEntries(Object.entries(body).filter(([k]) => ['name', 'description', 'meetingPoint', 'requirements', 'pricePaise', 'durationHours', 'capacity', 'active'].includes(k))));
+        next.name = String(next.name).trim().slice(0, 100); next.pricePaise = Number(next.pricePaise); next.durationHours = Number(next.durationHours); next.capacity = Number(next.capacity);
+        const largestSlot = Math.max(0, ...db().experienceSlots.filter((slot) => slot.offeringId === t.id && slot.active !== false).map((slot) => Number(slot.capacity)));
+        if (next.name.length < 2 || !Number.isInteger(next.pricePaise) || next.pricePaise < 0 || !Number.isFinite(next.durationHours) || next.durationHours <= 0
+          || !Number.isInteger(next.capacity) || next.capacity < 1 || next.capacity < largestSlot) bad('VALIDATION_FAILED', 'Check the offering values; capacity cannot be lower than an active slot', 422);
+        Object.assign(t, next, { updatedAt: nowIso() });
+        audit(user.id, 'partner.experience.updated', { offeringId: t.id });
         return ok(res, { tour: t });
       }
     }
@@ -189,10 +248,9 @@ export function createPartnerHub(ctx) {
 
     // ---- partner inbox (requests across all claimed services) ----
     if (method === 'GET' && tail[1] === 'inbox') {
-      const services = partnerServicesOf(user);
       return send(res, 200, {
-        bookings: db().bookings.filter((b) => services.includes(b.service)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-        orders: db().orders.filter((o) => services.includes(o.service) || o.service === 'marketplace').sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+        bookings: db().bookings.filter((b) => ['requested', 'awaiting_payment', 'confirmed', 'assigned', 'in_progress'].includes(b.status) && bookingActor(db(), user, b)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+        orders: db().orders.filter((o) => !['delivered', 'cancelled', 'refunded'].includes(o.status) && orderActor(db(), user, o)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
         notifications: db().notifications.filter((n) => n.userId === user.id).slice(0, 50),
       });
     }
@@ -202,27 +260,26 @@ export function createPartnerHub(ctx) {
   function earningsSummary(userId) {
     // Earnings derive ONLY from captured payments on records that belong to this
     // partner: bookings/orders on their claimed listings, or jobs they accepted.
-    // 85% partner share after a 15% platform commission.
+    // Partner share uses the captured amount and the service's actual commission rate.
     const user = db().users.find((u) => u.id === userId) ?? { roles: [] };
-    const services = partnerServicesOf(user);
-    const claimedListings = new Set(myClaims(user).map((c) => c.listingId));
-    const myJobs = new Set(db().jobs.filter((j) => j.driverId === db().drivers.find((d) => d.userId === userId)?.id).map((j) => j.bookingId ?? j.orderId));
     const payments = db().payments.filter((p) => p.status === 'captured');
     const rows = [];
     for (const p of payments) {
       const b = p.bookingId ? db().bookings.find((x) => x.id === p.bookingId) : null;
       const o = p.orderId ? db().orders.find((x) => x.id === p.orderId) : null;
       const rec = b ?? o;
-      if (!rec || !services.includes(rec.service)) continue;
-      const mine = (rec.listingId && claimedListings.has(rec.listingId)) || myJobs.has(rec.id);
-      if (!mine) continue;
-      rows.push({ ref: rec.reference, service: rec.service, grossPaise: p.amountPaise, commissionPaise: Math.round(p.amountPaise * 0.15), netPaise: Math.round(p.amountPaise * 0.85), at: p.updatedAt });
+      if (!rec) continue;
+      const actor = b ? bookingActor(db(), user, b) : orderActor(db(), user, o);
+      if (!actor) continue;
+      const rate = COMMISSION_RATES[rec.service] ?? 15;
+      const commissionPaise = Math.round(p.amountPaise * rate / 100);
+      rows.push({ ref: rec.reference, service: rec.service, grossPaise: p.amountPaise, commissionPaise, netPaise: p.amountPaise - commissionPaise, at: p.updatedAt });
     }
     const settled = (db().settlements ?? []).filter((s) => s.userId === userId && s.status === 'paid').reduce((s, x) => s + x.amountPaise, 0);
     const requested = (db().settlements ?? []).filter((s) => s.userId === userId && s.status === 'requested').reduce((s, x) => s + x.amountPaise, 0);
     const totalNet = rows.reduce((s, r) => s + r.netPaise, 0);
     return {
-      commissionPercent: 15, rows,
+      commissionPercent: null, commissionLabel: 'Varies by service', rows,
       totalGrossPaise: rows.reduce((s, r) => s + r.grossPaise, 0),
       totalNetPaise: totalNet, settledPaise: settled,
       pendingPayoutPaise: Math.max(0, totalNet - settled - requested),

@@ -39,7 +39,9 @@ export function bookingPayload(service: string, p: Payload): Payload {
     case 'package':
       return {
         offeringId: str(p.offeringId), service, travellers: num(p.guests) ?? num(p.travellers) ?? 1,
-        visitDate: p.date ?? p.visitDate ?? null, journeyId: p.journeyId ?? null,
+        visitDate: p.date ?? p.visitDate ?? null, slotId: p.slotId ?? null,
+        answers: p.answers && typeof p.answers === 'object' && !Array.isArray(p.answers) ? p.answers : {},
+        journeyId: p.journeyId ?? null,
       };
     case 'parcel':
       return {

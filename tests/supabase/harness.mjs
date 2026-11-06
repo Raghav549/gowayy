@@ -53,7 +53,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 `;
 
-export async function createDatabase({ withSeed = true } = {}) {
+export async function createDatabase({ withSeed = true, demoMode = true } = {}) {
   const db = new PGlite();
   await db.exec(SHIM);
   const errors = [];
@@ -68,6 +68,23 @@ export async function createDatabase({ withSeed = true } = {}) {
       try { await db.exec(sql); }
       catch (error) { errors.push(`${file}: ${error.message}`); }
     }
+  }
+  // Migration 202611040013 ships production-safe defaults (demo_mode = false).
+  // These tests deliberately exercise the labelled development adapters — demo OTP
+  // return, partner auto-verify and sandbox payment capture — so the harness opts
+  // back in explicitly instead of relying on the shipped default. Pass
+  // { demoMode: false } to force the production posture, or { demoMode: null } to
+  // inspect the values the migrations themselves produce.
+  if (errors.length === 0 && demoMode !== null) {
+    await db.query(
+      `UPDATE public.app_config SET value = $2::jsonb, updated_at = now() WHERE key = $1`,
+      ['demo_mode', demoMode ? 'true' : 'false']);
+    await db.query(
+      `UPDATE public.app_config SET value = $2::jsonb, updated_at = now() WHERE key = $1`,
+      ['payment_provider', demoMode ? '"sandbox"' : '"unconfigured"']);
+    await db.query(
+      `UPDATE public.app_config SET value = $2::jsonb, updated_at = now() WHERE key = $1`,
+      ['otp_mode', demoMode ? '"demo"' : '"provider_required"']);
   }
   return { db, errors, close: () => db.close() };
 }

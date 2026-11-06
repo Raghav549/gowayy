@@ -2,6 +2,7 @@ import type {
   Booking, Destination, DispatchJob, DriverProfile, Journey, Notification, Order, Payment,
   Place, SearchHit, Session, SupportTicket, Transaction, User, VehicleClass, SharedTaxiRoute,
   Property, Restaurant, GroceryStore, TourPackage, Experience, Attraction, HiddenGem,
+  ExperienceOffering, ExperienceSlot, ExperienceQuote,
 } from '@gowayy/types';
 import type { PaymentMethodOption } from '@gowayy/commerce';
 
@@ -77,6 +78,9 @@ export interface GowayyClient {
   bookSharedTaxi(input: unknown, idempotencyKey: string): Promise<Booking>;
   bookStay(input: unknown, idempotencyKey: string): Promise<Booking>;
   bookTourism(input: unknown, idempotencyKey: string): Promise<Booking>;
+  experienceOfferings(destinationId?: string, kind?: 'experience' | 'package'): Promise<{ items: ExperienceOffering[] }>;
+  experienceSlots(offeringId: string, date: string): Promise<{ offering: ExperienceOffering; items: ExperienceSlot[] }>;
+  experienceQuote(slotId: string, guests: number): Promise<ExperienceQuote>;
   bookParcel(input: unknown, idempotencyKey: string): Promise<Booking>;
   placeOrder(input: unknown, idempotencyKey: string): Promise<Order>;
   bookings(): Promise<Booking[]>;
@@ -153,6 +157,9 @@ export interface GowayyClient {
   partnerTours(): Promise<{ items: unknown[] }>;
   addTour(input: unknown): Promise<{ tour: unknown }>;
   updateTour(id: string, input: unknown): Promise<{ tour: unknown }>;
+  partnerExperienceSlots(offeringId: string): Promise<{ items: ExperienceSlot[] }>;
+  addExperienceSlot(input: { offeringId: string; startAt: string; capacity: number }): Promise<{ slot: ExperienceSlot }>;
+  deleteExperienceSlot(id: string): Promise<{ deactivated: boolean }>;
   partnerEarnings(): Promise<Record<string, unknown>>;
   partnerSettlements(): Promise<{ items: unknown[] }>;
   requestSettlement(): Promise<{ settlement: unknown }>;
@@ -170,6 +177,7 @@ export interface GowayyClient {
   createPartnerProduct?(input: unknown): Promise<Record<string, unknown>>;
   updatePartnerProduct?(id: string, input: unknown): Promise<Record<string, unknown>>;
   partnerStores?(): Promise<{ items: unknown[] }>;
+  createPartnerStore?(input: unknown): Promise<Record<string, unknown>>;
   updatePartnerStore?(id: string, input: unknown): Promise<Record<string, unknown>>;
   partnerOffers?(): Promise<{ items: unknown[] }>;
   createPartnerOffer?(input: unknown): Promise<Record<string, unknown>>;
@@ -201,6 +209,8 @@ export interface GowayyClient {
   addDestinationImage?(id: string, input: unknown): Promise<Record<string, unknown>>;
   updateDestinationImage?(id: string, imageId: string, input: unknown): Promise<Record<string, unknown>>;
   deleteDestinationImage?(id: string, imageId: string): Promise<Record<string, unknown>>;
+  /** Transport-neutral access to the whitelisted, server-authorized admin gateway. */
+  adminRequest?<T = unknown>(path: string, options?: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown }): Promise<T>;
 }
 
 type FetchImpl = typeof fetch;
@@ -272,6 +282,14 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     bookSharedTaxi: async (input, key) => (await post<{ booking: Booking }>('/bookings/shared-taxi', input, key)).booking,
     bookStay: async (input, key) => (await post<{ booking: Booking }>('/bookings/hotels', input, key)).booking,
     bookTourism: async (input, key) => (await post<{ booking: Booking }>('/bookings/tourism', input, key)).booking,
+    experienceOfferings: (destinationId, kind) => {
+      const qs = new URLSearchParams();
+      if (destinationId) qs.set('destinationId', destinationId);
+      if (kind) qs.set('kind', kind);
+      return get(`/experiences/offerings${qs.size ? `?${qs}` : ''}`);
+    },
+    experienceSlots: (offeringId, date) => get(`/experiences/${encodeURIComponent(offeringId)}/slots?date=${encodeURIComponent(date)}`),
+    experienceQuote: (slotId, guests) => get(`/experiences/quote?slotId=${encodeURIComponent(slotId)}&guests=${encodeURIComponent(String(guests))}`),
     bookParcel: async (input, key) => (await post<{ booking: Booking }>('/bookings/parcel', input, key)).booking,
     placeOrder: async (input, key) => (await post<{ order: Order }>('/orders', input, key)).order,
     bookings: async () => (await get<{ items: Booking[] }>('/bookings')).items,
@@ -352,6 +370,9 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     partnerTours: () => get('/partner/tours'),
     addTour: (input) => post('/partner/tours', input),
     updateTour: (id, input) => patch(`/partner/tours/${encodeURIComponent(id)}`, input),
+    partnerExperienceSlots: (offeringId) => get(`/partner/tours/${encodeURIComponent(offeringId)}/slots`),
+    addExperienceSlot: (input) => post(`/partner/tours/${encodeURIComponent(input.offeringId)}/slots`, input),
+    deleteExperienceSlot: (id) => request(`/partner/experience-slots/${encodeURIComponent(id)}`, { method: 'DELETE' }),
     partnerEarnings: () => get('/partner/earnings'),
     partnerSettlements: () => get('/partner/settlements'),
     requestSettlement: () => post('/partner/settlements/request', {}),
@@ -367,6 +388,7 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     createPartnerProduct: (input) => post('/partner/catalog/products', input),
     updatePartnerProduct: (id, input) => patch(`/partner/catalog/products/${encodeURIComponent(id)}`, input),
     partnerStores: () => get('/partner/catalog/stores'),
+    createPartnerStore: (input) => post('/partner/stores', input),
     updatePartnerStore: (id, input) => patch(`/partner/stores/${encodeURIComponent(id)}`, input),
     partnerOffers: () => get('/partner/offers'),
     createPartnerOffer: (input) => post('/partner/offers', input),
@@ -397,5 +419,7 @@ export function createHttpTransport(options: { baseUrl?: string; tokenStore: Tok
     addDestinationImage: (id, input) => post(`/admin/destinations/${encodeURIComponent(id)}/images`, input),
     updateDestinationImage: (id, imageId, input) => patch(`/admin/destinations/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}`, input),
     deleteDestinationImage: (id, imageId) => request(`/admin/destinations/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}`, { method: 'DELETE' }),
+    adminRequest: <T = unknown>(path: string, options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown } = {}) =>
+      request<T>(`/admin${path}`, { method: options.method ?? 'GET', body: options.body }),
   };
 }

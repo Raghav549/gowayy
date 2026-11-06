@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Plus, Pencil, CalendarDays, ImagePlus, PackageCheck, Tag, Clock3, MapPin, Trash2 } from 'lucide-react';
 import { catalogue } from '@gowayy/catalog';
 import { client } from '../lib/client';
@@ -7,6 +8,7 @@ import { uploadImageFile } from '../lib/uploads';
 import { useSession, useUI } from '../store';
 import { Field, SectionHead, Skeleton, Badge, EmptyState } from '@gowayy/ui';
 import { formatINR } from '@gowayy/shared-utils';
+import type { ExperienceSlot } from '@gowayy/types';
 
 type Tab = 'store' | 'catalog' | 'orders' | 'offers' | 'rooms' | 'tours';
 
@@ -14,16 +16,24 @@ type StoreImage = { path?: string; alt?: string } | string | null;
 interface Store { id: string; name: string; description: string; address: string; phone: string; openingHours: string; deliveryCoverageKm: number; status: string; verified: boolean; image: StoreImage; logo: StoreImage; banner: StoreImage }
 interface Category { id: string; name: string; image?: string | null }
 interface Variant { id?: string; label: string; pricePaise: number; mrpPaise: number; stock: number }
-interface Product { id: string; name: string; description: string; category: string; categoryId: string; images: string[]; variants: Variant[]; tags: string[]; published: boolean; active: boolean; couponEligible: boolean }
-interface Offer { id: string; title: string; code?: string; active: boolean; discountPercent?: number; discountPaise?: number; minSubtotalPaise?: number; ownerUserId?: string | null }
+interface Product { id: string; storeId?: string; name: string; description: string; category: string; categoryId: string; images: string[]; variants: Variant[]; tags: string[]; published: boolean; active: boolean; couponEligible: boolean }
+interface Offer { id: string; title: string; code?: string; active: boolean; kind?: 'percent' | 'flat'; value?: number; scope?: string; discountPercent?: number; discountPaise?: number; minSubtotalPaise?: number; ownerUserId?: string | null }
 interface PartnerOrder { id: string; reference: string; status: string; service: string; items: Array<{ name: string; quantity: number }>; price: { totalPaise: number }; deliveryAddress?: { line?: string; city?: string } }
+interface Tour { id: string; kind: 'experience' | 'package'; name: string; destinationId: string; description: string; meetingPoint: string; requirements: string; pricePaise: number; durationHours: number; capacity: number; active: boolean }
+
+function localDateTimeValue(date: Date) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+function initialSlotStart() {
+  const date = new Date(); date.setDate(date.getDate() + 2); date.setHours(9, 0, 0, 0);
+  return localDateTimeValue(date);
+}
 
 const NEXT_STATUS: Record<string, Array<{ to: string; label: string }>> = {
   created: [{ to: 'accepted', label: 'Accept order' }, { to: 'cancelled', label: 'Reject' }],
   accepted: [{ to: 'preparing', label: 'Start preparing' }],
   preparing: [{ to: 'packed', label: 'Mark packed' }],
   packed: [{ to: 'out_for_delivery', label: 'Out for delivery' }],
-  out_for_delivery: [{ to: 'delivered', label: 'Hand over' }],
 };
 
 export function Manage() {
@@ -32,7 +42,7 @@ export function Manage() {
   const tabs = useMemo(() => {
     const list: Tab[] = ['store', 'catalog', 'orders', 'offers'];
     if (roles.includes('property')) list.push('rooms');
-    if (roles.includes('tour_operator') || roles.includes('property')) list.push('tours');
+    if (roles.includes('tour_operator')) list.push('tours');
     return list;
   }, [roles]);
   const [tab, setTab] = useState<Tab>('store');
@@ -76,7 +86,7 @@ function StorePanel() {
     finally { setUploading(false); }
   };
   if (stores.isLoading) return <Skeleton style={{ height: 260 }} />;
-  if (!store) return <EmptyState title="No store yet" body="Ask GOWAYY operations to create your store, then add products here." />;
+  if (!store) return <EmptyState title="No store yet" body="Create your real store profile with its destination and actual coordinates, then add products here." action={<Link className="btn btn--primary" to="/onboarding">Create a store</Link>} />;
   const value = { ...store, ...draft };
   return (
     <div className="grid-2">
@@ -149,7 +159,8 @@ function CatalogPanel() {
   const stores = useQuery({ queryKey: ['partner-stores'], queryFn: () => client.partnerStores?.() as unknown as Promise<{ items: Store[] }> });
   const products = useQuery({ queryKey: ['partner-products'], queryFn: () => client.partnerProducts?.() as unknown as Promise<{ items: Product[] }> });
   const categories = useQuery({ queryKey: ['partner-categories'], queryFn: () => client.partnerCategories?.() as unknown as Promise<{ items: Category[]; mine: Category[] }> });
-  const store = stores.data?.items[0];
+  const [selectedStoreId, setSelectedStoreId] = useState('');
+  const store = stores.data?.items.find((item) => item.id === selectedStoreId) ?? stores.data?.items[0];
   const empty = { name: '', description: '', categoryId: '', newCategory: '', newCategoryImage: '', price: '', mrp: '', stock: '', tags: '', images: [] as string[], variantLabel: '', variantPrice: '', couponEligible: true, published: true };
   const [form, setForm] = useState(empty);
   const [showForm, setShowForm] = useState(false);
@@ -213,12 +224,14 @@ function CatalogPanel() {
     toggle.mutate({ id: p.id, body: { stock: Math.max(0, v.stock + delta) } });
   };
 
+  const visibleProducts = (products.data?.items ?? []).filter((product) => !store || !product.storeId || product.storeId === store.id);
   if (products.isLoading) return <Skeleton style={{ height: 260 }} />;
   return (
     <div className="stack">
-      {!store && <div className="notice">No store is linked to your account yet. Contact GOWAYY operations.</div>}
+      {!store && <div className="notice">No store is linked to your account yet. <Link to="/onboarding">Create a store</Link>.</div>}
+      {(stores.data?.items.length ?? 0) > 1 && <Field label="Store"><select className="select" value={store?.id ?? ''} onChange={(event) => setSelectedStoreId(event.target.value)}>{stores.data!.items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field>}
       <div className="between row--wrap">
-        <p className="small muted">{products.data?.items.length ?? 0} products · {products.data?.items.filter((p) => p.published).length ?? 0} published</p>
+        <p className="small muted">{visibleProducts.length} products · {visibleProducts.filter((p) => p.published).length} published</p>
         <button className="btn btn--primary btn--sm" disabled={!store} onClick={() => setShowForm(!showForm)}><Plus size={15} /> Add product</button>
       </div>
 
@@ -243,7 +256,7 @@ function CatalogPanel() {
             <Field label="Second variant price (₹)"><input className="input" inputMode="decimal" value={form.variantPrice} onChange={(e) => setForm({ ...form, variantPrice: e.target.value })} /></Field>
           </div>
           <Field label="Description"><textarea className="input" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
-          <Field label={`Product images (${form.images.length}/5)`} hint="First image is the cover. JPEG, PNG or WebP up to 4 MB.">
+          <Field label={`Product images (${form.images.length}/5)`} hint="First image is the cover. JPEG, PNG or WebP up to 2.5 MB.">
             <div className="row row--wrap">
               {form.images.map((src, i) => (
                 <span key={src} className="image-chip"><img src={src} alt={`Product image ${i + 1}`} /><button type="button" aria-label="Remove image" onClick={() => setForm({ ...form, images: form.images.filter((x) => x !== src) })}><Trash2 size={12} /></button></span>
@@ -258,7 +271,7 @@ function CatalogPanel() {
       )}
 
       <div className="grid-3">
-        {(products.data?.items ?? []).map((p) => (
+        {visibleProducts.map((p) => (
           <div className="card stack" key={p.id}>
             {p.images?.[0] ? <img src={p.images[0]} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 12 }} /> : <div className="image-empty">No photo</div>}
             <div className="between"><strong className="small">{p.name}</strong><Badge tone={p.published ? 'success' : 'warning'}>{p.published ? 'live' : 'draft'}</Badge></div>
@@ -271,7 +284,7 @@ function CatalogPanel() {
             {p.tags.length > 0 && <div className="row" style={{ gap: 4, flexWrap: 'wrap' }}>{p.tags.map((t) => <Badge key={t}>{t}</Badge>)}</div>}
           </div>
         ))}
-        {products.data?.items.length === 0 && <p className="small muted">No products yet. Add your first product above.</p>}
+        {visibleProducts.length === 0 && <p className="small muted">No products for this store yet. Add your first product above.</p>}
       </div>
     </div>
   );
@@ -281,9 +294,10 @@ function OrdersPanel() {
   const qc = useQueryClient();
   const showToast = useUI((s) => s.showToast);
   const inbox = useQuery({ queryKey: ['partner-requests'], queryFn: () => client.partnerRequests(), refetchInterval: 15000 });
-  const deliveries = useQuery({ queryKey: ['partner-deliveries'], queryFn: () => client.partnerDeliveries?.() as unknown as Promise<{ items: Array<{ orderId: string; reference: string; masked?: string; verified: boolean }> }> });
+  const deliveries = useQuery({ queryKey: ['partner-deliveries'], queryFn: () => client.partnerDeliveries?.() as unknown as Promise<{ items: Array<{ orderId: string; reference: string; status: string; masked?: string; verified: boolean }> }> });
   const [codes, setCodes] = useState<Record<string, string>>({});
   const orders = (inbox.data?.orders ?? []) as PartnerOrder[];
+  const deliveryItems = (deliveries.data?.items ?? []).filter((delivery) => delivery.status === 'out_for_delivery');
   const move = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => (await client.updatePartnerOrderStatus?.(id, status)) ?? {},
     onSuccess: async () => { showToast('Order status updated; the customer is notified', 'success'); await qc.invalidateQueries({ queryKey: ['partner-requests'] }); await qc.invalidateQueries({ queryKey: ['partner-deliveries'] }); },
@@ -301,7 +315,7 @@ function OrdersPanel() {
         <h3 style={{ fontSize: 16 }}>Delivery codes</h3>
         <p className="tiny muted">Ask the customer for their six-digit code at handover. Orders cannot be marked delivered without it.</p>
         <div className="list" style={{ marginTop: 10 }}>
-          {(deliveries.data?.items ?? []).map((d) => (
+          {deliveryItems.map((d) => (
             <div className="list-row" key={d.orderId}>
               <PackageCheck size={16} />
               <span className="list-row__body"><span className="list-row__title">{d.reference}</span><span className="list-row__sub">{d.verified ? 'verified' : d.masked ?? 'code issued'}</span></span>
@@ -313,7 +327,7 @@ function OrdersPanel() {
               )}
             </div>
           ))}
-          {(deliveries.data?.items ?? []).length === 0 && <p className="small muted">No deliveries awaiting verification.</p>}
+          {deliveryItems.length === 0 && <p className="small muted">No out-for-delivery orders awaiting verification.</p>}
         </div>
       </div>
       <div className="stack">
@@ -327,7 +341,7 @@ function OrdersPanel() {
             <div className="between small"><span>{formatINR(o.price.totalPaise)}</span><span className="muted">{o.deliveryAddress?.line}{o.deliveryAddress?.city ? `, ${o.deliveryAddress.city}` : ''}</span></div>
             {(NEXT_STATUS[o.status] ?? []).length > 0 && (
               <div className="row row--wrap" style={{ gap: 8 }}>
-                {(NEXT_STATUS[o.status] ?? []).map((n) => <button key={n.to} className={`btn btn--sm ${n.to === 'cancelled' ? 'btn--danger' : 'btn--primary'}`} onClick={() => move.mutate({ id: o.id, status: n.to })}>{n.label}</button>)}
+                {(NEXT_STATUS[o.status] ?? []).map((n) => <button key={n.to} className={`btn btn--sm ${n.to === 'cancelled' ? 'btn--danger' : 'btn--primary'}`} disabled={move.isPending} onClick={() => move.mutate({ id: o.id, status: n.to })}>{n.label}</button>)}
               </div>
             )}
             {o.status === 'out_for_delivery' && <p className="tiny muted">Use the delivery code above to complete this order.</p>}
@@ -343,16 +357,29 @@ function OffersPanel() {
   const showToast = useUI((s) => s.showToast);
   const offers = useQuery({ queryKey: ['partner-offers'], queryFn: () => client.partnerOffers?.() as unknown as Promise<{ items: Offer[] }> });
   const coupons = useQuery({ queryKey: ['partner-coupons'], queryFn: () => client.partnerCoupons?.() as unknown as Promise<{ items: Array<{ code: string; kind: string; valuePercent?: number; valuePaise?: number; active: boolean }> }> });
-  const [form, setForm] = useState({ title: '', code: '', kind: 'percent', value: '', min: '' });
+  const stores = useQuery({ queryKey: ['partner-stores'], queryFn: () => client.partnerStores?.() as unknown as Promise<{ items: Store[] }> });
+  const categories = useQuery({ queryKey: ['partner-categories'], queryFn: () => client.partnerCategories?.() as unknown as Promise<{ items: Category[] }> });
+  const products = useQuery({ queryKey: ['partner-products'], queryFn: () => client.partnerProducts?.() as unknown as Promise<{ items: Product[] }> });
+  const emptyForm = { title: '', code: '', kind: 'percent', value: '', min: '', scope: 'store', storeId: '', categoryId: '', productId: '' };
+  const [form, setForm] = useState(emptyForm);
+  const selectedStoreId = form.storeId || stores.data?.items[0]?.id || '';
+  const targetReady = form.scope === 'store' ? Boolean(selectedStoreId) : form.scope === 'category' ? Boolean(form.categoryId) : Boolean(form.productId);
   const create = useMutation({
-    mutationFn: async () => (await client.createPartnerOffer?.({
-      title: form.title, code: form.code || undefined, kind: form.kind,
-      valuePercent: form.kind === 'percent' ? Number(form.value) : undefined,
-      valuePaise: form.kind === 'flat' ? Math.round(Number(form.value) * 100) : undefined,
-      minSubtotalPaise: form.min ? Math.round(Number(form.min) * 100) : 0,
-      ownerUserId: 'me',
-    })) ?? {},
-    onSuccess: async () => { showToast('Offer created', 'success'); setForm({ title: '', code: '', kind: 'percent', value: '', min: '' }); await qc.invalidateQueries({ queryKey: ['partner-offers'] }); await qc.invalidateQueries({ queryKey: ['partner-coupons'] }); },
+    mutationFn: async () => {
+      if (!targetReady) throw new Error(`Choose a ${form.scope} for this offer`);
+      const amount = Number(form.value);
+      if (!Number.isFinite(amount) || amount <= 0 || (form.kind === 'percent' && amount > 90)) throw new Error('Enter a valid discount (up to 90%)');
+      return (await client.createPartnerOffer?.({
+        title: form.title.trim(), code: form.code.trim() || undefined, kind: form.kind, scope: form.scope,
+        storeId: form.scope === 'store' ? selectedStoreId : undefined,
+        categoryIds: form.scope === 'category' ? [form.categoryId] : [],
+        productIds: form.scope === 'product' ? [form.productId] : [],
+        valuePercent: form.kind === 'percent' ? amount : undefined,
+        valuePaise: form.kind === 'flat' ? Math.round(amount * 100) : undefined,
+        minSubtotalPaise: form.min ? Math.round(Number(form.min) * 100) : 0,
+      })) ?? {};
+    },
+    onSuccess: async () => { showToast('Offer created', 'success'); setForm(emptyForm); await qc.invalidateQueries({ queryKey: ['partner-offers'] }); await qc.invalidateQueries({ queryKey: ['partner-coupons'] }); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
   const toggle = useMutation({
@@ -370,15 +397,19 @@ function OffersPanel() {
           <Field label="Type"><select className="input" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}><option value="percent">Percent off</option><option value="flat">Flat amount off</option></select></Field>
           <Field label={form.kind === 'percent' ? 'Percent (%)' : 'Amount (₹)'}><input className="input" required inputMode="decimal" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></Field>
           <Field label="Minimum order (₹)"><input className="input" inputMode="decimal" value={form.min} onChange={(e) => setForm({ ...form, min: e.target.value })} /></Field>
+          <Field label="Offer scope"><select className="input" value={form.scope} onChange={(e) => setForm({ ...form, scope: e.target.value, categoryId: '', productId: '' })}><option value="store">Whole store</option><option value="category">Category</option><option value="product">Product</option></select></Field>
+          {form.scope === 'store' && <Field label="Store"><select className="input" value={selectedStoreId} onChange={(e) => setForm({ ...form, storeId: e.target.value })}>{(stores.data?.items ?? []).map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></Field>}
+          {form.scope === 'category' && <Field label="Category"><select className="input" required value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}><option value="">Choose…</option>{(categories.data?.items ?? []).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></Field>}
+          {form.scope === 'product' && <Field label="Product"><select className="input" required value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })}><option value="">Choose…</option>{(products.data?.items ?? []).map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></Field>}
         </div>
-        <button className="btn btn--primary" disabled={create.isPending || !form.title || !form.value}>{create.isPending ? 'Creating…' : <><Tag size={15} /> Create offer</>}</button>
+        <button className="btn btn--primary" disabled={create.isPending || !form.title.trim() || !form.value || !targetReady}>{create.isPending ? 'Creating…' : <><Tag size={15} /> Create offer</>}</button>
       </form>
       <div className="grid-2">
         <div className="card stack">
-          <h3 style={{ fontSize: 16 }}>Your offers</h3>
+          <h3 style={{ fontSize: 16 }}>Offers visible to your customers</h3>
           {(offers.data?.items ?? []).map((o) => (
-            <div className="list-row" key={o.id}><Tag size={16} /><span className="list-row__body"><span className="list-row__title">{o.title}</span><span className="list-row__sub">{o.code ?? 'no code'} · {o.discountPercent ? `${o.discountPercent}%` : formatINR(o.discountPaise ?? 0)}</span></span>
-              <button className={`badge ${o.active ? 'badge--success' : 'badge--danger'}`} onClick={() => toggle.mutate({ id: o.id, active: !o.active })}>{o.active ? 'active' : 'paused'}</button>
+            <div className="list-row" key={o.id}><Tag size={16} /><span className="list-row__body"><span className="list-row__title">{o.title}</span><span className="list-row__sub">{o.code ?? 'no code'} · {o.kind ? (o.kind === 'percent' ? `${o.value ?? 0}%` : formatINR(o.value ?? 0)) : o.discountPercent ? `${o.discountPercent}%` : formatINR(o.discountPaise ?? 0)} · {o.scope ?? 'store'}</span></span>
+              {o.ownerUserId == null ? <Badge>platform</Badge> : <button className={`badge ${o.active ? 'badge--success' : 'badge--danger'}`} disabled={toggle.isPending} onClick={() => toggle.mutate({ id: o.id, active: !o.active })}>{o.active ? 'active' : 'paused'}</button>}
             </div>
           ))}
           {(offers.data?.items ?? []).length === 0 && <p className="small muted">No offers yet.</p>}
@@ -444,35 +475,106 @@ function ToursPanel() {
   const qc = useQueryClient();
   const showToast = useUI((s) => s.showToast);
   const tours = useQuery({ queryKey: ['partner-tours'], queryFn: () => client.partnerTours() });
-  const [name, setName] = useState(''); const [dest, setDest] = useState(''); const [price, setPrice] = useState(''); const [hours, setHours] = useState('4'); const [cap, setCap] = useState('8');
+  const empty = { kind: 'experience' as 'experience' | 'package', name: '', destinationId: '', price: '', durationHours: '2', capacity: '8', description: '', meetingPoint: '', requirements: '' };
+  const [form, setForm] = useState(empty);
+  const [selectedId, setSelectedId] = useState('');
+  const items = (tours.data?.items as Tour[] | undefined) ?? [];
+  const selected = items.find((tour) => tour.id === selectedId) ?? null;
   const add = useMutation({
-    mutationFn: () => client.addTour({ name, destinationId: dest, pricePaise: Math.round(Number(price) * 100), durationHours: Number(hours), capacity: Number(cap) }),
-    onSuccess: async () => { setName(''); showToast('Tour package created', 'success'); await qc.invalidateQueries({ queryKey: ['partner-tours'] }); },
+    mutationFn: () => {
+      const pricePaise = Math.round(Number(form.price) * 100);
+      const durationHours = Number(form.durationHours); const capacity = Number(form.capacity);
+      if (form.name.trim().length < 2 || !form.destinationId || !Number.isInteger(pricePaise) || pricePaise < 0 || !Number.isFinite(durationHours) || durationHours <= 0 || !Number.isInteger(capacity) || capacity < 1) throw new Error('Enter a valid name, destination, price, duration and capacity');
+      return client.addTour({
+        kind: form.kind, name: form.name.trim(), destinationId: form.destinationId, pricePaise, durationHours, capacity,
+        description: form.description.trim(), meetingPoint: form.meetingPoint.trim(), requirements: form.requirements.trim(),
+      });
+    },
+    onSuccess: async (result) => {
+      setForm(empty); setSelectedId((result.tour as Tour).id);
+      showToast('Offering saved. Add future slots to make it bookable.', 'success');
+      await qc.invalidateQueries({ queryKey: ['partner-tours'] });
+    },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+  const toggle = useMutation({
+    mutationFn: (tour: Tour) => client.updateTour(tour.id, { active: !tour.active }),
+    onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['partner-tours'] }); showToast('Offering visibility updated', 'success'); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
   if (tours.isLoading) return <Skeleton style={{ height: 200 }} />;
   return (
     <div className="stack">
-      <div className="card grid-3" style={{ gap: 10 }}>
-        <Field label="Tour name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-        <Field label="Destination"><select className="select" value={dest} onChange={(e) => setDest(e.target.value)}><option value="">Select…</option>{catalogue.destinations.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
-        <Field label="Price (₹)"><input className="input" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} /></Field>
-        <Field label="Hours"><input className="input" inputMode="numeric" value={hours} onChange={(e) => setHours(e.target.value)} /></Field>
-        <Field label="Capacity"><input className="input" inputMode="numeric" value={cap} onChange={(e) => setCap(e.target.value)} /></Field>
-        <button className="btn btn--primary" style={{ gridColumn: '1 / -1' }} disabled={!name || !dest || !price || add.isPending} onClick={() => add.mutate()}><Plus size={15} /> Create package</button>
-      </div>
-      <div className="card">
-        <h3 style={{ fontSize: 16 }}>My packages</h3>
-        <div className="list" style={{ marginTop: 8 }}>
-          {(tours.data?.items as Array<{ id: string; name: string; pricePaise: number; durationHours: number; capacity: number; active: boolean }> ?? []).map((t) => (
-            <div className="list-row" key={t.id}>
-              <span className="list-row__body"><span className="list-row__title">{t.name}</span><span className="list-row__sub">{formatINR(t.pricePaise)} · {t.durationHours}h · capacity {t.capacity}</span></span>
-              <span className={`badge ${t.active ? 'badge--success' : 'badge--danger'}`}>{t.active ? 'Active' : 'Inactive'}</span>
-            </div>
-          ))}
-          {!(tours.data?.items as unknown[] ?? []).length && <p className="small muted">No packages yet.</p>}
+      <form className="card stack" onSubmit={(event) => { event.preventDefault(); add.mutate(); }}>
+        <div><h3 style={{ fontSize: 16, marginBottom: 4 }}>Create an experience or package</h3><p className="tiny muted" style={{ margin: 0 }}>Only active offerings from verified hosts appear to customers. A real future slot is required before booking.</p></div>
+        <div className="grid-3" style={{ gap: 10 }}>
+          <Field label="Offering type"><select className="select" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as 'experience' | 'package' })}><option value="experience">Local experience</option><option value="package">Sightseeing package</option></select></Field>
+          <Field label="Name"><input className="input" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Destination"><select className="select" required value={form.destinationId} onChange={(e) => setForm({ ...form, destinationId: e.target.value })}><option value="">Select…</option>{catalogue.destinations.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
+          <Field label="Price per guest (₹)"><input className="input" required min={0} type="number" inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></Field>
+          <Field label="Duration (hours)"><input className="input" required min={0.25} step={0.25} type="number" inputMode="decimal" value={form.durationHours} onChange={(e) => setForm({ ...form, durationHours: e.target.value })} /></Field>
+          <Field label="Maximum guests per slot"><input className="input" required min={1} step={1} type="number" inputMode="numeric" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></Field>
         </div>
+        <Field label="Description"><textarea className="input" rows={3} maxLength={2000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What guests will actually do" /></Field>
+        <div className="grid-2" style={{ gap: 10 }}>
+          <Field label="Meeting point"><input className="input" maxLength={300} value={form.meetingPoint} onChange={(e) => setForm({ ...form, meetingPoint: e.target.value })} placeholder="Exact place or host instructions" /></Field>
+          <Field label="Guest requirements"><input className="input" maxLength={1000} value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} placeholder="Fitness, clothing, age or safety requirements" /></Field>
+        </div>
+        <button className="btn btn--primary" disabled={add.isPending}><Plus size={15} /> {add.isPending ? 'Saving…' : 'Create offering'}</button>
+      </form>
+
+      <div className="card stack">
+        <h3 style={{ fontSize: 16, margin: 0 }}>My offerings</h3>
+        {items.map((tour) => <div className="card stack" key={tour.id} style={{ padding: 14 }}>
+          <div className="between row--wrap" style={{ gap: 8 }}><div style={{ minWidth: 0 }}><strong style={{ overflowWrap: 'anywhere' }}>{tour.name}</strong><div className="tiny muted">{tour.kind === 'package' ? 'Package' : 'Experience'} · {formatINR(tour.pricePaise)} / guest · {tour.durationHours}h · up to {tour.capacity}</div></div><span className={`badge ${tour.active ? 'badge--success' : 'badge--danger'}`}>{tour.active ? 'Active' : 'Inactive'}</span></div>
+          {tour.meetingPoint && <p className="tiny muted" style={{ margin: 0 }}><MapPin size={12} /> {tour.meetingPoint}</p>}
+          <div className="row row--wrap" style={{ gap: 8 }}><button className="btn btn--secondary btn--sm" onClick={() => setSelectedId(selectedId === tour.id ? '' : tour.id)}><CalendarDays size={14} /> {selectedId === tour.id ? 'Hide schedule' : 'Manage slots'}</button><button className="btn btn--ghost btn--sm" disabled={toggle.isPending} onClick={() => toggle.mutate(tour)}>{tour.active ? 'Deactivate' : 'Activate'}</button></div>
+        </div>)}
+        {items.length === 0 && <EmptyState title="No offerings yet" body="Create an experience or package above, then publish real future slots." />}
       </div>
+      {selected && <TourSlots key={selected.id} tour={selected} />}
+    </div>
+  );
+}
+
+function TourSlots({ tour }: { tour: Tour }) {
+  const qc = useQueryClient();
+  const showToast = useUI((s) => s.showToast);
+  const slots = useQuery({ queryKey: ['partner-experience-slots', tour.id], queryFn: () => client.partnerExperienceSlots(tour.id) });
+  const [startAt, setStartAt] = useState(initialSlotStart());
+  const [capacity, setCapacity] = useState(String(tour.capacity));
+  const add = useMutation({
+    mutationFn: () => {
+      const start = new Date(startAt); const count = Number(capacity);
+      if (!Number.isFinite(start.getTime()) || start.getTime() <= Date.now()) throw new Error('Choose a future date and time');
+      if (!Number.isInteger(count) || count < 1 || count > tour.capacity) throw new Error(`Capacity must be between 1 and ${tour.capacity}`);
+      return client.addExperienceSlot({ offeringId: tour.id, startAt: start.toISOString(), capacity: count });
+    },
+    onSuccess: async () => { showToast('Slot published with real capacity', 'success'); await qc.invalidateQueries({ queryKey: ['partner-experience-slots', tour.id] }); },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteExperienceSlot(id),
+    onSuccess: async () => { showToast('Slot deactivated', 'success'); await qc.invalidateQueries({ queryKey: ['partner-experience-slots', tour.id] }); },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+  return (
+    <div className="card stack">
+      <div><h3 style={{ fontSize: 16, marginBottom: 4 }}>Schedule · {tour.name}</h3><p className="tiny muted" style={{ margin: 0 }}>Saving the same start time updates that slot. Capacity can never be reduced below guests already booked.</p></div>
+      <form className="grid-3" style={{ gap: 10 }} onSubmit={(event) => { event.preventDefault(); add.mutate(); }}>
+        <Field label="Start date & time"><input className="input" type="datetime-local" required min={localDateTimeValue(new Date())} value={startAt} onChange={(e) => setStartAt(e.target.value)} /></Field>
+        <Field label="Slot capacity"><input className="input" type="number" min={1} max={tour.capacity} step={1} required value={capacity} onChange={(e) => setCapacity(e.target.value)} /></Field>
+        <button className="btn btn--primary" style={{ alignSelf: 'end' }} disabled={add.isPending}><Plus size={15} /> {add.isPending ? 'Publishing…' : 'Publish slot'}</button>
+      </form>
+      {slots.isLoading && <Skeleton style={{ height: 120 }} />}
+      <div className="list">
+        {((slots.data?.items ?? []) as ExperienceSlot[]).map((slot) => <div className="list-row" key={slot.id} style={{ flexWrap: 'wrap' }}>
+          <Clock3 size={16} /><span className="list-row__body" style={{ minWidth: 180 }}><span className="list-row__title">{new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(slot.startsAt))}</span><span className="list-row__sub">Ends {new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(slot.endsAt))} · {slot.booked}/{slot.capacity} booked</span></span>
+          <span className={`badge ${slot.active === false ? 'badge--danger' : 'badge--success'}`}>{slot.active === false ? 'Inactive' : `${slot.available} available`}</span>
+          {slot.active !== false && <button className="btn btn--ghost btn--sm" disabled={remove.isPending} onClick={() => remove.mutate(slot.id)}><Trash2 size={14} /> Deactivate</button>}
+        </div>)}
+      </div>
+      {!slots.isLoading && (slots.data?.items.length ?? 0) === 0 && <p className="small muted">No slots yet. This offering is not bookable until you publish one.</p>}
     </div>
   );
 }

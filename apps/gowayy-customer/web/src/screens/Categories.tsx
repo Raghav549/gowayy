@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Store, ArrowRight, BadgePercent, Search, X, MapPin, Package } from 'lucide-react';
+import { Store, ArrowRight, BadgePercent, MapPin, Package } from 'lucide-react';
 import { client } from '../lib/client';
 import { formatINR } from '@gowayy/shared-utils';
 import { ProductCardSkeleton } from '../components/Mascot';
 import { SectionHead, EmptyState } from '../components/ui';
 import { apiErrorText, usePageMeta } from '../lib/guards';
+import { UniversalSearch, useDebouncedValue } from '../components/UniversalSearch';
 
 interface ProductView {
   id: string; slug: string; name: string; brand: string; category: string; storeId: string; dataClass: string;
@@ -30,30 +31,32 @@ export function Categories() {
   const [params, setParams] = useSearchParams();
   const activeCategory = params.get('c') ?? '';
   const activeStore = params.get('store') ?? '';
-  const [text, setText] = useState('');
-  const [storeQuery, setStoreQuery] = useState('');
+  const [text, setText] = useState(params.get('q') ?? '');
+  const query = useDebouncedValue(text.trim());
 
   const cats = useQuery({ queryKey: ['commerce-categories'], queryFn: () => client.commerceCategories() });
   const products = useQuery({
-    queryKey: ['commerce-products', activeCategory, activeStore, text],
-    queryFn: () => client.commerceProducts({ category: activeCategory || undefined, storeId: activeStore || undefined, q: text || undefined }),
+    queryKey: ['commerce-products', activeCategory, activeStore, query],
+    queryFn: () => client.commerceProducts({ category: activeCategory || undefined, storeId: activeStore || undefined, q: query || undefined }),
   });
   const storefront = useQuery({ queryKey: ['storefront'], queryFn: async () => (await client.storefront?.()) as unknown as { stores: StoreView[]; offers: Array<{ id: string; title: string; code?: string | null; kind: string; value: number; minOrderPaise?: number }> } });
   const stores = useQuery({ queryKey: ['recommended-stores'], queryFn: () => client.recommendedStores() });
 
   const storeList = (storefront.data?.stores?.length ? storefront.data.stores : (stores.data?.items as StoreView[] | undefined) ?? [])
-    .filter((s) => !storeQuery || `${s.name} ${s.categoryName ?? ''}`.toLowerCase().includes(storeQuery.toLowerCase()));
+    .filter((s) => !text.trim() || `${s.name} ${s.categoryName ?? ''} ${s.address ?? ''}`.toLowerCase().includes(text.trim().toLowerCase()));
 
   return (
     <div className="stack shop-page">
-      <SectionHead eyebrow="Shop" title="Everything from hill stores" subtitle="Groceries, general stores and local Himalayan products — add real store products to your cart." />
+      <SectionHead eyebrow="Shop" title="Everything from hill stores" />
 
-      <div className="search-field search-field--compact" role="search">
-        <Search size={18} aria-hidden="true" className="search-field__icon" />
-        <input className="search-field__input" type="search" value={text} placeholder="Search products, e.g. tea, honey, woollens" aria-label="Search products"
-          onChange={(e) => setText(e.target.value)} />
-        {text && <button type="button" className="search-field__clear" aria-label="Clear" onClick={() => setText('')}><X size={16} /></button>}
-      </div>
+      <UniversalSearch
+        value={text}
+        onChange={setText}
+        scope="commerce"
+        variant="compact"
+        placeholder="Search products and stores — tea, honey, woollens…"
+        label="Search products and stores"
+      />
 
       <div className="chips">
         <button className={`chip ${!activeCategory ? 'chip--active' : ''}`} onClick={() => setParams({})}>All products</button>
@@ -76,10 +79,7 @@ export function Categories() {
       <section>
         <div className="between row--wrap">
           <h3 style={{ fontSize: 18 }}>Stores</h3>
-          <div className="search-field search-field--inline" style={{ maxWidth: 280 }}>
-            <Search size={15} aria-hidden="true" className="search-field__icon" />
-            <input className="search-field__input" value={storeQuery} onChange={(e) => setStoreQuery(e.target.value)} placeholder="Find a store" aria-label="Find a store" />
-          </div>
+          {(activeStore || text) && <button className="link" onClick={() => { setText(''); setParams({}); }}>Clear store filter</button>}
         </div>
         <div className="grid-3" style={{ marginTop: 12 }}>
           {storeList.map((s) => (

@@ -45,9 +45,10 @@ Additional variables for the development/HTTP backend and payment work:
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
-| `GOWAYY_PAYMENT_PROVIDER` | API | `sandbox` (default) or the real gateway adapter name |
-| `GOWAYY_PAYMENT_GATEWAY_KEY` | API | Server-only gateway key; card/net-banking are refused with `GATEWAY_NOT_CONFIGURED` until set |
-| `GOWAYY_PAYMENT_WEBHOOK_SECRET` | API | HMAC secret for signed payment callbacks |
+| `GOWAYY_PAYMENT_PROVIDER` | API/Edge | `razorpay` for the implemented live Edge adapter; `sandbox` only for labelled development |
+| `GOWAYY_RAZORPAY_KEY_ID`, `GOWAYY_RAZORPAY_KEY_SECRET` | Supabase Edge secrets | Server-side Razorpay order/refund calls; never put the secret in Vite/Expo variables |
+| `GOWAYY_PAYMENT_GATEWAY_KEY` | Development API only | Legacy configuration gate, not a live gateway integration; card/net-banking remain unavailable without a real adapter |
+| `GOWAYY_PAYMENT_WEBHOOK_SECRET` | API/Edge | HMAC secret for signed payment callbacks |
 | `GOWAYY_OTP_PROVIDER` | API | `demo` in development; a real email provider in production |
 | `EXPO_PUBLIC_ADMIN_URL` | Admin Android build | HTTPS URL of the deployed admin console loaded by the APK shell |
 

@@ -155,7 +155,7 @@ export default function RegisterScreen() {
         <Text style={[styles.title, { color: c.text }]}>Enter the 6-digit code</Text>
         <Text style={[styles.subtitle, { color: c.textMuted }]}>Step 3 of 3 · Sent to {credentials.email}</Text>
         <DemoBanner>{registration.demoNotice}</DemoBanner>
-        {registration.demoMode && registration.demoOtp ? <Text style={{ color: c.accent }}>Demo code: {registration.demoOtp}</Text> : null}
+        {__DEV__ && registration.demoMode && registration.demoOtp ? <Text style={{ color: c.accent }}>Demo code: {registration.demoOtp}</Text> : null}
         <OtpBoxes value={code} onChange={(v) => { setCode(v); if (v.length === 6) void verify(v); }} disabled={busy || expired} />
         <Text style={{ color: c.textMuted, fontSize: font.sizes.xs }}>Expires at {new Date(registration.expiresAt).toLocaleTimeString()}{expired ? ' · expired' : ''}</Text>
         {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}

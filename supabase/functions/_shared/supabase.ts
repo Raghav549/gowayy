@@ -24,6 +24,9 @@ export async function requireCaller(req: Request): Promise<Caller> {
   if (!r.ok) throw new HttpError(401, 'INVALID_SESSION', 'Your session expired. Please sign in again.');
   const user = await r.json() as { id?: string; email?: string };
   if (!user.id) throw new HttpError(401, 'INVALID_SESSION', 'Your session expired. Please sign in again.');
+  // Auth validity alone is insufficient: suspended/deleted profiles must lose
+  // access to every protected operation, not only to particular UI routes.
+  await rpc('gowayy_assert_active', {}, token);
   return { id: user.id, email: user.email ?? '', token };
 }
 

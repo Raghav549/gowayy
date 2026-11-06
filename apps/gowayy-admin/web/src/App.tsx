@@ -10,21 +10,34 @@ import type { User } from '@gowayy/types';
 import { admin, client, errorText } from './lib/client';
 import { useSession, useUI } from './store';
 import { Badge, Card, DataTable, Field, Modal, Stat, ToastHost, type Column } from './components/ui';
+import { SplashScreen } from '@gowayy/ui';
 import { Posters, ServiceAreas, Destinations } from './sections/content';
 import './styles.css';
 
 type SectionId = 'overview' | 'customers' | 'partners' | 'catalog' | 'tourism' | 'posters' | 'coverage' | 'orders' | 'bookings' | 'finance' | 'promotions' | 'support' | 'analytics' | 'audit' | 'roles' | 'settings';
 
 const NAV: Array<{ id: SectionId; label: string; icon: typeof LayoutDashboard; group: string }> = [
-  { id: 'tourism', label: 'Destinations', icon: MapPin, group: 'Content' },
-  { id: 'posters', label: 'Posters', icon: ImageIcon, group: 'Content' },
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Overview' },
+  { id: 'customers', label: 'Customers', icon: Users, group: 'People' },
+  { id: 'partners', label: 'Partner verification', icon: BadgeCheck, group: 'People' },
+  { id: 'roles', label: 'Roles & access', icon: ShieldCheck, group: 'People' },
+  { id: 'catalog', label: 'Products & stores', icon: Store, group: 'Catalogue' },
+  { id: 'tourism', label: 'Destinations', icon: MapPin, group: 'Catalogue' },
+  { id: 'posters', label: 'Posters & banners', icon: ImageIcon, group: 'Catalogue' },
   { id: 'coverage', label: 'Cities & service areas', icon: MapPin, group: 'Serviceability' },
+  { id: 'orders', label: 'Orders', icon: ShoppingBag, group: 'Operations' },
+  { id: 'bookings', label: 'Bookings', icon: CalendarDays, group: 'Operations' },
+  { id: 'finance', label: 'Finance & settlements', icon: Wallet, group: 'Operations' },
+  { id: 'promotions', label: 'Promotions', icon: Percent, group: 'Engagement' },
+  { id: 'support', label: 'Support', icon: LifeBuoy, group: 'Engagement' },
+  { id: 'analytics', label: 'Reports & analytics', icon: BarChart3, group: 'Governance' },
   { id: 'audit', label: 'Audit log', icon: ScrollText, group: 'Governance' },
+  { id: 'settings', label: 'Service configuration', icon: Settings2, group: 'Governance' },
 ];
 
-// The console is deliberately scoped to content, posters and serviceability.
-// Legacy sections remain in the codebase for API compatibility but are not routable.
-const ADMIN_SECTIONS = new Set<SectionId>(['tourism', 'posters', 'coverage', 'audit']);
+// Every implemented console screen is routable. Authorization is still enforced
+// by the backend for each operation; this set controls navigation only.
+const ADMIN_SECTIONS = new Set<SectionId>(NAV.map((item) => item.id));
 
 const statusTone = (status?: string) => status === 'active' || status === 'captured' || status === 'paid' || status === 'delivered' || status === 'verified' ? 'good' : status === 'suspended' || status === 'refunded' || status === 'cancelled' || status === 'rejected' ? 'bad' : status === 'pending' || status === 'requires_action' ? 'warn' : 'neutral';
 
@@ -632,19 +645,27 @@ const SECTIONS: Record<SectionId, ComponentType> = {
 
 export default function App() {
   const { user, loading, hydrate } = useSession();
+  const [splash, setSplash] = useState(() => {
+    try { return window.sessionStorage.getItem('gowayy.admin.splashSeen') !== 'true'; }
+    catch { return true; }
+  });
   const toast = useUI((s) => s.toast);
   const clearToast = useUI((s) => s.clearToast);
-  const [section, setSection] = useState<SectionId>(() => { const h = window.location.hash.slice(1) as SectionId; return ADMIN_SECTIONS.has(h) ? h : 'tourism'; });
-  const Section = ADMIN_SECTIONS.has(section) ? SECTIONS[section] : Destinations;
+  const [section, setSection] = useState<SectionId>(() => { const h = window.location.hash.slice(1) as SectionId; return ADMIN_SECTIONS.has(h) ? h : 'overview'; });
+  const Section = ADMIN_SECTIONS.has(section) ? SECTIONS[section] : Overview;
 
   useEffect(() => { void hydrate(); }, [hydrate]);
   useEffect(() => { window.location.hash = section; }, [section]);
   useEffect(() => {
-    const onHash = () => { const h = window.location.hash.slice(1) as SectionId; setSection(ADMIN_SECTIONS.has(h) ? h : 'tourism'); };
+    const onHash = () => { const h = window.location.hash.slice(1) as SectionId; setSection(ADMIN_SECTIONS.has(h) ? h : 'overview'); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  if (splash) return <SplashScreen onDone={() => {
+    try { window.sessionStorage.setItem('gowayy.admin.splashSeen', 'true'); } catch { /* storage may be unavailable */ }
+    setSplash(false);
+  }} />;
   if (loading) return <div className="admin-loading"><span className="spinner" aria-hidden="true" /> Checking administrator session…</div>;
   if (!user) return <><Login /><ToastHost toast={toast} onDone={clearToast} /></>;
   return (
