@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { CarFront, Inbox, Wallet, ShieldCheck, FileCheck, ArrowRight } from 'lucide-react';
 import { client } from '../lib/client';
 import { formatINR } from '@gowayy/shared-utils';
-import { Badge, SectionHead, Skeleton, Stat, MascotEmpty } from '@gowayy/ui';
+import { Badge, SectionHead, Skeleton, SkeletonMetrics, SkeletonList, Stat, MascotEmpty } from '@gowayy/ui';
 
 export function Home() {
   const overview = useQuery({ queryKey: ['partner-overview'], queryFn: () => client.partnerOverview(), refetchInterval: 15000 });
   const o = overview.data as Record<string, any> | undefined;
-  if (overview.isLoading) return <div className="stack"><Skeleton style={{ height: 120 }} /><div className="grid-3"><Skeleton style={{ height: 90 }} /><Skeleton style={{ height: 90 }} /><Skeleton style={{ height: 90 }} /></div></div>;
+  if (overview.isLoading) return <div className="stack"><Skeleton style={{ height: 22, width: 180, borderRadius: 8 }} /><SkeletonMetrics count={3} /><div className="grid-2"><Skeleton style={{ height: 84, borderRadius: 16 }} /><Skeleton style={{ height: 84, borderRadius: 16 }} /></div><SkeletonList rows={3} /></div>;
   if (!o) return <MascotEmpty pose="error-retry" title="Could not load your dashboard" body="Pull to retry." />;
   const roles: string[] = o.roles ?? [];
   const verification = String(o.verification ?? 'unverified');

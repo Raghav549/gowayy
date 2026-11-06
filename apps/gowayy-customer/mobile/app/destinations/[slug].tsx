@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { client } from '../../src/lib/client';
 import { useJourney } from '../../src/store/useJourney';
 import { useUI } from '../../src/store/useUI';
-import { Button, Card, Photo, Screen, SectionTitle, Badge } from '../../src/components/UI';
+import { Button, Card, Photo, Screen, SectionTitle, Badge, Skeleton } from '../../src/components/UI';
 import { ListingCard } from '../../src/components/Cards';
 import { openNavigationHandoff } from '../../src/lib/location';
 import { useTheme, spacing, radius, font } from '../../src/theme';
@@ -21,8 +21,7 @@ export default function DestinationDetail() {
   const destination = catalog.data?.destinations.find((d) => d.slug === slug || d.id === slug);
   const recs = useQuery({ queryKey: ['recommendations', destination?.id], queryFn: () => client.recommendations(destination!.id), enabled: Boolean(destination) });
 
-  if (!destination) return <Screen><Card><Text style={{ color: c.text }}>{catalog.isLoading ? 'Loading destination…' : 'Destination not found.'}</Text>
-    <Button title="Back to explore" variant="secondary" onPress={() => router.push('/explore')} /></Card></Screen>;
+  if (!destination) return <Screen>{catalog.isLoading ? <Skeleton height={120} /> : <Card><Text style={{ color: c.text }}>Destination not found.</Text><Button title="Back to explore" variant="secondary" onPress={() => router.push('/explore')} /></Card>}</Screen>;
 
   const verified = destination.images.find((i) => i.status === 'verified');
   const data = catalog.data;

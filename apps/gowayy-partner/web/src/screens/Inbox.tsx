@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { client } from '../lib/client';
 import { useUI } from '../store';
-import { Badge, SectionHead, Skeleton } from '@gowayy/ui';
+import { Badge, SectionHead, Skeleton, SkeletonList } from '@gowayy/ui';
 import { formatINR } from '@gowayy/shared-utils';
 
 const NEXT: Record<string, string> = {
@@ -28,7 +28,7 @@ export function Inbox() {
     onError: (e: Error) => showToast(e.message, 'error'),
   });
 
-  if (inbox.isLoading) return <Skeleton style={{ height: 300 }} />;
+  if (inbox.isLoading) return <><Skeleton style={{ height: 22, width: 160, borderRadius: 8 }} /><SkeletonList rows={5} /></>;
   const bookings = (data?.bookings ?? []) as any[];
   const orders = (data?.orders ?? []) as any[];
 

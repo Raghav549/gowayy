@@ -6,7 +6,7 @@ import { catalogue } from '@gowayy/catalog';
 import { client } from '../lib/client';
 import { uploadImageFile } from '../lib/uploads';
 import { useSession, useUI } from '../store';
-import { Field, SectionHead, Skeleton, Badge, EmptyState } from '@gowayy/ui';
+import { Field, SectionHead, Skeleton, SkeletonList, SkeletonTable, Badge, EmptyState } from '@gowayy/ui';
 import { formatINR } from '@gowayy/shared-utils';
 import type { ExperienceSlot } from '@gowayy/types';
 
@@ -85,7 +85,7 @@ function StorePanel() {
     } catch (e) { showToast(e instanceof Error ? e.message : 'Upload failed', 'error'); }
     finally { setUploading(false); }
   };
-  if (stores.isLoading) return <Skeleton style={{ height: 260 }} />;
+  if (stores.isLoading) return <div className="stack" aria-hidden="true" aria-label="Loading stores"><Skeleton style={{ height: 22, width: 140 }} /><div className="grid-2"><Skeleton style={{ height: 120, borderRadius: 16 }} /><Skeleton style={{ height: 120, borderRadius: 16 }} /></div></div>;
   if (!store) return <EmptyState title="No store yet" body="Create your real store profile with its destination and actual coordinates, then add products here." action={<Link className="btn btn--primary" to="/onboarding">Create a store</Link>} />;
   const value = { ...store, ...draft };
   return (
@@ -225,7 +225,7 @@ function CatalogPanel() {
   };
 
   const visibleProducts = (products.data?.items ?? []).filter((product) => !store || !product.storeId || product.storeId === store.id);
-  if (products.isLoading) return <Skeleton style={{ height: 260 }} />;
+  if (products.isLoading) return <div className="stack" aria-hidden="true" aria-label="Loading products"><Skeleton style={{ height: 22, width: 140 }} /><Skeleton style={{ height: 220, borderRadius: 16 }} /><Skeleton style={{ height: 160, borderRadius: 16 }} /></div>;
   return (
     <div className="stack">
       {!store && <div className="notice">No store is linked to your account yet. <Link to="/onboarding">Create a store</Link>.</div>}
@@ -308,7 +308,7 @@ function OrdersPanel() {
     onSuccess: async () => { showToast('Delivery code verified — order completed', 'success'); await qc.invalidateQueries({ queryKey: ['partner-requests'] }); await qc.invalidateQueries({ queryKey: ['partner-deliveries'] }); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
-  if (inbox.isLoading) return <Skeleton style={{ height: 240 }} />;
+  if (inbox.isLoading) return <SkeletonList rows={4} />;
   return (
     <div className="stack">
       <div className="card">
@@ -440,7 +440,7 @@ function RoomsPanel() {
     onSuccess: async () => { showToast('Availability updated for customers', 'success'); await qc.invalidateQueries(); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
-  if (rooms.isLoading) return <Skeleton style={{ height: 200 }} />;
+  if (rooms.isLoading) return <div className="stack"><Skeleton style={{ height: 22, width: 140 }} /><Skeleton style={{ height: 160, borderRadius: 16 }} /></div>;
   return (
     <div className="stack">
       <div className="card grid-3" style={{ gap: 10 }}>
@@ -502,7 +502,7 @@ function ToursPanel() {
     onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['partner-tours'] }); showToast('Offering visibility updated', 'success'); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
-  if (tours.isLoading) return <Skeleton style={{ height: 200 }} />;
+  if (tours.isLoading) return <div className="stack"><Skeleton style={{ height: 22, width: 140 }} /><Skeleton style={{ height: 160, borderRadius: 16 }} /></div>;
   return (
     <div className="stack">
       <form className="card stack" onSubmit={(event) => { event.preventDefault(); add.mutate(); }}>
@@ -566,7 +566,7 @@ function TourSlots({ tour }: { tour: Tour }) {
         <Field label="Slot capacity"><input className="input" type="number" min={1} max={tour.capacity} step={1} required value={capacity} onChange={(e) => setCapacity(e.target.value)} /></Field>
         <button className="btn btn--primary" style={{ alignSelf: 'end' }} disabled={add.isPending}><Plus size={15} /> {add.isPending ? 'Publishing…' : 'Publish slot'}</button>
       </form>
-      {slots.isLoading && <Skeleton style={{ height: 120 }} />}
+      {slots.isLoading && <div style={{ display: 'flex', gap: 8 }}><Skeleton style={{ height: 72, width: 120, borderRadius: 12 }} /><Skeleton style={{ height: 72, width: 120, borderRadius: 12 }} /><Skeleton style={{ height: 72, width: 120, borderRadius: 12 }} /></div>}
       <div className="list">
         {((slots.data?.items ?? []) as ExperienceSlot[]).map((slot) => <div className="list-row" key={slot.id} style={{ flexWrap: 'wrap' }}>
           <Clock3 size={16} /><span className="list-row__body" style={{ minWidth: 180 }}><span className="list-row__title">{new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(slot.startsAt))}</span><span className="list-row__sub">Ends {new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(slot.endsAt))} · {slot.booked}/{slot.capacity} booked</span></span>

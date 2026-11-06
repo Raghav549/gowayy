@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CarFront, MapPin, CheckCircle2, Package, UtensilsCrossed, Truck, Power, History, Wallet } from 'lucide-react';
 import { client } from '../lib/client';
 import { useUI } from '../store';
-import { Badge, EmptyState, SectionHead, Skeleton } from '@gowayy/ui';
+import { Badge, EmptyState, SectionHead, Skeleton, SkeletonList } from '@gowayy/ui';
 import { formatINR } from '@gowayy/shared-utils';
 
 const SERVICE_ICON: Record<string, typeof CarFront> = { cab: CarFront, shared_taxi: CarFront, parcel: Package, food: UtensilsCrossed, grocery: Truck, marketplace: Package };
@@ -41,7 +41,7 @@ export function DriverMode() {
     onError: (e: Error) => showToast(e.message, 'error'),
   });
 
-  if (me.isLoading) return <Skeleton style={{ height: 300 }} />;
+  if (me.isLoading) return <div className="stack" aria-hidden="true" aria-label="Loading driver mode"><Skeleton style={{ height: 28, width: 180 }} /><Skeleton style={{ height: 120, borderRadius: 16 }} /><SkeletonList rows={3} /></div>;
   if (!driver) return <EmptyState title="No driver profile yet" body="Complete driver onboarding to receive ride and delivery requests." />;
 
   const bookings = requests.data?.bookings ?? [];

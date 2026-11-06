@@ -7,7 +7,7 @@ import { client, idemKey } from '../lib/client';
 import { completePayment, type PaymentAction } from '../lib/payments';
 import { usePageMeta } from '../lib/guards';
 import { useUI } from '../store/useUI';
-import { SectionHead, PriceLines, Spinner, StatusBadge } from '../components/ui';
+import { SectionHead, PriceLines, StatusBadge, Skeleton } from '../components/ui';
 
 export function Checkout() {
   usePageMeta('Secure checkout');
@@ -51,7 +51,7 @@ export function Checkout() {
   };
 
   if (!bookingId && !orderId) return <div className="empty-state"><h3>Nothing to check out</h3><p>Open a booking or order to pay.</p></div>;
-  if ((booking.isLoading && bookingId) || (order.isLoading && orderId)) return <Spinner />;
+  if ((booking.isLoading && bookingId) || (order.isLoading && orderId)) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}><Skeleton style={{ height: 22, width: 180 }} /><Skeleton style={{ height: 120, borderRadius: 16 }} /><Skeleton style={{ height: 160, borderRadius: 16 }} /></div>;
   if (!record) return <div className="empty-state"><h3>Record not found</h3><p>{error ?? 'This booking or order is unavailable.'}</p><Link className="btn btn--primary" to="/bookings">My bookings</Link></div>;
 
   return (
@@ -103,7 +103,7 @@ export function Checkout() {
 
 function Transactions() {
   const q = useQuery({ queryKey: ['transactions'], queryFn: () => client.transactions() });
-  if (q.isLoading) return <Spinner />;
+  if (q.isLoading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}><Skeleton style={{ height: 22, width: 160 }} /><Skeleton style={{ height: 140, borderRadius: 16 }} /></div>;
   if (!q.data?.length) return <p className="small muted" style={{ marginTop: 10 }}>No transactions recorded yet.</p>;
   return <div className="list" style={{ marginTop: 12 }}>{q.data.map((t) => <div className="list-row" key={t.id}><span className="list-row__body"><span className="list-row__title">{t.type}</span><span className="list-row__sub">{t.note}</span></span><span className="small">{formatINR(t.amountPaise)}</span></div>)}</div>;
 }

@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, TextInput as TextInputBase } from 'react-native';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, TextInput as TextInputBase, Animated, Easing } from 'react-native';
 import { Image } from 'expo-image';
 import { useTheme, spacing, radius, font } from '../theme';
 import { imageUrl } from '../lib/client';
@@ -154,6 +154,40 @@ export function Badge({ text }: { text: string }) {
   return <View style={[styles.badge, { borderColor: c.border, backgroundColor: c.surfaceAlt }]}><Text style={[styles.badgeText, { color: c.textMuted }]}>{text}</Text></View>;
 }
 
+/* ── Mobile Skeleton — content-aware, token-based, respects reduced-motion ── */
+function useSkeletonPulse() {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [v]);
+  return v.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
+}
+export function Skeleton({ height = 14, width, style, radius: r }: { height?: number; width?: number | string; style?: object; radius?: number }) {
+  const { c } = useTheme();
+  const opacity = useSkeletonPulse();
+  return <Animated.View style={[{ height, width: width as unknown as number | undefined, backgroundColor: c.surfaceAlt, borderRadius: r ?? radius.sm, opacity }, style]} />;
+}
+export function SkeletonText({ lines = 1, gap = 8 }: { lines?: number; gap?: number }) {
+  return <View style={{ gap }} aria-hidden>{Array.from({ length: lines }).map((_, i) => <Skeleton key={i} height={12} width={i === lines - 1 && lines > 1 ? '68%' as unknown as number : '100%' as unknown as number} />)}</View>;
+}
+export function SkeletonCard({ lines = 2 }: { lines?: number }) {
+  return <View style={[styles.card, { gap: spacing.sm }]} aria-hidden><Skeleton height={110} radius={radius.sm} /><SkeletonText lines={lines} /></View>;
+}
+export function SkeletonList({ rows = 3 }: { rows?: number }) {
+  return <View style={{ gap: spacing.sm }} aria-hidden>{Array.from({ length: rows }).map((_, i) => <View key={i} style={[styles.skeletonRow, { backgroundColor: '#fff', borderColor: '#E9E0F0' }]}><Skeleton height={42} width={42 as unknown as number} radius={12} /><View style={{ flex: 1, gap: 6 }}><Skeleton height={14} width={'50%' as unknown as number} /><Skeleton height={12} width={'76%' as unknown as number} /></View><Skeleton height={24} width={64 as unknown as number} radius={radius.pill} /></View>)}</View>;
+}
+export function SkeletonProductGrid({ count = 4 }: { count?: number }) {
+  return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} aria-hidden>{Array.from({ length: count }).map((_, i) => <View key={i} style={{ width: '48%', gap: 8 }}><Skeleton height={110} radius={radius.sm} /><Skeleton height={12} /><Skeleton height={12} width={'66%' as unknown as number} /></View>)}</View>;
+}
+export function SkeletonTableHeader() {
+  return <View style={{ flexDirection: 'row', gap: spacing.sm }} aria-hidden>{[64, 88, 72].map((w, i) => <Skeleton key={i} height={12} width={w as unknown as number} />)}</View>;
+}
+
 export function Picker({ label, options, value, onChange }: {
   label: string; options: Array<{ id: string; label: string; sub?: string }>; value: string; onChange: (id: string) => void;
 }) {
@@ -209,4 +243,5 @@ const styles = StyleSheet.create({
   badge: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2, alignSelf: 'flex-start' },
   badgeText: { fontSize: font.sizes.xs },
   pickerOption: { borderWidth: 1, borderRadius: radius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 2 },
+  skeletonRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderRadius: radius.lg, padding: spacing.md },
 });

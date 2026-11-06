@@ -8,7 +8,7 @@ import { client } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useSession } from '../store/useSession';
 import { useUI } from '../store/useUI';
-import { SectionHead, EmptyState, Field } from '../components/ui';
+import { SectionHead, EmptyState, Field, Skeleton } from '../components/ui';
 import { registerWebPush, unregisterWebPush } from '../lib/push';
 import type { NotificationPreferences } from '@gowayy/types';
 
@@ -65,7 +65,7 @@ function PushPreferences() {
           <button className="btn btn--primary btn--sm" disabled={busy} onClick={() => void enable()}><Bell size={15} /> Enable this browser</button>
           <button className="btn btn--secondary btn--sm" disabled={busy} onClick={() => void disable()}>Unregister</button>
         </div>
-      </div> : <p className="small muted">Loading preferences…</p>}
+      </div> : <div className="stack" aria-hidden="true" aria-label="Loading preferences"><div className="skeleton" style={{ height: 14, width: 120 }} /><div className="skeleton" style={{ height: 36 }} /><div className="skeleton" style={{ height: 36 }} /><div className="skeleton" style={{ height: 36 }} /></div>}
     <p className="tiny muted" aria-live="polite">{deviceStatus}</p>
   </div>;
 }

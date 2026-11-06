@@ -11,7 +11,7 @@ import { client } from '../lib/client';
 import { useJourney } from '../store/useJourney';
 import { useSession } from '../store/useSession';
 import { usePageMeta } from '../lib/guards';
-import { ImageFrame, SectionHead, Spinner } from '../components/ui';
+import { ImageFrame, SectionHead } from '../components/ui';
 import { CategoryArt, CATEGORY_ART } from '../components/CategoryArt';
 import { DestinationCard } from './shared';
 import { PosterCarousel, type Poster } from '../components/PosterCarousel';
@@ -193,23 +193,72 @@ export function Home() {
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Everyday needs" title="Grocery & convenience stores near you" action={<Link className="btn btn--secondary btn--sm" to="/groceries">All stores <ArrowRight size={14} /></Link>} />
-        <div className="grid-3">
-          {nearbyStores.map((s) => (
-            <Link key={s.id} to={`/groceries/${s.id}`} className="card card--hover">
-              <div className="row" style={{ gap: 12 }}>
-                <span className="store-avatar" aria-hidden="true"><ShoppingBasket size={20} /></span>
-                <div style={{ minWidth: 0 }}><strong>{s.name}</strong><div className="tiny muted">Delivers within {s.deliveryCoverageKm} km</div></div>
-              </div>
-              <div className="mini-dishes">{s.products.slice(0, 3).map((p) => <span key={p.id}>{p.name} · {formatINR(p.pricePaise)}</span>)}</div>
-            </Link>
-          ))}
-        </div>
+        <SectionHead eyebrow="Everyday needs" title="Grocery & convenience stores near you" subtitle="Fresh arrivals daily — pantry, dairy, fruits & essentials delivered" action={<Link className="btn btn--secondary btn--sm" to="/groceries">All stores <ArrowRight size={14} /></Link>} />
+        {nearbyStores.length === 0 ? (
+          <p className="small muted">No grocery stores listed for this destination yet.</p>
+        ) : (
+          <div className="grid-3">
+            {nearbyStores.map((s) => {
+              // Enrich grocery products with marketplace imagery when available (same storeId) — fallback to demo list
+              const marketplaceForStore = productList.filter((pr) => pr.storeId === s.id).slice(0, 3);
+              const demoProducts = s.products.slice(0, 3);
+              const merged = marketplaceForStore.length ? marketplaceForStore.map((pr) => ({ id: pr.id, name: pr.name, pricePaise: pr.variants[0]?.pricePaise ?? 0, img: (pr.images ?? []).find((im) => im.status !== 'unavailable' && (im.path || im.assetPath)) })) as Array<{ id: string; name: string; pricePaise: number; img?: { path?: string; assetPath?: string; alt: string } }>
+                : demoProducts.map((pr) => ({ id: pr.id, name: pr.name, pricePaise: pr.pricePaise, img: undefined }));
+              const banner = s.image?.status === 'verified' && (s.image as any).assetPath ? `/${String((s.image as any).assetPath).replace(/^\//, '')}` : null;
+              const openLabel = s.slots?.[0] ? `Open · ${s.slots[0]}` : 'Delivery slots available';
+              return (
+                <article key={s.id} className="card store-card store-card--brand store-card--grocery">
+                  <Link to={`/groceries/${s.id}`} className="store-card__banner" aria-label={s.name}>
+                    {banner ? (
+                      <img src={banner} alt={s.name} loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="store-card__banner-fallback" style={{ background: 'linear-gradient(120deg,#EDE3F7 0%,#F7F0E8 52%,#FFF9F2 100%)', display: 'grid', placeItems: 'center' }}>
+                        <ShoppingBasket size={28} style={{ color: 'rgba(66,16,128,.22)' }} aria-hidden="true" />
+                      </div>
+                    )}
+                    <span className="store-card__banner-pill" aria-hidden="true"><Clock size={11} /> {s.deliveryCoverageKm} km · {openLabel}</span>
+                  </Link>
+                  <div className="store-card__identity">
+                    <span className="store-card__logo" aria-hidden="true">{s.image?.status === 'verified' && (s.image as any).assetPath ? <img src={`/${String((s.image as any).assetPath).replace(/^\//, '')}`} alt="" /> : <ShoppingBasket size={18} />}</span>
+                    <div className="store-card__titles">
+                      <strong title={s.name}>{s.name}</strong>
+                      <span className="tiny muted">{s.deliveryCoverageKm} km · {s.tags?.[0] ?? 'Independent inventory'}</span>
+                    </div>
+                    <Link className="btn btn--secondary btn--sm store-card__visit" to={`/groceries/${s.id}`}>Visit store</Link>
+                  </div>
+                  <div className="store-card__meta tiny muted">
+                    <span className="row" style={{ gap: 4 }}><MapPin size={11} /> Delivers within {s.deliveryCoverageKm} km</span>
+                    <span>{s.products.length} products</span>
+                  </div>
+                  {merged.length > 0 && (
+                    <div className="store-products store-products--images">
+                      {merged.map((pr) => (
+                        <Link key={pr.id} className="store-product" to={`/groceries/${s.id}`}>
+                          <span className="store-product__thumb">
+                            {pr.img ? (
+                              <img src={pr.img.path ?? `/${String(pr.img.assetPath ?? '').replace(/^\//, '')}`} alt="" loading="lazy" decoding="async" />
+                            ) : (
+                              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gw-champagne-deep)' }}>{pr.name.slice(0, 2).toUpperCase()}</span>
+                            )}
+                          </span>
+                          <span className="store-product__body">
+                            <span className="store-product__name" title={pr.name}>{pr.name}</span>
+                            <span className="store-product__price">{formatINR(pr.pricePaise)}</span>
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="section">
         <SectionHead eyebrow="Shop" title={shopStores.length ? 'Shops & their products' : 'Local shops'} action={<Link className="btn btn--secondary btn--sm" to="/categories">All shops <ArrowRight size={14} /></Link>} />
-        {storefrontQuery.isLoading && <Spinner label="Loading shops…" />}
+        {storefrontQuery.isLoading && <div className="grid-2 store-grid" aria-hidden="true" aria-label="Loading shops"><div className="card" style={{ height: 220 }}><div className="skeleton" style={{ height: 72 }} /><div className="sk-stack" style={{ padding: 14 }}><div className="skeleton skeleton--text" style={{ width: '54%' }} /><div className="skeleton skeleton--text" style={{ width: '38%' }} /></div></div><div className="card" style={{ height: 220 }}><div className="skeleton" style={{ height: 72 }} /><div className="sk-stack" style={{ padding: 14 }}><div className="skeleton skeleton--text" style={{ width: '54%' }} /><div className="skeleton skeleton--text" style={{ width: '38%' }} /></div></div></div>}
         <div className="grid-2 store-grid">
           {shopStores.map((s) => {
             const products = productList.filter((p) => p.storeId === s.id).slice(0, 3);

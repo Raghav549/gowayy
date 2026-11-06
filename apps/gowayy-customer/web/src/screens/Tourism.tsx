@@ -146,7 +146,7 @@ export function Tourism({ variant }: { variant: Variant }) {
       ) : (
         <div className="grid-2" style={{ alignItems: 'start' }}>
           <div className="stack" aria-label={isPackage ? 'Available packages' : 'Available experiences'}>
-            {offeringsQuery.isLoading && <div className="card muted" role="status">Loading verified host offerings…</div>}
+            {offeringsQuery.isLoading && <div className="sk-grid-2"><div className="skeleton" style={{ height: 160, borderRadius: 16 }} /><div className="skeleton" style={{ height: 160, borderRadius: 16 }} /><div className="skeleton" style={{ height: 160, borderRadius: 16 }} /></div>}
             {offeringsQuery.isError && <div className="notice notice--info" role="alert">
               {offeringsQuery.error instanceof Error ? offeringsQuery.error.message : 'Could not load offerings'}
               <button className="btn btn--ghost btn--sm" style={{ marginLeft: 8 }} onClick={() => void offeringsQuery.refetch()}>Retry</button>
@@ -194,7 +194,7 @@ export function Tourism({ variant }: { variant: Variant }) {
                 </div>
                 <Field label="Available times" hint={date ? `Times shown in India Standard Time for ${date}.` : 'Choose a date first.'}>
                   <div className="stack" style={{ gap: 8 }}>
-                    {slotsQuery.isLoading && <p className="small muted" role="status">Checking real availability…</p>}
+                    {slotsQuery.isLoading && <div className="skeleton" style={{ height: 72, borderRadius: 12 }} />}
                     {slotsQuery.isError && <div className="notice notice--info" role="alert">{slotsQuery.error instanceof Error ? slotsQuery.error.message : 'Could not load slots'} <button type="button" className="btn btn--ghost btn--sm" onClick={() => void slotsQuery.refetch()}>Retry</button></div>}
                     {!slotsQuery.isLoading && !slotsQuery.isError && slots.length === 0 && <div className="notice" style={{ margin: 0 }}><CalendarDays size={17} /><p className="small" style={{ margin: 0 }}>No future slots are published for this date. Try another date.</p></div>}
                     {slots.map((slot) => <button type="button" key={slot.id} className={`btn ${slotId === slot.id ? 'btn--primary' : 'btn--secondary'}`}
@@ -213,7 +213,7 @@ export function Tourism({ variant }: { variant: Variant }) {
               </>}
 
               {step === 3 && <>
-                {quoteQuery.isLoading && <div className="notice" role="status">Fetching the latest server price and availability…</div>}
+                {quoteQuery.isLoading && <div className="skeleton" style={{ height: 44, borderRadius: 12 }} />}
                 {quoteQuery.isError && <div className="notice notice--info" role="alert">{quoteQuery.error instanceof Error ? quoteQuery.error.message : 'Could not quote this slot'}<button type="button" className="btn btn--ghost btn--sm" onClick={() => void quoteQuery.refetch()}>Retry quote</button></div>}
                 {quoteQuery.data && <div className="stack">
                   <div className="list">

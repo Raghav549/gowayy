@@ -296,9 +296,46 @@ p { margin: 0; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
 }
 
-/* ---------------- marketplace / commerce (screenshot-inspired, GOWAYY tokens) ---------------- */
-.skeleton { background: linear-gradient(100deg, var(--gw-surface-alt) 40%, var(--gw-raised) 50%, var(--gw-surface-alt) 60%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; border-radius: 8px; }
-@keyframes shimmer { to { background-position: -200% 0; } }
+/* ===== GOWAYY Professional Skeleton System — content-aware, Flipkart-inspired ===== */
+.skeleton {
+  --sk-from: var(--gw-surface-alt);
+  --sk-shine: var(--gw-surface);
+  background: linear-gradient(100deg, var(--sk-from) 30%, var(--sk-shine) 50%, var(--sk-from) 70%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton--text { height: 13px; border-radius: 6px; }
+.skeleton--title { height: 20px; border-radius: 8px; min-width: 120px; }
+.skeleton--subtitle { height: 14px; width: 60%; border-radius: 6px; }
+.skeleton--avatar { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; }
+.skeleton--avatar-sm { width: 36px; height: 36px; border-radius: 10px; }
+.skeleton--avatar-lg { width: 56px; height: 56px; border-radius: 16px; }
+.skeleton--image { width: 100%; aspect-ratio: 4/3; border-radius: 14px; }
+.skeleton--image-16-9 { aspect-ratio: 16/9; }
+.skeleton--image-1-1 { aspect-ratio: 1; }
+.skeleton--banner { width: 100%; aspect-ratio: 16/5; border-radius: 18px; }
+.skeleton--btn { height: 42px; border-radius: 12px; min-width: 96px; }
+.skeleton--btn-sm { height: 34px; border-radius: 10px; min-width: 76px; }
+.skeleton--pill { height: 28px; border-radius: 999px; min-width: 64px; }
+.skeleton--card { padding: 18px; border: 1px solid var(--gw-border); border-radius: 16px; background: var(--gw-surface); display: flex; flex-direction: column; gap: 12px; }
+@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; background: var(--gw-surface-alt); } }
+.sk-stack { display: flex; flex-direction: column; gap: 10px; }
+.sk-row { display: flex; align-items: center; gap: 12px; }
+.sk-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.sk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 900px) { .sk-grid-2, .sk-grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .sk-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.sk-section { display: flex; flex-direction: column; gap: 16px; margin-top: 34px; }
+.sk-card-skeleton { background: var(--gw-surface); border: 1px solid var(--gw-border); border-radius: 18px; overflow: hidden; }
+.sk-card-skeleton__media { background: var(--gw-surface-alt); }
+.sk-card-skeleton__body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.skeleton-section { display: flex; flex-direction: column; gap: 12px; }
+.skeleton-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .crumbs a { color: var(--gw-text-muted); }
 .pdp { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (max-width: 900px) { .pdp { grid-template-columns: 1fr; } }
@@ -845,10 +882,13 @@ body { background:var(--gw-gradient-page); color:var(--gw-text); }
 
 /* ---------------- store cards with branding ---------------- */
 .store-grid { align-items: start; }
-.store-card--brand { padding: 0; overflow: hidden; display: flex; flex-direction: column; min-width: 0; height: 100%; }
-.store-card__banner { aspect-ratio: 16 / 5; background: var(--gw-lavender); overflow: hidden; }
+.store-card--brand { padding: 0; overflow: hidden; display: flex; flex-direction: column; min-width: 0; height: 100%; border-radius: 20px; box-shadow: var(--gw-shadow-sm); transition: transform .18s var(--gw-easing), box-shadow .18s var(--gw-easing); }
+.store-card--brand:hover { transform: translateY(-2px); box-shadow: var(--gw-shadow-md); }
+.store-card--grocery { border-color: rgba(228,217,239,.9); }
+.store-card__banner { aspect-ratio: 16 / 5; background: var(--gw-lavender); overflow: hidden; position: relative; display: block; }
 .store-card__banner img { width: 100%; height: 100%; object-fit: cover; }
 .store-card__banner-fallback { height: 100%; background: linear-gradient(115deg,#EDE3F7,#F7F0E8 60%,#FFF9F2); }
+.store-card__banner-pill { position: absolute; left: 10px; bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #2A1740; background: rgba(255,255,255,.92); border: 1px solid rgba(66,16,128,.08); padding: 4px 10px; border-radius: 999px; backdrop-filter: blur(8px); }
 .store-card__identity { display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px; min-width: 0; }
 .store-card__logo { width: 42px; height: 42px; border-radius: 12px; background: #fff; border: 1px solid var(--gw-border); display: grid; place-items: center; flex-shrink: 0; overflow: hidden; color: #421080; }
 .store-card__logo img { width: 100%; height: 100%; object-fit: cover; }

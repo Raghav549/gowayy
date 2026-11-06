@@ -8,7 +8,7 @@ import { SERVICE_LABELS, progressFor } from '@gowayy/booking-engine';
 import { client } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useUI } from '../store/useUI';
-import { SectionHead, StatusBadge, PriceLines, EmptyState, Spinner } from '../components/ui';
+import { SectionHead, StatusBadge, PriceLines, EmptyState, SkeletonList, Skeleton } from '../components/ui';
 
 export function Bookings() {
   usePageMeta('Your bookings');
@@ -23,7 +23,7 @@ export function Bookings() {
       <div className="chips" style={{ marginBottom: 18 }}>
         {(['all', 'active', 'past'] as const).map((f) => <button key={f} className={`chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}
       </div>
-      {q.isLoading && <Spinner />}
+      {q.isLoading && <SkeletonList rows={4} />}
       {q.data?.length === 0 && <EmptyState title="No bookings yet" body="Book a cab, stay, tour or parcel and it will appear here." action={<Link className="btn btn--primary" to="/cabs">Book a cab</Link>} />}
       <div className="list">
         {list.map((b) => (
@@ -51,7 +51,7 @@ export function BookingDetail() {
   const [busy, setBusy] = useState(false);
   const q = useQuery({ queryKey: ['booking', id], queryFn: () => client.booking(id ?? ''), enabled: Boolean(id) });
   usePageMeta('Booking details');
-  if (q.isLoading) return <Spinner />;
+  if (q.isLoading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}><Skeleton style={{ height: 22, width: 160, borderRadius: 8 }} /><SkeletonList rows={3} /><Skeleton style={{ height: 120, borderRadius: 16 }} /></div>;
   const b = q.data?.booking;
   if (!b) return <EmptyState title="Booking not found" body="It may have been removed." action={<Link className="btn btn--primary" to="/bookings">All bookings</Link>} />;
 

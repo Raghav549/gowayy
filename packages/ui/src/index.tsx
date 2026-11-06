@@ -78,7 +78,154 @@ export function MascotEmpty({ pose, title, body, action }: { pose: string; title
   return <div className="empty-state"><Mascot pose={pose} size={120} /><h3 style={{ marginTop: 10 }}>{title}</h3><p>{body}</p>{action && <div style={{ marginTop: 16 }}>{action}</div>}</div>;
 }
 
-export function Skeleton({ style = {} }: { style?: React.CSSProperties }) { return <div className="skeleton" style={style} aria-hidden="true" />; }
+/* ── Professional Skeleton primitives — content-aware, token-based, accessible ── */
+export function Skeleton({ variant, style = {}, className = '' }: { variant?: 'text' | 'title' | 'subtitle' | 'avatar' | 'avatar-sm' | 'avatar-lg' | 'image' | 'image-16-9' | 'image-1-1' | 'banner' | 'btn' | 'btn-sm' | 'pill' | 'card'; style?: React.CSSProperties; className?: string }) {
+  const cls = variant ? `skeleton skeleton--${variant}` : 'skeleton';
+  return <div className={`${cls} ${className}`.trim()} style={style} aria-hidden="true" />;
+}
+export function SkeletonText({ lines = 1, gap = 8, widths, style = {} }: { lines?: number; gap?: number; widths?: (string | number)[]; style?: React.CSSProperties }) {
+  return (
+    <div className="sk-stack" style={{ gap, ...style }} aria-hidden="true">
+      {Array.from({ length: lines }).map((_, i) => {
+        const w = widths?.[i] ?? (i === lines - 1 && lines > 1 ? '68%' : '100%');
+        return <div key={i} className="skeleton skeleton--text" style={{ width: w }} />;
+      })}
+    </div>
+  );
+}
+export function SkeletonMetricCard() {
+  return (
+    <div className="card" aria-hidden="true" style={{ gap: 14 }}>
+      <div className="skeleton skeleton--subtitle" style={{ width: 84 }} />
+      <div className="skeleton skeleton--title" style={{ width: 96, height: 26 }} />
+      <div className="skeleton skeleton--text" style={{ width: '62%' }} />
+    </div>
+  );
+}
+export function SkeletonMetrics({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid-3" aria-hidden="true" aria-label="Loading metrics">
+      {Array.from({ length: count }).map((_, i) => <SkeletonMetricCard key={i} />)}
+    </div>
+  );
+}
+export function SkeletonTableRow({ cols = 4 }: { cols?: number }) {
+  return (
+    <tr aria-hidden="true">
+      {Array.from({ length: cols }).map((_, i) => (
+        <td key={i}><div className="skeleton skeleton--text" style={{ width: i === 0 ? 120 : i === cols - 1 ? 72 : 88 }} /></td>
+      ))}
+    </tr>
+  );
+}
+export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="card card--pad0" aria-hidden="true" aria-label="Loading table">
+      <div style={{ overflowX: 'auto' }}>
+        <table className="table">
+          <thead><tr>{Array.from({ length: cols }).map((_, i) => <th key={i}><div className="skeleton skeleton--text" style={{ width: 64 }} /></th>)}</tr></thead>
+          <tbody>{Array.from({ length: rows }).map((_, i) => <SkeletonTableRow key={i} cols={cols} />)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+export function SkeletonListRow() {
+  return (
+    <div className="sk-row" style={{ padding: '14px 6px', borderBottom: '1px solid var(--gw-border)' }} aria-hidden="true">
+      <div className="skeleton skeleton--avatar" style={{ width: 42, height: 42 }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="skeleton skeleton--text" style={{ width: '44%', height: 14 }} />
+        <div className="skeleton skeleton--text" style={{ width: '68%', opacity: .65 }} />
+      </div>
+      <div className="skeleton skeleton--pill" style={{ width: 64 }} />
+    </div>
+  );
+}
+export function SkeletonList({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="card" aria-hidden="true" aria-label="Loading list">
+      {Array.from({ length: rows }).map((_, i) => <SkeletonListRow key={i} />)}
+    </div>
+  );
+}
+export function SkeletonProductCard() {
+  return (
+    <article className="sk-card-skeleton" aria-hidden="true">
+      <div className="skeleton" style={{ aspectRatio: '4/3', borderRadius: 0 }} />
+      <div className="sk-card-skeleton__body">
+        <div className="skeleton skeleton--text" style={{ width: '42%', height: 12 }} />
+        <div className="skeleton skeleton--text" style={{ width: '88%' }} />
+        <div className="skeleton skeleton--text" style={{ width: '64%' }} />
+        <div className="sk-row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
+          <div className="skeleton skeleton--title" style={{ width: 64, height: 16 }} />
+          <div className="skeleton skeleton--btn-sm" style={{ width: 68 }} />
+        </div>
+      </div>
+    </article>
+  );
+}
+export function SkeletonStoreCard() {
+  return (
+    <article className="sk-card-skeleton" aria-hidden="true">
+      <div className="skeleton" style={{ height: 76 }} />
+      <div style={{ display: 'flex', gap: 10, padding: '12px 14px 4px', alignItems: 'center' }}>
+        <div className="skeleton" style={{ width: 42, height: 42, borderRadius: 12 }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="skeleton skeleton--text" style={{ width: '58%' }} />
+          <div className="skeleton skeleton--text" style={{ width: '42%', height: 11 }} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, padding: '8px 14px' }}>
+        <div className="skeleton skeleton--pill" style={{ width: 72, height: 22 }} />
+        <div className="skeleton skeleton--pill" style={{ width: 64, height: 22 }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1, background: 'var(--gw-border)', borderTop: '1px solid var(--gw-border)' }}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} style={{ background: 'var(--gw-surface)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div className="skeleton skeleton--image" style={{ height: 56 }} />
+            <div className="skeleton skeleton--text" style={{ width: '84%' }} />
+            <div className="skeleton skeleton--text" style={{ width: '44%', height: 12 }} />
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+export function SkeletonOrderCard() {
+  return (
+    <div className="card" aria-hidden="true">
+      <div className="between">
+        <div className="skeleton skeleton--text" style={{ width: 132, height: 16 }} />
+        <div className="skeleton skeleton--pill" style={{ width: 72 }} />
+      </div>
+      <div className="sk-stack" style={{ marginTop: 14 }}>
+        <SkeletonListRow />
+        <div className="sk-row" style={{ justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--gw-border)' }}>
+          <div className="skeleton skeleton--text" style={{ width: 88 }} />
+          <div className="skeleton skeleton--title" style={{ width: 86, height: 16 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+export function SkeletonProductGrid({ count = 6 }: { count?: number }) {
+  return (
+    <div className="sk-grid-3" aria-hidden="true" aria-label="Loading products">
+      {Array.from({ length: count }).map((_, i) => <SkeletonProductCard key={i} />)}
+    </div>
+  );
+}
+export function SkeletonStoreGrid({ count = 3 }: { count?: number }) {
+  return (
+    <div className="grid-3" aria-hidden="true" aria-label="Loading stores">
+      {Array.from({ length: count }).map((_, i) => <SkeletonStoreCard key={i} />)}
+    </div>
+  );
+}
+export function SkeletonHero() {
+  return <div className="skeleton skeleton--banner" aria-hidden="true" aria-label="Loading banner" />;
+}
 
 export function SectionHead({ eyebrow, title, subtitle, action }: { eyebrow?: string; title: string; subtitle?: string; action?: ReactNode }) {
   return <div className="section__head"><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>{action}</div>;

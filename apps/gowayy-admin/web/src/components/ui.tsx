@@ -37,7 +37,13 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 export interface Column<T> { key: string; header: string; render: (row: T) => ReactNode; width?: string }
 
 export function DataTable<T extends { id?: string }>({ rows, columns, empty = 'Nothing to show yet.', loading }: { rows: T[]; columns: Array<Column<T>>; empty?: string; loading?: boolean }) {
-  if (loading) return <div className="table-loading"><span className="spinner" aria-hidden="true" /> Loading records…</div>;
+  if (loading) return (
+    <div className="table-wrap" aria-hidden="true" aria-label="Loading table">
+      <table className="table"><thead><tr>{columns.map((c) => <th key={c.key}><div className="skeleton skeleton--text" style={{ width: 64 }} /></th>)}</tr></thead>
+        <tbody>{Array.from({ length: 5 }).map((_, r) => <tr key={r}>{columns.map((c) => <td key={c.key}><div className="skeleton skeleton--text" style={{ width: r === 2 && c.key === columns[0]?.key ? 120 : 78 }} /></td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  );
   if (!rows.length) return <p className="empty">{empty}</p>;
   return (
     <div className="table-wrap">

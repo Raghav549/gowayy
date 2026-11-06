@@ -7,7 +7,7 @@ import { client } from '../lib/client';
 import { usePageMeta } from '../lib/guards';
 import { useJourney } from '../store/useJourney';
 import { useUI } from '../store/useUI';
-import { SectionHead, EmptyState, Spinner, StatusBadge } from '../components/ui';
+import { SectionHead, EmptyState, StatusBadge, Skeleton, SkeletonList } from '../components/ui';
 import { ConnectedRecommendations, DestinationSelect } from './shared';
 
 const ICONS: Record<string, typeof CarFront> = {
@@ -36,7 +36,7 @@ export function JourneyDashboard() {
     }
   }, [q.data, setJourney]);
 
-  if (q.isLoading) return <Spinner />;
+  if (q.isLoading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}><Skeleton style={{ height: 20, width: 160 }} /><SkeletonList rows={4} /><Skeleton style={{ height: 160, borderRadius: 16 }} /></div>;
   const journey = q.data?.journey;
   if (!journey) return <EmptyState title="Journey not found" body="Start a new journey from the home screen." action={<Link className="btn btn--primary" to="/">Go home</Link>} />;
   const destination = catalogue.destinations.find((d) => d.id === journey.destinationId);

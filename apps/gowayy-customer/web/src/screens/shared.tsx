@@ -6,7 +6,7 @@ import { catalogue } from '@gowayy/catalog';
 import type { Destination } from '@gowayy/types';
 import { client } from '../lib/client';
 import { useJourney } from '../store/useJourney';
-import { ImageFrame, SectionHead, Spinner } from '../components/ui';
+import { ImageFrame, SectionHead, Skeleton, SkeletonList } from '../components/ui';
 import type { RecommendationGroups } from '@gowayy/api-client';
 import { SearchSelect } from '../components/SearchSelect';
 
@@ -95,7 +95,7 @@ export function ConnectedRecommendations({ destinationId, title = 'Complete your
   const journey = useJourney((s) => s.journey);
   if (!destinationId) return null;
   const destination = catalogue.destinations.find((d) => d.id === destinationId);
-  if (q.isLoading) return <Spinner label="Finding connected services…" />;
+  if (q.isLoading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}><Skeleton style={{ height: 18, width: 180 }} /><SkeletonList rows={3} /></div>;
   const groups = q.data;
   if (!groups) return null;
   const withJourney = (href: string) => `${href}${href.includes('?') ? '&' : '?'}journey=${journey?.id ?? ''}`;
