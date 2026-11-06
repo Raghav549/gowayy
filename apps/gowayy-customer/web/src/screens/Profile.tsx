@@ -9,6 +9,66 @@ import { usePageMeta } from '../lib/guards';
 import { useSession } from '../store/useSession';
 import { useUI } from '../store/useUI';
 import { SectionHead, EmptyState, Field } from '../components/ui';
+import { registerWebPush, unregisterWebPush } from '../lib/push';
+import type { NotificationPreferences } from '@gowayy/types';
+
+const preferenceLabels: Array<{ key: keyof Omit<NotificationPreferences, 'updatedAt'>; label: string }> = [
+  { key: 'pushEnabled', label: 'Push notifications' },
+  { key: 'bookingUpdates', label: 'Booking and travel updates' },
+  { key: 'orderUpdates', label: 'Order and delivery updates' },
+  { key: 'paymentUpdates', label: 'Payment and refund updates' },
+  { key: 'partnerUpdates', label: 'Partner updates' },
+  { key: 'marketing', label: 'Offers and marketing' },
+];
+
+function PushPreferences() {
+  const qc = useQueryClient();
+  const showToast = useUI((s) => s.showToast);
+  const [busy, setBusy] = useState(false);
+  const [deviceStatus, setDeviceStatus] = useState('This browser has not been registered from this screen.');
+  const preferences = useQuery({ queryKey: ['notification-preferences'], queryFn: () => client.notificationPreferences(), retry: 0 });
+  const update = async (key: keyof Omit<NotificationPreferences, 'updatedAt'>, value: boolean) => {
+    setBusy(true);
+    try {
+      const next = await client.updateNotificationPreferences({ [key]: value });
+      qc.setQueryData(['notification-preferences'], next); showToast('Notification preference saved', 'success');
+    } catch (error) { showToast(error instanceof Error ? error.message : 'Could not save preference', 'error'); }
+    finally { setBusy(false); }
+  };
+  const enable = async () => {
+    setBusy(true);
+    try {
+      await registerWebPush(true);
+      setDeviceStatus('Registered with the server. Actual delivery depends on the configured Web Push provider and browser.');
+      showToast('Browser push registration confirmed by the server', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Browser push registration failed';
+      setDeviceStatus(message); showToast(message, 'error');
+    } finally { setBusy(false); }
+  };
+  const disable = async () => {
+    setBusy(true);
+    try { await unregisterWebPush(); setDeviceStatus('This browser was unregistered on the server and unsubscribed locally.'); }
+    catch (error) { showToast(error instanceof Error ? error.message : 'Could not unregister browser push', 'error'); }
+    finally { setBusy(false); }
+  };
+
+  return <div className="card" id="notifications">
+    <h3>Push notifications</h3>
+    <p className="small muted">Device registration and category preferences are separate. A registered subscription is not proof of delivery.</p>
+    {preferences.isError ? <div className="notice notice--info" role="alert">{preferences.error instanceof Error ? preferences.error.message : 'Preferences unavailable'}</div>
+      : preferences.data ? <div className="stack" style={{ marginTop: 12 }}>
+        {preferenceLabels.map(({ key, label }) => <label className="between small" key={key} style={{ minHeight: 36, gap: 12 }}>
+          <span>{label}</span><input type="checkbox" checked={preferences.data[key]} disabled={busy || (key !== 'pushEnabled' && !preferences.data.pushEnabled)} onChange={(event) => void update(key, event.target.checked)} />
+        </label>)}
+        <div className="row row--wrap" style={{ gap: 8 }}>
+          <button className="btn btn--primary btn--sm" disabled={busy} onClick={() => void enable()}><Bell size={15} /> Enable this browser</button>
+          <button className="btn btn--secondary btn--sm" disabled={busy} onClick={() => void disable()}>Unregister</button>
+        </div>
+      </div> : <p className="small muted">Loading preferences…</p>}
+    <p className="tiny muted" aria-live="polite">{deviceStatus}</p>
+  </div>;
+}
 
 export function Profile() {
   usePageMeta('Your profile');
@@ -76,10 +136,11 @@ export function Profile() {
             <h3>Preferences</h3>
             <div className="stack" style={{ marginTop: 14 }}>
               <div className="between"><span className="row small"><span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg,#EDE3F7,#421080)' }} /> Appearance</span><span className="badge badge--accent">Lavender identity</span></div>
-              <div className="between"><span className="row small"><Bell size={16} /> Notifications</span><button className="btn btn--secondary btn--sm" onClick={() => navigate('/profile')}>{notifications.data?.unreadCount ?? 0} unread</button></div>
+              <div className="between"><span className="row small"><Bell size={16} /> Notifications</span><a className="btn btn--secondary btn--sm" href="#notifications">{notifications.data?.unreadCount ?? 0} unread</a></div>
               <div className="between"><span className="row small"><CreditCard size={16} /> Payment records</span><span className="badge">{payments.data?.length ?? 0}</span></div>
             </div>
           </div>
+          <PushPreferences />
           <div className="card">
             <h3>Quick links</h3>
             <div className="stack" style={{ marginTop: 12 }}>

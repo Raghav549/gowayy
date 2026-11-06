@@ -46,7 +46,15 @@ export default function HomeScreen() {
   const notifications = useQuery({ queryKey: ['notifications'], queryFn: () => client.notifications(), enabled: Boolean(user), refetchInterval: 60_000 });
 
   useEffect(() => { if (user) void ensureJourney(); }, [user, ensureJourney]);
-  useEffect(() => { void expoLocationProvider.current().then(setLocation); }, []);
+  const [locationExplainOpen, setLocationExplainOpen] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const requestLocation = async (explainFirst = false) => {
+    if (explainFirst) setLocationExplainOpen(true);
+    const fix = await expoLocationProvider.current();
+    if (fix) { setLocation(fix); setLocationError(null); setLocationExplainOpen(false); }
+    else { setLocationError('Location permission was not granted or GPS is disabled. You can still pick a destination manually, or enable location in system settings and retry.'); if (!explainFirst) setLocationExplainOpen(true); }
+  };
+  useEffect(() => { void expoLocationProvider.current().then((fix) => { if (fix) setLocation(fix); }); }, []);
 
   const data = catalog.data;
   const active = useMemo(() => data?.destinations.find((d) => d.id === journey?.destinationId), [data, journey?.destinationId]);
@@ -65,7 +73,7 @@ export default function HomeScreen() {
     <Screen>
       <View style={styles.locationRow}>
         <Ionicons name="location-outline" size={16} color={c.accent} />
-        <Pressable onPress={async () => { const fix = await expoLocationProvider.current(); if (fix) setLocation(fix); else showToast('Location permission was not granted. Choose a destination instead.'); }}>
+        <Pressable onPress={() => void requestLocation(true)}>
           <Text style={{ color: c.text, fontSize: font.sizes.sm }} numberOfLines={1}>{location?.label ?? 'Choose your location'}</Text>
         </Pressable>
         <Pressable onPress={() => router.push('/settings')} hitSlop={10}><Text style={{ color: c.accent, fontSize: font.sizes.sm }}>Change</Text></Pressable>
@@ -74,6 +82,19 @@ export default function HomeScreen() {
           {notifications.data?.unreadCount ? <View style={[styles.badgeDot, { backgroundColor: c.accent }]} /> : null}
         </Pressable>
       </View>
+
+      {locationExplainOpen && (
+        <Card>
+          <Text style={{ color: c.text, fontWeight: '700' }}>Why GOWAYY needs your location</Text>
+          <Text style={{ color: c.textMuted, fontSize: font.sizes.sm, marginTop: 8 }}>We use it only to rank nearby stays, food, groceries and travel options, check delivery availability, and pre-fill cab/parcel pickup. Your coordinates never leave the device except as your chosen journey context — we do not track in the background.</Text>
+          <Text style={{ color: c.textMuted, fontSize: font.sizes.sm, marginTop: 8 }}>If you deny, you can always pick a destination manually. You can retry after enabling location in system settings. On Android this needs the Location permission and GPS enabled.</Text>
+          {locationError && <Text style={{ color: '#B94D59', fontSize: font.sizes.sm, marginTop: 8 }}>{locationError}</Text>}
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+            <Button title="Allow & get location" onPress={() => void requestLocation(false)} />
+            <Button title="Not now" variant="ghost" onPress={() => setLocationExplainOpen(false)} />
+          </View>
+        </Card>
+      )}
 
       <View>
         <Text style={[styles.hero, { color: c.text }]}>Where would you like to go?</Text>

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CreditCard, ShieldCheck, ArrowRight, CheckCircle2, Wallet } from 'lucide-react';
 import { formatINR } from '@gowayy/shared-utils';
 import { client, idemKey } from '../lib/client';
+import { completePayment, type PaymentAction } from '../lib/payments';
 import { usePageMeta } from '../lib/guards';
 import { useUI } from '../store/useUI';
 import { SectionHead, PriceLines, Spinner, StatusBadge } from '../components/ui';
@@ -19,8 +20,9 @@ export function Checkout() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const booking = useQuery({ queryKey: ['booking', bookingId], queryFn: () => client.booking(bookingId ?? ''), enabled: Boolean(bookingId) });
-  const order = useQuery({ queryKey: ['order', orderId], queryFn: () => client.order(orderId ?? ''), enabled: Boolean(orderId) });
+  const [awaiting, setAwaiting] = useState(false);
+  const booking = useQuery({ queryKey: ['booking', bookingId], queryFn: () => client.booking(bookingId ?? ''), enabled: Boolean(bookingId), refetchInterval: (query) => awaiting && query.state.data?.payment?.status !== 'captured' ? 5000 : false });
+  const order = useQuery({ queryKey: ['order', orderId], queryFn: () => client.order(orderId ?? ''), enabled: Boolean(orderId), refetchInterval: (query) => awaiting && query.state.data?.payment?.status !== 'captured' ? 5000 : false });
   const b = booking.data?.booking;
   const o = order.data?.order;
   const record = b ?? o;
@@ -34,10 +36,14 @@ export function Checkout() {
       const p = await client.initPayment({ bookingId, orderId, method, amountPaise: record.price.totalPaise, idempotencyKey: idemKey() });
       if (method === 'cash') { showToast('Pay on delivery selected', 'info'); setDone(true); }
       else {
-        const result = await client.captureSandboxPayment(p.id);
-        if (result.payment.status !== 'captured') throw new Error('Payment was not captured by the server');
-        showToast('Payment confirmed', 'success');
-        setDone(true);
+        const outcome = await completePayment(p as PaymentAction, label || 'GOWAYY booking');
+        if (outcome === 'pending') {
+          setAwaiting(true);
+          showToast('Payment submitted. Waiting for signed provider confirmation.', 'info');
+        } else {
+          showToast('Payment confirmed', 'success');
+          setDone(true);
+        }
       }
       await qc.invalidateQueries();
     } catch (e) { setError(e instanceof Error ? e.message : 'Payment failed'); }
@@ -74,6 +80,8 @@ export function Checkout() {
           {error && <div className="notice notice--info" style={{ marginTop: 12 }} role="alert">{error}</div>}
           {done || payment?.status === 'captured' ? (
             <div className="notice notice--info" style={{ marginTop: 16 }}><CheckCircle2 size={16} /> Payment recorded. The booking still requires partner confirmation — payment success does not confirm a booking.</div>
+          ) : awaiting ? (
+            <div className="notice notice--info" style={{ marginTop: 16 }} role="status">Payment submitted. Waiting for signed provider confirmation; this page will update automatically.</div>
           ) : (
             <button className="btn btn--primary btn--block" style={{ marginTop: 16 }} onClick={() => void pay()} disabled={busy}>
               {busy ? 'Processing…' : method === 'cash' ? 'Record pay-later' : `Pay ${formatINR(record.price.totalPaise)}`} <ArrowRight size={17} />

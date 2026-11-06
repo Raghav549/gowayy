@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Compass, MapPin, Mountain, Route as RouteIcon, ShieldAlert, ExternalLink, X } from 'lucide-react';
+import { Compass, MapPin, Mountain, Route as RouteIcon, ShieldAlert, ExternalLink } from 'lucide-react';
 import { catalogue } from '@gowayy/catalog';
 import { usePageMeta } from '../lib/guards';
 import { SectionHead, ImageFrame } from '../components/ui';
 import { DestinationCard, useDestinations } from './shared';
 import { MapView } from '../components/MapView';
+import { UniversalSearch } from '../components/UniversalSearch';
 
 type Tab = 'all' | 'gems' | 'verified';
 
@@ -33,12 +34,14 @@ export function Explore() {
         </div>
       </section>
 
-      <div className="search-field search-field--compact" role="search">
-        <Search size={18} aria-hidden="true" className="search-field__icon" />
-        <input className="search-field__input" type="search" value={query} placeholder="Search a destination, e.g. Mirik" aria-label="Search destinations"
-          onChange={(e) => setQuery(e.target.value)} />
-        {query && <button type="button" className="search-field__clear" aria-label="Clear" onClick={() => setQuery('')}><X size={16} /></button>}
-      </div>
+      <UniversalSearch
+        value={query}
+        onChange={setQuery}
+        scope="destinations"
+        variant="compact"
+        placeholder="Search destinations, stays and experiences…"
+        label="Search destinations"
+      />
 
       <div className="chips explore-filters">
         <button className={`chip ${tab === 'all' ? 'chip--active' : ''}`} onClick={() => setTab('all')}>All destinations</button>

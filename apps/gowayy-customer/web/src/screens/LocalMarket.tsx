@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { BadgePercent, MapPin, Package, Search, Store, UtensilsCrossed, ShoppingBasket, X } from 'lucide-react';
+import { BadgePercent, MapPin, Package, Store, UtensilsCrossed, ShoppingBasket } from 'lucide-react';
 import { formatINR } from '@gowayy/shared-utils';
 import { client } from '../lib/client';
 import { EmptyState, ImageFrame, SectionHead } from '../components/ui';
 import { apiErrorText, usePageMeta } from '../lib/guards';
 import { useServiceArea } from '../store/useServiceArea';
+import { UniversalSearch, useDebouncedValue } from '../components/UniversalSearch';
 
 interface ProductView {
   id: string; slug: string; name: string; brand: string; category: string; storeId: string; dataClass: string;
@@ -51,13 +52,14 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
   usePageMeta(cfg.title, cfg.blurb);
   const [text, setText] = useState('');
   const [category, setCategory] = useState('');
-  const [focused, setFocused] = useState(false);
-  const [activeSuggestion, setActiveSuggestion] = useState(0);
-  const navigate = useNavigate();
+  const query = useDebouncedValue(text.trim());
   const pincode = useServiceArea((s) => s.pincode);
   const setPincode = useServiceArea((s) => s.setPincode);
   const categories = useQuery({ queryKey: ['commerce-categories'], queryFn: () => client.commerceCategories() });
-  const products = useQuery({ queryKey: ['market-products', kind], queryFn: () => client.commerceProducts() });
+  const products = useQuery({
+    queryKey: ['market-products', kind, query],
+    queryFn: () => client.commerceProducts({ q: query || undefined }),
+  });
   const stores = useQuery({ queryKey: ['commerce-stores'], queryFn: () => client.recommendedStores() });
   const coverage = useQuery({
     queryKey: ['service-coverage', pincode],
@@ -82,20 +84,6 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
     (!category || p.category === category) &&
     (!text || `${p.name} ${p.brand} ${p.category} ${(p.tags ?? []).join(' ')}`.toLowerCase().includes(text.toLowerCase())));
 
-  const suggestions = useMemo(() => {
-    const term = text.trim().toLowerCase();
-    if (term.length < 1) return [] as Array<{ id: string; title: string; subtitle: string; href: string; kind: string }>;
-    const products: Array<{ id: string; title: string; subtitle: string; href: string; kind: string }> = scoped
-      .filter((p) => `${p.name} ${p.brand} ${p.category} ${(p.tags ?? []).join(' ')}`.toLowerCase().includes(term))
-      .slice(0, 5)
-      .map((p) => ({ id: p.id, title: p.name, subtitle: `${p.category} · ${formatINR(p.variants?.[0]?.pricePaise ?? 0)}`, href: `/products/${p.slug}`, kind: 'product' }));
-    const shops = ((stores.data?.items as StoreView[] | undefined) ?? [])
-      .filter((s) => `${s.name} ${s.categoryName ?? ''}`.toLowerCase().includes(term))
-      .slice(0, 3)
-      .map((s) => ({ id: s.id, title: s.name, subtitle: s.categoryName ?? 'Store', href: `/categories?store=${s.id}`, kind: 'store' }));
-    return [...products, ...shops];
-  }, [text, scoped, stores.data]);
-
   const storeList = ((stores.data?.items as StoreView[] | undefined) ?? [])
     .filter((s) => kind === 'groceries' || cfg.match.some((m) => (s.categoryName ?? '').toLowerCase().includes(m.split(' ')[0])))
     .filter((s) => s.productCount > 0)
@@ -105,7 +93,7 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
   const unavailable = checked && supported === false;
   return (
     <div className="stack">
-      <SectionHead eyebrow={cfg.eyebrow} title={cfg.title} subtitle={cfg.blurb} />
+      <SectionHead eyebrow={cfg.eyebrow} title={cfg.title} />
 
       <div className="service-pincode" role="group" aria-label="Check delivery PIN code">
         <MapPin size={17} aria-hidden="true" />
@@ -124,37 +112,15 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
           action={<Link className="btn btn--secondary" to="/categories">Browse Shop</Link>} />
       )}
 
-      {!unavailable && <div className="search-field" role="search">
-        <Search size={18} aria-hidden="true" className="search-field__icon" />
-        <input className="search-field__input" type="search" value={text} placeholder={`Search ${kind === 'food' ? 'food, tea, honey' : 'groceries, essentials'}…`}
-          aria-label={`Search ${cfg.title}`} autoComplete="off"
-          aria-expanded={focused && text.trim().length > 0}
-          aria-controls="market-suggestions"
-          onFocus={() => setFocused(true)}
-          onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-          onChange={(e) => { setText(e.target.value); setActiveSuggestion(0); }}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowDown') { e.preventDefault(); setActiveSuggestion((i) => Math.min(i + 1, Math.max(0, suggestions.length - 1))); }
-            if (e.key === 'ArrowUp') { e.preventDefault(); setActiveSuggestion((i) => Math.max(i - 1, 0)); }
-            if (e.key === 'Enter' && suggestions[activeSuggestion]) { e.preventDefault(); navigate(suggestions[activeSuggestion].href); }
-            if (e.key === 'Escape') setFocused(false);
-          }}
+      {!unavailable && (
+        <UniversalSearch
+          value={text}
+          onChange={setText}
+          scope={kind === 'food' ? 'food' : 'commerce'}
+          placeholder={`Search ${kind === 'food' ? 'food, kitchens, tea and honey' : 'groceries, stores and essentials'}…`}
+          label={`Search ${cfg.title}`}
         />
-        {text && <button type="button" className="search-field__clear" aria-label="Clear search" onClick={() => setText('')}><X size={16} /></button>}
-        {focused && text.trim().length > 0 && (
-          <div className="search-suggestions" id="market-suggestions" role="listbox" aria-label={`${cfg.title} suggestions`}>
-            {suggestions.length === 0 && <div className="search-suggestions__state small muted">No {kind === 'food' ? 'dishes or kitchens' : 'products or stores'} match “{text}”.</div>}
-            {suggestions.map((s, i) => (
-              <button key={`${s.kind}-${s.id}`} type="button" role="option" aria-selected={i === activeSuggestion} className={`search-suggestion ${i === activeSuggestion ? 'is-active' : ''}`}
-                onMouseEnter={() => setActiveSuggestion(i)} onClick={() => navigate(s.href)}>
-                <Search size={14} aria-hidden="true" />
-                <span className="search-suggestion__body"><span className="search-suggestion__title">{s.title}</span><span className="search-suggestion__sub">{s.subtitle}</span></span>
-                <span className="badge">{s.kind}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>}
+      )}
 
       {!unavailable && <div className="chips">
         <button className={`chip ${!category ? 'chip--active' : ''}`} onClick={() => setCategory('')}>All</button>
@@ -167,7 +133,7 @@ function Market({ kind }: { kind: 'food' | 'groceries' }) {
 
       {!unavailable && storeList.length > 0 && (
         <section>
-          <div className="between"><h3 style={{ fontSize: 18 }}>Stores listing here</h3><Link to="/categories" className="link">All shops</Link></div>
+          <div className="between"><h3 style={{ fontSize: 18 }}>Stores listing here</h3><Link to="/categories" className="btn btn--secondary btn--sm">All shops</Link></div>
           <div className="grid-3" style={{ marginTop: 12 }}>
             {storeList.map((s) => (
               <Link key={s.id} to={`/categories?store=${s.id}`} className="card card--hover store-card">

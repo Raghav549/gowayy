@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { downloadInvoice } from '../lib/invoice';
-import { downloadInvoice as downloadServerInvoice } from '../lib/invoice';
 import { ClipboardList, ArrowRight, Star, Download, CreditCard, XCircle } from 'lucide-react';
 import { formatINR } from '@gowayy/shared-utils';
 import { SERVICE_LABELS, progressFor } from '@gowayy/booking-engine';

@@ -12,7 +12,7 @@
 <rect x="120" y="270" width="60" height="60" rx="8" fill="#FFFFFF" opacity=".9"/><rect x="200" y="270" width="60" height="60" rx="8" fill="#FFFFFF" opacity=".75"/>
 </g>
 <rect x="64" y="88" width="560" height="324" rx="28" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".22"/>
-<text x="104" y="150" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#FFFFFF" opacity=".85">Farm vegetables & fruit</text>
+<text x="104" y="150" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#FFFFFF" opacity=".85">Farm vegetables &amp; fruit</text>
 <text x="104" y="228" font-family="Manrope,Segoe UI,Arial,sans-serif" font-size="58" font-weight="800" fill="#FFFFFF">FRESH THIS WEEK</text>
 <text x="104" y="280" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" fill="#FFFFFF" opacity=".9">Up to 30% off</text>
 <rect x="104" y="322" width="290" height="58" rx="29" fill="#17131B"/>

@@ -103,7 +103,8 @@ export function createAdminHub(ctx) {
           refundsPaise: db().transactions.filter((t) => t.type === 'refund').reduce((s, t) => s + t.amountPaise, 0),
           openTickets: db().tickets.filter((t) => t.status === 'open').length,
         },
-        recentActivity: [...db().audit].slice(-12).reverse(),
+        // Match the Supabase camelCased read contract consumed by Admin.
+        recentActivity: [...db().audit].slice(-12).reverse().map((entry) => ({ ...entry, createdAt: entry.at })),
         recentOrders: [...db().orders].slice(-5).reverse().map((o) => publicOrder(o)),
         serviceAvailability: db().settings.services,
       });

@@ -26,6 +26,7 @@ import { Orders, OrderDetail } from './screens/Orders';
 import { JourneyDashboard } from './screens/JourneyDashboard';
 import { Profile } from './screens/Profile';
 import { Support } from './screens/Support';
+import { useWebPushRegistration } from './lib/push';
 
 function StoreRedirect() {
   const { id } = useParams();
@@ -39,6 +40,7 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  useWebPushRegistration();
   const { splashDone, onboarded, setSplashDone, setOnboarded } = useUI();
   const loading = useSession((s) => s.loading);
   const location = useLocation();

@@ -169,7 +169,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_tem
 DECLARE
   u uuid := public.gowayy_require_user(); tbl text := public.gowayy_booking_table(p_id);
   st text; owner uuid; d date; prop public.hotel_bookings%ROWTYPE; ride public.ride_bookings%ROWTYPE;
-  pay public.payments%ROWTYPE;
+  pay public.payments%ROWTYPE; refund_result jsonb;
 BEGIN
   IF tbl IS NULL THEN RAISE EXCEPTION 'BOOKING_NOT_FOUND' USING ERRCODE = '22023'; END IF;
   EXECUTE format('SELECT status, user_id FROM public.%I WHERE id = $1 FOR UPDATE', tbl) INTO st, owner USING p_id;
@@ -193,10 +193,10 @@ BEGIN
   VALUES (p_id, tbl, 'booking', st, 'cancelled', 'customer', u, p_reason);
   UPDATE public.journey_services SET state = 'cancelled', updated_at = now() WHERE booking_id = p_id;
   SELECT * INTO pay FROM public.payments WHERE booking_id = p_id AND status = 'captured';
-  IF FOUND THEN PERFORM public.rpc_refund_payment(pay.id, true, COALESCE(p_reason, 'Booking cancelled')); END IF;
+  IF FOUND THEN SELECT public.rpc_refund_payment(pay.id, true, COALESCE(p_reason, 'Booking cancelled')) INTO refund_result; END IF;
   PERFORM public.gowayy_notify(u, 'booking.cancelled', 'Booking cancelled', 'Your booking has been cancelled.', 'booking:' || p_id || ':cancelled');
   PERFORM public.gowayy_audit('booking.cancel', tbl, p_id::text, jsonb_build_object('reason', p_reason));
-  RETURN public.gowayy_booking_json(p_id);
+  RETURN public.gowayy_booking_json(p_id) || jsonb_build_object('refundResult', refund_result);
 END $$;
 GRANT EXECUTE ON FUNCTION public.rpc_cancel_booking(uuid, text) TO authenticated;
 

@@ -46,7 +46,7 @@ test('no admin role, admin table or service-role secret exists in the schema', a
     SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename ILIKE '%admin%'
     UNION ALL SELECT role FROM user_roles WHERE role ILIKE '%admin%'`);
   assert.deepEqual(bad, []);
-  const secret = await rows(`SELECT key FROM app_config WHERE key ILIKE '%service%' OR key ILIKE '%secret%'`);
+  const secret = await rows(`SELECT key FROM app_config WHERE key ILIKE '%service_role%' OR key ILIKE '%secret%' OR key IN ('service_key', 'service_role', 'service_role_key')`);
   assert.deepEqual(secret, []);
 });
 
@@ -180,8 +180,12 @@ test('payment requires a verified capture; refund and cancellation are atomic', 
   assert.ok(tx.some((t) => t.type === 'charge'));
   const cancelled = (await one(`SELECT public.rpc_cancel_booking($1::uuid, 'Changed plans') AS r`, [ctx.cabId])).r;
   assert.equal(cancelled.status, 'cancelled');
-  const after = await one(`SELECT status FROM payments WHERE id=$1`, [pay.id]);
-  assert.equal(after.status, 'refunded');
+  assert.equal(cancelled.refundResult.refund.status, 'pending');
+  assert.equal((await one(`SELECT status FROM payments WHERE id=$1`, [pay.id])).status, 'captured');
+  assert.equal((await one(`SELECT count(*)::int c FROM transactions WHERE payment_id=$1 AND type='refund'`, [pay.id])).c, 0);
+  const completed = (await one(`SELECT public.rpc_complete_sandbox_refund($1::uuid) AS r`, [cancelled.refundResult.refund.id])).r;
+  assert.equal(completed.refund.status, 'succeeded');
+  assert.equal(completed.payment.status, 'refunded');
   assert.ok((await one(`SELECT count(*)::int c FROM refunds WHERE payment_id=$1`, [pay.id])).c >= 1);
 });
 

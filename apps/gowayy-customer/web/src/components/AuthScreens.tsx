@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Check, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Check, Mail, ShieldCheck, Smartphone } from 'lucide-react';
 import { stepOneSchema, stepTwoSchema, loginSchema, forgotSchema, assessPassword, otpSchema, type StepOne, type StepTwo } from '@gowayy/validation';
 import { ApiError } from '@gowayy/api-client';
 import { client } from '../lib/client';
@@ -249,11 +249,77 @@ function OtpStep({ registrationId, demoOtp, email, password, onBack, onVerified 
   );
 }
 
+function PhoneLoginForm({ onVerified }: { onVerified: (user: import('@gowayy/types').User, token: string) => void }) {
+  const [phone, setPhone] = useState('+91');
+  const [code, setCode] = useState('');
+  const [phase, setPhase] = useState<'request' | 'verify'>('request');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
+  const validPhone = /^\+[1-9]\d{7,14}$/.test(phone);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = window.setInterval(() => setResendIn((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [resendIn]);
+
+  const request = async () => {
+    if (!validPhone || busy) { setError('Enter an international phone number, for example +919876543210.'); return; }
+    setBusy(true); setError(null);
+    try {
+      const result = await client.requestPhoneOtp(phone);
+      setResendIn(result.resendAfterSeconds); setPhase('verify'); setCode('');
+    } catch (e) { setError(errorText(e)); }
+    finally { setBusy(false); }
+  };
+  const verify = async () => {
+    if (!/^\d{6}$/.test(code) || busy) { setError('Enter the six-digit SMS code.'); return; }
+    setBusy(true); setError(null);
+    try {
+      const result = await client.verifyPhoneOtp(phone, code);
+      onVerified(result.user, result.session.token);
+    } catch (e) { setError(errorText(e)); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <form className="auth-form" noValidate onSubmit={(event) => { event.preventDefault(); void (phase === 'request' ? request() : verify()); }}>
+      <h2>Sign in with phone</h2>
+      <p className="muted small">Supabase Phone Auth verifies the SMS code. Standard SMS provider charges may apply.</p>
+      <label className="field">
+        <span className="label">Mobile number</span>
+        <input className="input" type="tel" inputMode="tel" autoComplete="tel" value={phone} disabled={phase === 'verify' || busy}
+          onChange={(event) => setPhone(event.target.value.replace(/[\s()-]/g, ''))} placeholder="+919876543210" autoFocus />
+        <span className="hint">Include the country code. No development OTP is generated.</span>
+      </label>
+      {phase === 'verify' && (
+        <label className="field">
+          <span className="label">Six-digit SMS code</span>
+          <input className="input" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} disabled={busy}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" autoFocus />
+        </label>
+      )}
+      {error && <div className="notice notice--info" role="alert">{error}</div>}
+      <button className="btn btn--primary btn--block" type="submit" disabled={busy || (phase === 'request' ? !validPhone : code.length !== 6)}>
+        {busy ? 'Contacting authentication service…' : phase === 'request' ? 'Request SMS code' : 'Verify and sign in'} <Smartphone size={17} />
+      </button>
+      {phase === 'verify' && (
+        <div className="row between auth-footnote">
+          <button type="button" className="link" disabled={busy} onClick={() => { setPhase('request'); setCode(''); setError(null); }}>Change number</button>
+          <button type="button" className="link" disabled={busy || resendIn > 0} onClick={() => void request()}>{resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}</button>
+        </div>
+      )}
+    </form>
+  );
+}
+
 export function LoginScreen() {
   const navigate = useNavigate();
   const setAuth = useSession((s) => s.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   const form = useForm<{ email: string; password: string }>({ resolver: zodResolver(loginSchema), mode: 'onChange' });
   const submit = form.handleSubmit(async (d) => {
     setServerError(null);
@@ -273,8 +339,9 @@ export function LoginScreen() {
       </aside>
       <main className="auth-page__panel">
         <div className="auth-page__brand"><GSymbol size={32} /><span className="eyebrow">GOWAYY</span></div>
+        {authMethod === 'email' ? (
         <form onSubmit={submit} noValidate className="auth-form">
-          <h2>Sign in</h2>
+          <h2>Sign in with email</h2>
           <label className="field"><span className="label">Email address</span><input className="input" type="email" autoComplete="email" placeholder="you@example.com" autoFocus {...form.register('email')} />
             {form.formState.errors.email && <span className="error" role="alert">{form.formState.errors.email.message}</span>}
           </label>
@@ -292,6 +359,10 @@ export function LoginScreen() {
             <span>New here? <Link className="link" to="/auth/register">Create account</Link></span>
           </div>
         </form>
+        ) : <PhoneLoginForm onVerified={(user, token) => { setAuth(user, token); navigate('/'); }} />}
+        <button type="button" className="btn btn--secondary btn--block" onClick={() => { setAuthMethod(authMethod === 'email' ? 'phone' : 'email'); setServerError(null); }}>
+          {authMethod === 'email' ? 'Use phone OTP instead' : 'Use email and password instead'}
+        </button>
       </main>
     </div>
   );

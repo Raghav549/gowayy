@@ -79,10 +79,10 @@ export function Field({ label, error, hint, children }: { label: string; error?:
   );
 }
 
-export function TextInput({ value, onChangeText, placeholder, secureTextEntry = false, keyboardType = 'default', autoCapitalize = 'sentences', testID, multiline = false }: {
+export function TextInput({ value, onChangeText, placeholder, secureTextEntry = false, keyboardType = 'default', autoCapitalize = 'sentences', testID, multiline = false, editable = true }: {
   value: string; onChangeText: (t: string) => void; placeholder?: string; secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad'; autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  testID?: string; multiline?: boolean;
+  testID?: string; multiline?: boolean; editable?: boolean;
 }) {
   const { c } = useTheme();
   return (
@@ -97,6 +97,7 @@ export function TextInput({ value, onChangeText, placeholder, secureTextEntry = 
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         multiline={multiline}
+        editable={editable}
         style={[styles.input, { color: c.text }]}
       />
     </View>

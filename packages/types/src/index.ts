@@ -22,7 +22,7 @@ export type PaymentStatus =
   | 'refunded' | 'partially_refunded';
 
 export type PaymentMethod = 'upi' | 'upi_intent' | 'gateway' | 'cash';
-export type Role = 'customer' | 'driver' | 'restaurant' | 'grocery' | 'property' | 'tour_operator';
+export type Role = 'customer' | 'driver' | 'restaurant' | 'grocery' | 'property' | 'tour_operator' | 'admin';
 export type VerificationState = 'unverified' | 'pending' | 'verified' | 'rejected';
 export type ThemeMode = 'light' | 'dark';
 
@@ -217,6 +217,44 @@ export interface Experience {
   host: string;
 }
 
+/** A verified host's real, bookable offering (not a static catalogue suggestion). */
+export interface ExperienceOffering {
+  id: string;
+  kind: 'experience' | 'package';
+  destinationId: string;
+  destinationName: string | null;
+  name: string;
+  description: string;
+  durationHours: number;
+  durationMinutes: number;
+  pricePaise: number;
+  capacity: number;
+  meetingPoint: string;
+  requirements: string;
+  host: { id: string; name: string | null };
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ExperienceSlot {
+  id: string;
+  offeringId: string;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  booked: number;
+  available: number;
+  active?: boolean;
+}
+
+export interface ExperienceQuote {
+  offering: ExperienceOffering;
+  slot: ExperienceSlot;
+  guests: number;
+  service: 'experience' | 'package';
+  price: PriceBreakdown;
+}
+
 export interface Journey {
   id: string;
   userId: string;
@@ -257,6 +295,9 @@ export interface Booking {
   paymentId: string | null;
   createdAt: string;
   updatedAt: string;
+  guests?: number | null;
+  visitDate?: string | null;
+  slotId?: string | null;
   statusHistory: Array<{ status: BookingStatus; at: string; by: string; note?: string }>;
 }
 
@@ -288,7 +329,7 @@ export interface Payment {
   method: PaymentMethod;
   status: PaymentStatus;
   amountPaise: number;
-  provider: 'sandbox';
+  provider: 'sandbox' | 'razorpay' | (string & {});
   providerReference: string | null;
   idempotencyKey: string;
   createdAt: string;
@@ -329,6 +370,32 @@ export interface User {
 }
 
 export interface Session { token: string; userId: string; expiresAt: string }
+
+export interface PhoneOtpRequestResult { accepted: true; resendAfterSeconds: number }
+export interface PhoneOtpVerificationResult { user: User; session: Session }
+export type PushPlatform = 'android' | 'ios' | 'web';
+export interface WebPushSubscriptionInput {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: { auth: string; p256dh: string };
+}
+export interface PushTokenRegistration {
+  provider: 'expo' | 'web_push';
+  platform: PushPlatform;
+  installationId: string;
+  token: string;
+  subscription?: WebPushSubscriptionInput;
+}
+export interface PushConfig { expoEnabled: boolean; webPushEnabled: boolean; vapidPublicKey?: string }
+export interface NotificationPreferences {
+  pushEnabled: boolean;
+  bookingUpdates: boolean;
+  orderUpdates: boolean;
+  paymentUpdates: boolean;
+  partnerUpdates: boolean;
+  marketing: boolean;
+  updatedAt?: string;
+}
 
 export interface DriverProfile {
   id: string;

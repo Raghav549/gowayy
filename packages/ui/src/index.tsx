@@ -48,7 +48,7 @@ export function AppShell({ brand, nav, sections, children, rightSlot }: { brand:
         ))}
       </aside>
       <div>
-        <header className="topbar"><div className="topbar__inner" style={{ justifyContent: 'flex-end' }}>{rightSlot}</div></header>
+        <header className="topbar"><div className="topbar__inner"><div className="topbar__brand">{brand}</div><div className="topbar__slot">{rightSlot}</div></div></header>
         <main className="shell__main">{children}</main>
       </div>
       <nav className="bottom-nav" aria-label="Bottom navigation">
@@ -118,3 +118,4 @@ export function Stat({ label, value }: { label: string; value: ReactNode }) {
 }
 
 export { formatINR };
+export { PushPreferences, useBrowserPushRegistration } from './PushPreferences.tsx';

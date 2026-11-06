@@ -12,7 +12,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createHmac } from 'node:crypto';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -181,6 +181,27 @@ test('catalogue is data-driven, universal search works, and image credits are ho
   assert.ok(credits.json.credits.length > 0);
   assert.ok(credits.json.credits.every((c) => c.license && c.sourceUrl), 'every displayed photo has a licence and source');
   assert.ok(credits.json.unavailablePlaces.length > 0, 'places without a verified photo are marked unavailable');
+});
+
+test('image uploads require authentication, validate content and return the stored bytes', async () => {
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrS8AAAAASUVORK5CYII=';
+  const unauthenticated = await post('/api/uploads', { mimeType: 'image/png', dataBase64: png }, { token: '' });
+  assert.equal(unauthenticated.status, 401);
+  const wrongType = await post('/api/uploads', { mimeType: 'image/svg+xml', dataBase64: png });
+  assert.equal(wrongType.status, 422); assert.equal(wrongType.json.error, 'UNSUPPORTED_FILE');
+  const mismatch = await post('/api/uploads', { mimeType: 'image/png', dataBase64: Buffer.from('<script>not an image</script>').toString('base64') });
+  assert.equal(mismatch.status, 422); assert.equal(mismatch.json.error, 'INVALID_IMAGE');
+  const uploaded = await post('/api/uploads', { mimeType: 'image/png', dataBase64: png });
+  assert.equal(uploaded.status, 201); assert.match(uploaded.json.url, /^\/uploads\/img_[a-zA-Z0-9_-]+\.png$/);
+  const name = uploaded.json.url.split('/').pop();
+  try {
+    const response = await fetch(`${BASE}${uploaded.json.url}`);
+    assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'image/png');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), Buffer.from(png, 'base64'));
+  } finally {
+    unlinkSync(join(ROOT, 'apps/dev-api/data/uploads', name));
+  }
 });
 
 // ---------------------------------------------------- connected journey core --
@@ -366,7 +387,7 @@ test('grocery inventory is per store and orders are rejected when stock is short
 });
 
 // --------------------------------------- tourism, packages, parcels, shared --
-test('tourism, experience, package, parcel and shared-taxi services book independently', async () => {
+test('tourism, package, parcel and shared-taxi services book independently; static experiences cannot be booked', async () => {
   const tourism = await post('/api/bookings/tourism', {
     offeringId: 'att_01', service: 'tourism', date: '2027-03-04', guests: 2, journeyId: state.journeyId,
   });
@@ -374,7 +395,8 @@ test('tourism, experience, package, parcel and shared-taxi services book indepen
   const experience = await post('/api/bookings/tourism', {
     offeringId: 'exp_1', service: 'experience', date: '2027-03-05', guests: 2, journeyId: state.journeyId,
   });
-  assert.equal(experience.status, 201);
+  assert.equal(experience.status, 422);
+  assert.equal(experience.json.error, 'VALIDATION_FAILED');
   const pkg = await post('/api/bookings/tourism', {
     offeringId: 'pkg_1', service: 'package', date: '2027-03-06', guests: 1, journeyId: state.journeyId,
   });
@@ -395,9 +417,82 @@ test('tourism, experience, package, parcel and shared-taxi services book indepen
 
   const all = await get('/api/bookings');
   const services = new Set(all.json.items.map((b) => b.service));
-  for (const s of ['cab', 'hotel', 'homestay', 'tourism', 'experience', 'package', 'parcel', 'shared_taxi']) {
+  for (const s of ['cab', 'hotel', 'homestay', 'tourism', 'package', 'parcel', 'shared_taxi']) {
     assert.ok(services.has(s), `service ${s} must persist independently`);
   }
+});
+
+// -------------------------------------- real host experiences / capacity --
+test('host experiences use real slots, server quotes, isolated replay keys and atomic capacity', async () => {
+  const hostLogin = await post('/api/auth/login', { email: 'partner@gowayy.app', password: 'Gw@yPartner2026' });
+  const otherLogin = await post('/api/auth/login', { email: 'demo@gowayy.app', password: 'Gw@yDemo2026' });
+  assert.equal(hostLogin.status, 200); assert.equal(otherLogin.status, 200);
+  const hostToken = hostLogin.json.session.token; const otherToken = otherLogin.json.session.token;
+  const created = await post('/api/partner/tours', {
+    kind: 'experience', name: 'Integration heritage walk', destinationId: 'dst_darjeeling',
+    description: 'A real Partner-created integration offering.', meetingPoint: 'Chowk Bazaar clock tower',
+    requirements: 'Comfortable walking shoes', pricePaise: 50000, durationHours: 2, capacity: 3,
+  }, { token: hostToken });
+  assert.equal(created.status, 201);
+  const offering = created.json.tour;
+  assert.equal(offering.kind, 'experience');
+
+  const start = new Date(Date.now() + 3 * 86_400_000); start.setUTCHours(4, 0, 0, 0);
+  const startAt = start.toISOString();
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(start);
+  const part = (type) => parts.find((p) => p.type === type)?.value;
+  const date = `${part('year')}-${part('month')}-${part('day')}`;
+
+  const publicOfferings = await get('/api/experiences/offerings?kind=experience&destinationId=dst_darjeeling', { token: '' });
+  assert.equal(publicOfferings.status, 200);
+  assert.ok(publicOfferings.json.items.some((item) => item.id === offering.id && item.host.name === 'Himalaya Bazaar Group'));
+  const denied = await post(`/api/partner/tours/${offering.id}/slots`, { offeringId: offering.id, startAt, capacity: 3 }, { token: otherToken });
+  assert.equal(denied.status, 404);
+  const slotCreated = await post(`/api/partner/tours/${offering.id}/slots`, { offeringId: offering.id, startAt, capacity: 3 }, { token: hostToken });
+  assert.equal(slotCreated.status, 201);
+  const slot = slotCreated.json.slot;
+
+  const slots = await get(`/api/experiences/${offering.id}/slots?date=${date}`, { token: '' });
+  assert.equal(slots.status, 200); assert.equal(slots.json.items.length, 1); assert.equal(slots.json.items[0].available, 3);
+  const quote = await get(`/api/experiences/quote?slotId=${slot.id}&guests=2`, { token: '' });
+  assert.equal(quote.status, 200); assert.equal(quote.json.price.totalPaise, 105000); assert.equal(quote.json.guests, 2);
+
+  const input = { offeringId: offering.id, service: 'experience', slotId: slot.id, date, guests: 2, answers: { experienceLevel: 'first-time' }, journeyId: null };
+  const sharedKey = 'shared-experience-replay-key';
+  const booked = await post('/api/bookings/tourism', input, { headers: { 'idempotency-key': sharedKey } });
+  assert.equal(booked.status, 201); assert.equal(booked.json.booking.guests, 2);
+  assert.equal(booked.json.booking.details.answers.experienceLevel, 'first-time');
+  const firstBooking = booked.json.booking;
+
+  const shrink = await post(`/api/partner/tours/${offering.id}/slots`, { offeringId: offering.id, startAt, capacity: 1 }, { token: hostToken });
+  assert.equal(shrink.status, 409); assert.equal(shrink.json.error, 'INVALID_SLOT_CAPACITY');
+  const otherBooking = await post('/api/bookings/tourism', { ...input, guests: 1 }, { token: otherToken, headers: { 'idempotency-key': sharedKey } });
+  assert.equal(otherBooking.status, 201, 'the same client key for another user must not replay the first user\'s booking');
+  assert.notEqual(otherBooking.json.booking.id, firstBooking.id);
+
+  const replay = await post('/api/bookings/tourism', input, { headers: { 'idempotency-key': sharedKey } });
+  assert.equal(replay.status, 201); assert.equal(replay.json.booking.id, firstBooking.id, 'replay wins even after capacity fills');
+  const duplicate = await post('/api/bookings/tourism', input, { headers: { 'idempotency-key': 'different-experience-key' } });
+  assert.equal(duplicate.status, 409); assert.equal(duplicate.json.error, 'BOOKING_ALREADY_EXISTS');
+  const fullQuote = await get(`/api/experiences/quote?slotId=${slot.id}&guests=1`, { token: '' });
+  assert.equal(fullQuote.status, 409); assert.equal(fullQuote.json.error, 'SLOT_UNAVAILABLE');
+  const blockedDelete = await api('DELETE', `/api/partner/experience-slots/${slot.id}`, { token: hostToken });
+  assert.equal(blockedDelete.status, 409); assert.equal(blockedDelete.json.error, 'SLOT_HAS_BOOKINGS');
+  const hostInbox = await get('/api/partner/inbox', { token: hostToken });
+  const otherInbox = await get('/api/partner/inbox', { token: otherToken });
+  assert.ok(hostInbox.json.bookings.some((item) => item.id === firstBooking.id));
+  assert.ok(!otherInbox.json.bookings.some((item) => item.id === firstBooking.id));
+  const foreignTransition = await post(`/api/bookings/${firstBooking.id}/transition`, { status: 'confirmed' }, { token: otherToken });
+  assert.equal(foreignTransition.status, 403);
+  const hostTransition = await post(`/api/bookings/${firstBooking.id}/transition`, { status: 'confirmed' }, { token: hostToken });
+  assert.equal(hostTransition.status, 200); assert.equal(hostTransition.json.booking.status, 'confirmed');
+
+  const cancelled = await post(`/api/bookings/${firstBooking.id}/cancel`, { reason: 'Capacity regression' });
+  assert.equal(cancelled.status, 200);
+  const availableAgain = await get(`/api/experiences/quote?slotId=${slot.id}&guests=2`, { token: '' });
+  assert.equal(availableAgain.status, 200); assert.equal(availableAgain.json.slot.available, 2);
+  const hostNotifications = await get('/api/notifications', { token: hostToken });
+  assert.ok(hostNotifications.json.items.some((item) => String(item.body).includes(firstBooking.reference)));
 });
 
 // ---------------------------------------------- cancellation + refund path --
@@ -506,6 +601,19 @@ test('notifications are deduplicated, readable, and support tickets persist', as
   assert.equal(readAll.status, 200);
   const afterRead = await get('/api/notifications');
   assert.equal(afterRead.json.unreadCount, 0);
+});
+
+// --------------------------------------------------------- admin contract --
+test('admin overview exposes the camelCased audit timestamp contract', async () => {
+  const login = await post('/api/auth/login', { email: 'admin@gowayy.app', password: 'Gw@yAdmin2026' });
+  assert.equal(login.status, 200);
+  const overview = await get('/api/admin/overview', { token: login.json.session.token });
+  assert.equal(overview.status, 200);
+  assert.ok(overview.json.recentActivity.length > 0);
+  for (const entry of overview.json.recentActivity) {
+    assert.equal(typeof entry.createdAt, 'string');
+    assert.ok(Number.isFinite(Date.parse(entry.createdAt)), `invalid audit timestamp: ${entry.createdAt}`);
+  }
 });
 
 // ----------------------------------------------------- login / account -----

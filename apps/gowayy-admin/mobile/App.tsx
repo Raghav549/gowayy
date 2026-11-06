@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, BackHandler, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { nativeTokenStore, registerAdminPush, unregisterAdminPush } from './src/lib/notifications';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 
 /**
@@ -14,6 +16,8 @@ import { WebView, type WebViewNavigation } from 'react-native-webview';
  * every request. Set EXPO_PUBLIC_ADMIN_URL at build time.
  */
 const ADMIN_URL = (process.env.EXPO_PUBLIC_ADMIN_URL ?? '').trim();
+const ADMIN_ORIGIN = (() => { try { return new URL(ADMIN_URL).origin; } catch { return ''; } })();
+const AUTH_SYNC_SCRIPT = `(function(){try{window.ReactNativeWebView.postMessage(JSON.stringify({type:'GOWAYY_AUTH_TOKEN',token:window.localStorage.getItem('gowayy.session.token')}));}catch(e){}})();true;`;
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -44,9 +48,57 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
+  const [nativeAuthenticated, setNativeAuthenticated] = useState(false);
+
+  const postPushStatus = useCallback((message: string, kind: 'success' | 'error' | 'info') => {
+    const detail = JSON.stringify({ message, kind });
+    webRef.current?.injectJavaScript(`window.dispatchEvent(new CustomEvent('gowayy-push-status',{detail:${detail}}));true;`);
+  }, []);
+
+  const onWebMessage = useCallback((event: { nativeEvent: { data: string; url: string } }) => {
+    void (async () => {
+      try {
+        if (!ADMIN_ORIGIN || new URL(event.nativeEvent.url).origin !== ADMIN_ORIGIN) return;
+        const message = JSON.parse(event.nativeEvent.data) as { type?: string; token?: string | null };
+        if (message.type === 'GOWAYY_AUTH_TOKEN') {
+          if (typeof message.token === 'string' && message.token.length > 0 && message.token.length <= 8192) {
+            nativeTokenStore.set(message.token); setNativeAuthenticated(true);
+          } else if (message.token === null) {
+            if (nativeTokenStore.get()) await unregisterAdminPush().catch(() => undefined);
+            nativeTokenStore.set(null); setNativeAuthenticated(false);
+          }
+          return;
+        }
+        if (message.type === 'GOWAYY_NATIVE_PUSH_REGISTER') {
+          try {
+            await registerAdminPush(true); setNativeAuthenticated(true);
+            postPushStatus('Server registration confirmed. Actual provider delivery still requires a live push test.', 'success');
+          } catch (error) { postPushStatus(error instanceof Error ? error.message : 'Native push registration failed.', 'error'); }
+        }
+        if (message.type === 'GOWAYY_NATIVE_PUSH_UNREGISTER') {
+          try { await unregisterAdminPush(); postPushStatus('This Android installation was unregistered on the server.', 'info'); }
+          catch (error) { postPushStatus(error instanceof Error ? error.message : 'Could not unregister this device.', 'error'); }
+        }
+      } catch { /* Ignore malformed or non-GOWAYY WebView messages. */ }
+    })();
+  }, [postPushStatus]);
 
   useEffect(() => {
     void SplashScreen.hideAsync().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!nativeAuthenticated || Platform.OS === 'web') return;
+    void registerAdminPush(false).catch(() => undefined);
+    const subscription = Notifications.addPushTokenListener(() => { void registerAdminPush(false).catch(() => undefined); });
+    return () => subscription.remove();
+  }, [nativeAuthenticated]);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const subscription = Notifications.addNotificationResponseReceivedListener(() => {
+      webRef.current?.injectJavaScript("window.location.hash='support';true;");
+    });
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {
@@ -129,7 +181,8 @@ export default function App() {
               setSupportMultipleWindows={false}
               allowsBackForwardNavigationGestures
               onLoadStart={() => setLoading(true)}
-              onLoadEnd={() => setLoading(false)}
+              onLoadEnd={() => { setLoading(false); webRef.current?.injectJavaScript(AUTH_SYNC_SCRIPT); }}
+              onMessage={onWebMessage}
               onError={() => { setFailed(true); setLoading(false); }}
               onHttpError={(event) => { if (event.nativeEvent.statusCode >= 500) { setFailed(true); setLoading(false); } }}
               onNavigationStateChange={onNavigation}

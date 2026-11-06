@@ -28,7 +28,7 @@ export function Login() {
     onError: (e: Error) => showToast(e.message, 'error'),
   });
   return (
-    <div className="stack" style={{ maxWidth: 420, margin: '6vh auto' }}>
+    <div className="stack auth-stack">
       <Brand />
       <h1 style={{ fontSize: 26 }}>Welcome back, partner</h1>
       <p className="small muted">Sign in with your GOWAYY account — one identity across GOWAYY, GOWAYY PARTNER and GOWAYY EXPLORE.</p>
@@ -54,13 +54,15 @@ export function Register() {
     onSuccess: (r) => { setRegId(r.registrationId); if (r.demoOtp) setDemoOtp(r.demoOtp); setStep(1); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
+  // The password is required exactly once, at verification time, by the Edge gateway
+  // (422 PASSWORD_REQUIRED). It is never persisted — it only creates the session.
   const verify = useMutation({
-    mutationFn: () => client.verifyOtp(regId, code),
+    mutationFn: () => client.verifyOtp(regId, code, form.password),
     onSuccess: (r) => { if (r.verified) { setAuth(r.user, r.session.token); nav('/onboarding'); } else showToast(r.message, 'error'); },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
   return (
-    <div className="stack" style={{ maxWidth: 420, margin: '6vh auto' }}>
+    <div className="stack auth-stack">
       <Brand />
       {step === 0 ? (
         <>
@@ -81,7 +83,12 @@ export function Register() {
         <>
           <h1 style={{ fontSize: 26 }}>Verify your email</h1>
           <p className="small muted">Enter the six-digit code sent to {form.email}.</p>
-          {demoOtp && <details className="notice notice--info" style={{ marginTop: 10 }}><summary className="small"><ShieldCheck size={14} /> Development verification code</summary><p className="small" style={{ marginTop: 6 }}>No email provider is connected in this build. Test code: <strong style={{ fontFamily: 'var(--gw-mono)' }}>{demoOtp}</strong></p></details>}
+          {import.meta.env.DEV && demoOtp && (
+            <details className="notice notice--info" style={{ marginTop: 10 }}>
+              <summary className="small"><ShieldCheck size={14} /> Development verification code</summary>
+              <p className="small" style={{ marginTop: 6 }}>No email provider is connected in this build. Test code: <strong style={{ fontFamily: 'var(--gw-mono)' }}>{demoOtp}</strong></p>
+            </details>
+          )}
           <Field label="Verification code"><input className="input" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} style={{ fontFamily: 'var(--gw-mono)', fontSize: 22, letterSpacing: 8, textAlign: 'center' }} /></Field>
           <button className="btn btn--primary btn--block" disabled={code.length !== 6 || verify.isPending} onClick={() => verify.mutate()}>{verify.isPending ? 'Verifying…' : 'Verify & continue'}</button>
           <button className="btn btn--ghost btn--sm" onClick={() => send.mutate()}>Resend code</button>

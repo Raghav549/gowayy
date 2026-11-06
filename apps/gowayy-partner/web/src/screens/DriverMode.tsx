@@ -47,7 +47,7 @@ export function DriverMode() {
   const bookings = requests.data?.bookings ?? [];
   const active = bookings.filter((b) => ['confirmed', 'in_progress'].includes(b.status));
   const history = bookings.filter((b) => ['completed', 'cancelled', 'refunded'].includes(b.status));
-  const money = earnings.data as { totalNetPaise?: number; pendingPayoutPaise?: number; commissionPercent?: number } | undefined;
+  const money = earnings.data as { totalNetPaise?: number; pendingPayoutPaise?: number; commissionPercent?: number | null; commissionLabel?: string } | undefined;
 
   return (
     <div className="stack">
@@ -126,7 +126,7 @@ export function DriverMode() {
           <div className="grid-3">
             <div className="card"><div className="tiny muted">Net earnings</div><strong>{formatINR(money?.totalNetPaise ?? 0)}</strong></div>
             <div className="card"><div className="tiny muted">Pending payout</div><strong>{formatINR(money?.pendingPayoutPaise ?? 0)}</strong></div>
-            <div className="card"><div className="tiny muted">Platform commission</div><strong>{money?.commissionPercent ?? 15}%</strong></div>
+            <div className="card"><div className="tiny muted">Platform commission</div><strong>{money?.commissionPercent == null ? (money?.commissionLabel ?? 'Varies by service') : `${money.commissionPercent}%`}</strong></div>
           </div>
           <div className="card row between" style={{ flexWrap: 'wrap', gap: 10 }}>
             <span className="row" style={{ gap: 8 }}><Wallet size={18} style={{ color: 'var(--gw-champagne)' }} /> Request a payout of your available balance</span>

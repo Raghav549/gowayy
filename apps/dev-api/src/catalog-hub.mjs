@@ -12,6 +12,9 @@ import { fileURLToPath } from 'node:url';
 import { catalogue } from '@gowayy/catalog';
 import { makeId, nowIso, slugify } from '@gowayy/shared-utils';
 import { transitionOrderStatus } from '@gowayy/booking-engine';
+import { allTours, publicOffering, offeringView, experienceQuote, kolkataDate, slotView } from './experiences.mjs';
+import { orderActor, canManageStore } from './partner-access.mjs';
+import { isPublicProduct, isPublicStore, isPublicOffer } from './catalog-visibility.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const UPLOAD_DIR = join(HERE, '../data/uploads');
@@ -89,7 +92,7 @@ export function createProductRecord(db, body, ownerUserId) {
   while (db.catalogProducts.some((p) => p.slug === slug)) slug = `${slugBase}-${n++}`;
   const product = {
     id: makeId('prd'), slug, storeId: store.id, brand: String(body.brand ?? store.name).slice(0, 60),
-    name, category: category.name, categoryId: category.id, dataClass: 'demo-listing',
+    name, category: category.name, categoryId: category.id, dataClass: 'verified-listing',
     highlights: Array.isArray(body.highlights) ? body.highlights.slice(0, 6).map((h) => String(h).slice(0, 160)) : [],
     description: String(body.description ?? '').slice(0, 2000),
     specifications: Array.isArray(body.specifications) ? body.specifications.slice(0, 20).map((s) => ({ label: String(s.label ?? '').slice(0, 60), value: String(s.value ?? '').slice(0, 120) })) : [],
@@ -101,7 +104,7 @@ export function createProductRecord(db, body, ownerUserId) {
     couponEligible: body.couponEligible !== false,
     active: body.active !== false, published: body.published !== false,
     featured: false, ownerUserId: ownerUserId ?? null, createdAt: nowIso(),
-    demo: true, categorySlug: category.slug,
+    demo: false, categorySlug: category.slug,
   };
   db.catalogProducts.push(product);
   return product;
@@ -109,18 +112,19 @@ export function createProductRecord(db, body, ownerUserId) {
 
 export function createOfferRecord(db, body, ownerUserId) {
   const kind = body.kind === 'flat' ? 'flat' : 'percent';
-  const value = Number(body.value ?? 0);
+  const value = Number(body.value ?? body.valuePercent ?? (body.valuePaise !== undefined ? Number(body.valuePaise) / 100 : 0));
   if (!Number.isFinite(value) || value <= 0) throw Object.assign(new Error('Offer value must be greater than zero'), { status: 422, code: 'VALIDATION_FAILED' });
   if (kind === 'percent' && value > 90) throw Object.assign(new Error('Percentage discount cannot exceed 90%'), { status: 422, code: 'VALIDATION_FAILED' });
   const code = body.code ? String(body.code).trim().toUpperCase().slice(0, 20) : null;
   if (code && db.coupons.some((c) => c.code === code)) throw Object.assign(new Error('This coupon code already exists'), { status: 409, code: 'COUPON_EXISTS' });
   const offer = {
-    id: makeId('off'), scope: ['product', 'category', 'store', 'platform'].includes(body.scope) ? body.scope : 'product',
+    id: makeId('off'), scope: ['product', 'category', 'store', 'platform'].includes(body.scope) ? body.scope : 'store',
     productIds: Array.isArray(body.productIds) ? body.productIds.slice(0, 100) : [],
     categoryIds: Array.isArray(body.categoryIds) ? body.categoryIds.slice(0, 50) : [],
+    storeId: body.storeId ?? null,
     title: String(body.title ?? 'Offer').slice(0, 100), code, kind, value,
     maxDiscountPaise: Math.max(0, Number(body.maxDiscountPaise ?? 0)) || null,
-    minOrderPaise: Math.max(0, Number(body.minOrderPaise ?? 0)),
+    minOrderPaise: Math.max(0, Number(body.minOrderPaise ?? body.minSubtotalPaise ?? 0)),
     startAt: body.startAt ?? null, endAt: body.endAt ?? null,
     usageLimit: body.usageLimit ? Math.max(1, Number(body.usageLimit)) : null,
     usedCount: 0, active: body.active !== false, ownerUserId: ownerUserId ?? null, createdAt: nowIso(),
@@ -165,25 +169,63 @@ export function createCatalogHub(ctx) {
       banner: store.banner ?? null,
       products: withProducts ? products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, pricePaise: p.variants?.[0]?.pricePaise ?? 0, mrpPaise: p.variants?.[0]?.mrpPaise, stock: p.variants?.[0]?.stock ?? 0, images: p.images, category: p.category })) : undefined,
       groceryItems: withProducts ? groceryItems.map((p) => ({ id: p.id, name: p.name, pricePaise: p.pricePaise, unit: p.unit, stock: db().inventory[`${store.id}:${p.id}`] ?? p.stock, category: p.category })) : undefined,
-      offers: (db().offers ?? []).filter((o) => o.active && (o.scope === 'platform' || o.productIds.some((pid) => products.some((p) => p.id === pid)))),
+      offers: (db().offers ?? []).filter((o) => o.active && (o.scope === 'platform'
+        || (o.scope === 'store' && o.storeId === store.id)
+        || (o.productIds ?? []).some((pid) => products.some((p) => p.id === pid))
+        || (o.categoryIds ?? []).some((cid) => products.some((p) => p.categoryId === cid)))),
     };
     return view;
   }
 
+  const withDestination = (offering) => ({
+    ...offering,
+    destinationName: catalogue.destinations.find((d) => d.id === offering.destinationId)?.name ?? null,
+  });
+
   async function handle(req, res, method, tail, body, q, send, ok) {
+    // -------------------------------------- real host experiences and packages
+    if (method === 'GET' && tail[0] === 'experiences' && tail[1] === 'offerings') {
+      const destinationId = q.get('destinationId') ?? '';
+      const kind = q.get('kind') ?? '';
+      if (kind && !['experience', 'package'].includes(kind)) bad('INVALID_OFFERING_KIND', 'Choose experience or package', 422);
+      const items = allTours(db())
+        .filter((tour) => publicOffering(db(), tour.id))
+        .filter((tour) => !destinationId || tour.destinationId === destinationId)
+        .filter((tour) => !kind || (tour.kind ?? 'experience') === kind)
+        .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+        .map((tour) => withDestination(offeringView(db(), tour)));
+      return send(res, 200, { items });
+    }
+    if (method === 'GET' && tail[0] === 'experiences' && tail[1] && tail[2] === 'slots') {
+      const offering = publicOffering(db(), tail[1]);
+      const date = String(q.get('date') ?? '');
+      if (!offering) bad('OFFERING_NOT_FOUND', 'Offering not found', 404);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) bad('DATE_REQUIRED', 'Choose a valid date', 422);
+      const items = (db().experienceSlots ?? [])
+        .filter((slot) => slot.offeringId === offering.id && slot.active !== false && slot.startsAt > nowIso() && kolkataDate(slot.startsAt) === date)
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+        .map((slot) => slotView(db(), slot));
+      return send(res, 200, { offering: withDestination(offeringView(db(), offering)), items });
+    }
+    if (method === 'GET' && tail[0] === 'experiences' && tail[1] === 'quote') {
+      const quote = experienceQuote(db(), q.get('slotId'), Number(q.get('guests')), bad);
+      return send(res, 200, { ...quote, offering: withDestination(quote.offering) });
+    }
+
     // ------------------------------------------------------------- storefront
     if (method === 'GET' && tail[0] === 'storefront') {
-      const products = (db().catalogProducts ?? []).filter((p) => p.active && p.published);
+      const products = (db().catalogProducts ?? []).filter((p) => isPublicProduct(db(), p));
       const categories = (db().categories ?? []).filter((c) => c.active).map((c) => ({
         ...c, productCount: products.filter((p) => p.categoryId === c.id || p.category === c.name).length,
       }));
+      const visibleOffers = (db().offers ?? []).filter((offer) => isPublicOffer(db(), offer));
       return send(res, 200, {
         banners: liveBanners(),
         categories,
-        stores: (db().stores ?? []).filter((s) => s.status === 'active').map((s) => storeView(s)),
+        stores: (db().stores ?? []).filter(isPublicStore).map((s) => storeView(s)),
         featuredProducts: products.filter((p) => p.featured).slice(0, 8),
         newProducts: products.slice(-6).reverse(),
-        offers: (db().offers ?? []).filter((o) => o.active),
+        offers: visibleOffers,
         posters: {
           grocery: (db().posters ?? []).filter((p) => p.kind === 'grocery' && p.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
           food: (db().posters ?? []).filter((p) => p.kind === 'food' && p.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
@@ -239,11 +281,11 @@ export function createCatalogHub(ctx) {
     if (method === 'GET' && tail[0] === 'categories') return send(res, 200, { items: (db().categories ?? []).filter((c) => c.active) });
 
     if (method === 'GET' && tail[0] === 'stores' && tail.length === 1) {
-      return send(res, 200, { items: (db().stores ?? []).filter((s) => s.status === 'active').map((s) => storeView(s)) });
+      return send(res, 200, { items: (db().stores ?? []).filter(isPublicStore).map((s) => storeView(s)) });
     }
     if (method === 'GET' && tail[0] === 'stores' && tail[1]) {
       const store = (db().stores ?? []).find((s) => s.id === tail[1]);
-      if (!store || store.status !== 'active') bad('STORE_NOT_FOUND', 'Store not found', 404);
+      if (!isPublicStore(store)) bad('STORE_NOT_FOUND', 'Store not found', 404);
       return send(res, 200, { store: storeView(store, true) });
     }
 
@@ -288,21 +330,22 @@ export function createCatalogHub(ctx) {
       }
     }
     if (tail[1] === 'catalog' && tail[2] === 'products') {
-      const mine = (db().catalogProducts ?? []).filter((p) => p.ownerUserId === user.id || (db().stores ?? []).some((s) => s.id === p.storeId && s.ownerUserId === user.id));
+      const mine = (db().catalogProducts ?? []).filter((p) => p.ownerUserId === user.id || canManageStore(db(), user, (db().stores ?? []).find((s) => s.id === p.storeId)));
       if (method === 'GET') return send(res, 200, { items: mine });
       if (method === 'POST') {
         rateLimit(req, 'catalog', 60);
         const storeId = body.storeId ?? (db().stores ?? []).find((s) => s.ownerUserId === user.id)?.id;
         const store = (db().stores ?? []).find((s) => s.id === storeId);
         if (!store) bad('STORE_REQUIRED', 'Create or claim a store before adding products', 422);
-        if (store.ownerUserId && store.ownerUserId !== user.id && !user.roles.includes('admin')) bad('FORBIDDEN', 'This store belongs to another partner', 403);
+        if (!canManageStore(db(), user, store) && !user.roles.includes('admin')) bad('FORBIDDEN', 'This store is not managed by you', 403);
         const product = createProductRecord(db(), { ...body, storeId: store.id }, user.id);
         audit(user.id, 'partner.product.created', { productId: product.id, name: product.name });
         return ok(res, { product }, 201);
       }
       if (tail[3] && (method === 'PATCH' || method === 'DELETE')) {
-        const product = (db().catalogProducts ?? []).find((p) => p.id === tail[3] && (p.ownerUserId === user.id || user.roles.includes('admin')));
-        if (!product) bad('PRODUCT_NOT_FOUND', 'Product not found in your catalogue', 404);
+        const product = (db().catalogProducts ?? []).find((p) => p.id === tail[3]);
+        if (!product || (!user.roles.includes('admin') && product.ownerUserId !== user.id
+          && !canManageStore(db(), user, (db().stores ?? []).find((store) => store.id === product.storeId)))) bad('PRODUCT_NOT_FOUND', 'Product not found in your catalogue', 404);
         if (method === 'DELETE') {
           product.active = false; product.published = false;
           audit(user.id, 'partner.product.unpublished', { productId: product.id });
@@ -332,13 +375,39 @@ export function createCatalogHub(ctx) {
       }
     }
     if (tail[1] === 'catalog' && tail[2] === 'stores' && method === 'GET') {
-      return send(res, 200, { items: (db().stores ?? []).filter((s) => s.ownerUserId === user.id) });
+      return send(res, 200, { items: (db().stores ?? []).filter((store) => canManageStore(db(), user, store)) });
+    }
+
+    if (tail[1] === 'stores' && !tail[2] && method === 'POST') {
+      rateLimit(req, 'catalog', 30);
+      if (!['grocery', 'seller', 'admin'].some((role) => user.roles.includes(role))) bad('ROLE_REQUIRED', 'Complete seller onboarding first', 403);
+      const name = String(body.name ?? '').trim().slice(0, 100);
+      const destination = catalogue.destinations.find((d) => d.id === body.destinationId);
+      const lat = Number(body.lat); const lng = Number(body.lng);
+      if (name.length < 2 || String(body.address ?? '').trim().length < 5) bad('VALIDATION_FAILED', 'Store name and complete address are required', 422);
+      if (!destination) bad('DESTINATION_NOT_FOUND', 'Choose a real destination', 404);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) bad('LOCATION_REQUIRED', 'Provide valid store coordinates', 422);
+      const store = {
+        id: makeId('str'), service: 'grocery', name, destinationId: destination.id,
+        description: String(body.description ?? '').slice(0, 2000), coords: { lat, lng },
+        address: String(body.address).trim().slice(0, 300), phone: String(body.phone ?? '').slice(0, 40),
+        openingHours: String(body.openingHours ?? '').slice(0, 120), deliveryCoverageKm: Math.max(0.1, Number(body.deliveryCoverageKm ?? 8)),
+        dataClass: 'verified-listing', availabilitySource: 'partner-managed', ownerUserId: user.id,
+        verified: false, status: 'paused', products: [], slots: [], tags: [],
+        logo: body.logo ? sanitiseImages([body.logo])[0] ?? null : null,
+        banner: body.banner ? sanitiseImages([body.banner])[0] ?? null : null,
+        image: body.image ? sanitiseImages([body.image])[0] ?? null : null,
+        createdAt: nowIso(), updatedAt: nowIso(),
+      };
+      db().stores.push(store);
+      audit(user.id, 'partner.store.created', { storeId: store.id, verification: 'pending' });
+      return ok(res, { store: storeView(store, true) }, 201);
     }
 
     if (tail[1] === 'stores' && tail[2] && method === 'PATCH') {
       const store = (db().stores ?? []).find((s) => s.id === tail[2]);
       if (!store) bad('STORE_NOT_FOUND', 'Store not found', 404);
-      if (store.ownerUserId !== user.id && !user.roles.includes('admin')) bad('FORBIDDEN', 'This store belongs to another partner', 403);
+      if (!canManageStore(db(), user, store) && !user.roles.includes('admin')) bad('FORBIDDEN', 'This store is not managed by you', 403);
       for (const key of ['name', 'description', 'address', 'phone', 'openingHours']) {
         if (body[key] !== undefined) store[key] = String(body[key]).slice(0, 300);
       }
@@ -346,6 +415,7 @@ export function createCatalogHub(ctx) {
       if (body.image) store.image = sanitiseImages([body.image])[0] ?? store.image;
       if (body.logo !== undefined) store.logo = sanitiseImages([body.logo])[0] ?? null;
       if (body.banner !== undefined) store.banner = sanitiseImages([body.banner])[0] ?? null;
+      if (body.status === 'active' && store.verified === false && !user.roles.includes('admin')) bad('VERIFICATION_REQUIRED', 'GOWAYY operations must verify this store before it can open publicly', 403);
       if (body.status && ['active', 'paused'].includes(body.status)) store.status = body.status;
       store.updatedAt = nowIso();
       audit(user.id, 'partner.store.updated', { storeId: store.id });
@@ -356,6 +426,22 @@ export function createCatalogHub(ctx) {
       if (method === 'GET') return send(res, 200, { items: (db().offers ?? []).filter((o) => o.ownerUserId === user.id || o.ownerUserId === null) });
       if (method === 'POST') {
         rateLimit(req, 'offers', 40);
+        const scope = body.scope ?? 'store';
+        const admin = user.roles.includes('admin');
+        if (scope === 'platform' && !admin) bad('FORBIDDEN', 'Partners cannot create platform-wide offers', 403);
+        if (scope === 'store') {
+          const store = (db().stores ?? []).find((s) => s.id === body.storeId);
+          if (!store || (!admin && !canManageStore(db(), user, store))) bad('STORE_REQUIRED', 'Choose a store you manage', 403);
+        }
+        if (scope === 'category' && !admin) {
+          const ids = Array.isArray(body.categoryIds) ? body.categoryIds : [];
+          if (!ids.length || ids.some((id) => !(db().categories ?? []).some((c) => c.id === id && c.ownerUserId === user.id))) bad('FORBIDDEN', 'Category offers may target only your own categories', 403);
+        }
+        if (scope === 'product' && !admin) {
+          const ids = Array.isArray(body.productIds) ? body.productIds : [];
+          if (!ids.length || ids.some((id) => !(db().catalogProducts ?? []).some((p) => p.id === id && (p.ownerUserId === user.id
+            || canManageStore(db(), user, (db().stores ?? []).find((store) => store.id === p.storeId)))))) bad('FORBIDDEN', 'Product offers may target only your own products', 403);
+        }
         const offer = createOfferRecord(db(), body, user.id);
         audit(user.id, 'partner.offer.created', { offerId: offer.id, code: offer.code ?? null });
         return ok(res, { offer }, 201);
@@ -374,10 +460,9 @@ export function createCatalogHub(ctx) {
 
     // ------------------------------------------------------ order operations
     if (tail[1] === 'orders' && tail[3] === 'status' && method === 'POST') {
-      const services = partnerServices(user);
       const order = (db().orders ?? []).find((o) => o.id === tail[2]);
       if (!order) bad('ORDER_NOT_FOUND', 'Order not found', 404);
-      if (!services.includes(order.service) && !user.roles.includes('admin')) bad('FORBIDDEN', 'This order is not part of your service', 403);
+      if (!orderActor(db(), user, order) && !user.roles.includes('admin')) bad('FORBIDDEN', 'This order is not assigned to you', 403);
       const to = String(body.status ?? '');
       if (to === 'delivered') {
         const rec = delivery.recordFor(order.id);
@@ -395,8 +480,7 @@ export function createCatalogHub(ctx) {
     }
 
     if (tail[1] === 'deliveries') {
-      const services = partnerServices(user);
-      const relevant = (db().orders ?? []).filter((o) => services.includes(o.service) && ['packed', 'out_for_delivery'].includes(o.status));
+      const relevant = (db().orders ?? []).filter((o) => (orderActor(db(), user, o) || user.roles.includes('admin')) && ['packed', 'out_for_delivery'].includes(o.status));
       if (method === 'GET') {
         return send(res, 200, {
           items: relevant.map((o) => ({
@@ -411,7 +495,7 @@ export function createCatalogHub(ctx) {
         rateLimit(req, 'delivery-verify', 30);
         const order = (db().orders ?? []).find((o) => o.id === tail[2]);
         if (!order) bad('ORDER_NOT_FOUND', 'Order not found', 404);
-        if (!services.includes(order.service) && !user.roles.includes('admin')) bad('FORBIDDEN', 'This order is not part of your service', 403);
+        if (!orderActor(db(), user, order) && !user.roles.includes('admin')) bad('FORBIDDEN', 'This order is not assigned to you', 403);
         if (!['packed', 'out_for_delivery'].includes(order.status)) bad('INVALID_ORDER_STATE', 'Delivery can only be verified when the order is packed or out for delivery', 409);
         const result = delivery.verify(order.id, body.code);
         audit(user.id, 'delivery.verify', { orderId: order.id, ok: result.ok, code: result.code });

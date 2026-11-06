@@ -72,6 +72,8 @@ test('cart → quote → checkout → signed capture → earnings → settlement
   const out = await j(await fetch(`${BASE}/checkout`, auth(token, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, 'idempotency-key': 'itest-checkout-1' }, body: JSON.stringify({ addressId: addr.address.id, paymentMethod: 'upi', deliverySlot: 'standard', coupon: 'GOWAYY100' }) })));
   assert.equal(out.order.service, 'marketplace');
   assert.equal(out.order.price.totalPaise, quote.quote.totalPaise, 'checkout total must equal the server quote');
+  const replay = await j(await fetch(`${BASE}/checkout`, auth(token, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, 'idempotency-key': 'itest-checkout-1' }, body: JSON.stringify({ addressId: addr.address.id, paymentMethod: 'upi', deliverySlot: 'standard', coupon: 'GOWAYY100' }) })));
+  assert.equal(replay.order.id, out.order.id, 'checkout replay must return the original order after the cart is cleared');
   const pay = await j(await fetch(`${BASE}/payments/init`, auth(token, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, 'idempotency-key': 'itest-pay-1' }, body: JSON.stringify({ bookingId: null, orderId: out.order.id, method: 'upi', amountPaise: out.order.price.totalPaise, idempotencyKey: 'itest-pay-1' }) })));
   const cap = await j(await fetch(`${BASE}/payments/${pay.payment.id}/sandbox-capture`, auth(token, { method: 'POST' })));
   assert.equal(cap.payment.status, 'captured');
@@ -92,6 +94,17 @@ test('partner claim → inventory adjust → earnings → settlement', async () 
   const token = await registerAndLogin('partner@example.com');
   const claim = await j(await fetch(`${BASE}/partners/claim`, auth(token, { method: 'POST', body: JSON.stringify({ role: 'grocery', listingId: 'grc_3' }) })));
   assert.ok(claim.user.roles.includes('grocery'));
+  const storeUpdate = await fetch(`${BASE}/partner/stores/grc_3`, auth(token, { method: 'PATCH', body: JSON.stringify({
+    logo: { path: '/images/categories/groceries.webp', alt: 'Claimed store logo' }, banner: { path: '/images/categories/food.webp', alt: 'Claimed store banner' },
+  }) }));
+  assert.equal(storeUpdate.status, 200, 'a verified claim must permit store image management');
+  const scoped = await fetch(`${BASE}/partner/offers`, auth(token, { method: 'POST', body: JSON.stringify({ scope: 'store', storeId: 'grc_3', title: 'Claimed store only', code: 'CLAIMED10', kind: 'percent', value: 10 }) }));
+  assert.equal(scoped.status, 201);
+  const buyer = await registerAndLogin('coupon-scope@example.com');
+  await fetch(`${BASE}/cart/items`, auth(buyer, { method: 'POST', body: JSON.stringify({ productId: 'prd_powerbank', variantId: 'var_ice_blue', quantity: 1 }) }));
+  const wrongStore = await fetch(`${BASE}/cart/quote`, auth(buyer, { method: 'POST', body: JSON.stringify({ deliverySlot: 'standard', coupon: 'CLAIMED10' }) }));
+  assert.equal(wrongStore.status, 422);
+  assert.equal((await j(wrongStore)).error, 'COUPON_NOT_APPLICABLE');
   const inv = await j(await fetch(`${BASE}/partner/inventory`, auth(token)));
   assert.ok(inv.items.length > 0);
   const adj = await j(await fetch(`${BASE}/partner/inventory`, auth(token, { method: 'POST', body: JSON.stringify({ listingId: 'grc_3', productId: inv.items[0].id, delta: 3 }) })));
@@ -105,6 +118,56 @@ test('partner claim → inventory adjust → earnings → settlement', async () 
   assert.ok(up.demoNotice.includes('PENDING'));
   const settle = await fetch(`${BASE}/partner/settlements/request`, auth(token, { method: 'POST' }));
   assert.equal(settle.status, 409, 'no captured payments yet → nothing to settle');
+});
+
+test('partner store, product images and scoped offers persist without leaking pending listings', async () => {
+  const token = await registerAndLogin('store-owner@example.com');
+  await fetch(`${BASE}/partners/claim`, auth(token, { method: 'POST', body: JSON.stringify({ role: 'grocery', listingId: 'grc_2' }) }));
+  const created = await j(await fetch(`${BASE}/partner/stores`, auth(token, { method: 'POST', body: JSON.stringify({
+    name: 'Runtime Hill Store', destinationId: 'dst_darjeeling', address: '12 Test Road, Darjeeling', lat: 27.04, lng: 88.26,
+    logo: { path: '/images/categories/groceries.webp', alt: 'Runtime Hill Store logo' },
+    banner: { path: '/images/categories/food.webp', alt: 'Runtime Hill Store banner' },
+  }) })));
+  assert.equal(created.store.status, 'paused'); assert.equal(created.store.verified, false);
+  assert.equal(created.store.logo.path, '/images/categories/groceries.webp');
+  assert.equal(created.store.banner.path, '/images/categories/food.webp');
+  const updated = await j(await fetch(`${BASE}/partner/stores/${created.store.id}`, auth(token, { method: 'PATCH', body: JSON.stringify({
+    description: 'Partner-managed integration test store', logo: { path: '/images/categories/groceries.webp', alt: 'Updated store logo' },
+  }) })));
+  assert.equal(updated.store.description, 'Partner-managed integration test store');
+  const product = (await j(await fetch(`${BASE}/partner/catalog/products`, auth(token, { method: 'POST', body: JSON.stringify({
+    storeId: created.store.id, name: 'Runtime Tea Selection', categoryName: 'Runtime Pantry', pricePaise: 45000, mrpPaise: 50000, stock: 4,
+    images: [{ path: '/images/categories/groceries.webp', alt: 'Runtime Tea Selection' }],
+  }) })))).product;
+  assert.equal(product.images[0].path, '/images/categories/groceries.webp');
+  const mine = await j(await fetch(`${BASE}/partner/catalog/products`, auth(token)));
+  assert.ok(mine.items.some((item) => item.id === product.id));
+  const offer = (await j(await fetch(`${BASE}/partner/offers`, auth(token, { method: 'POST', body: JSON.stringify({
+    scope: 'store', storeId: created.store.id, title: 'Opening offer', code: 'PENDING10', kind: 'percent', value: 10,
+  }) })))).offer;
+  assert.equal(offer.ownerUserId, created.store.ownerUserId);
+  const ownOffers = await j(await fetch(`${BASE}/partner/offers`, auth(token)));
+  assert.ok(ownOffers.items.some((item) => item.id === offer.id));
+  const activate = await fetch(`${BASE}/partner/stores/${created.store.id}`, auth(token, { method: 'PATCH', body: JSON.stringify({ status: 'active' }) }));
+  assert.equal(activate.status, 403);
+  const direct = await fetch(`${BASE}/commerce/products/${product.slug}`);
+  assert.equal(direct.status, 404);
+  const cart = await fetch(`${BASE}/cart/items`, auth(token, { method: 'POST', body: JSON.stringify({ productId: product.id, variantId: 'var_std', quantity: 1 }) }));
+  assert.equal(cart.status, 404);
+  const storefront = await j(await fetch(`${BASE}/storefront`));
+  assert.ok(!storefront.stores.some((item) => item.id === created.store.id));
+  assert.ok(!storefront.newProducts.some((item) => item.id === product.id));
+  assert.ok(!storefront.offers.some((item) => item.id === offer.id));
+  const search = await j(await fetch(`${BASE}/search?q=Runtime%20Tea`));
+  assert.ok(!search.hits.some((item) => item.id === product.id));
+  const coupons = await j(await fetch(`${BASE}/coupons`));
+  assert.ok(!coupons.items.some((item) => item.code === 'PENDING10'));
+  const other = await registerAndLogin('other-store-owner@example.com');
+  await fetch(`${BASE}/partners/claim`, auth(other, { method: 'POST', body: JSON.stringify({ role: 'grocery', listingId: 'grc_1' }) }));
+  const foreignUpdate = await fetch(`${BASE}/partner/stores/${created.store.id}`, auth(other, { method: 'PATCH', body: JSON.stringify({ description: 'Not allowed' }) }));
+  assert.equal(foreignUpdate.status, 403);
+  const foreignOffer = await fetch(`${BASE}/partner/offers`, auth(other, { method: 'POST', body: JSON.stringify({ scope: 'store', storeId: created.store.id, kind: 'percent', value: 5 }) }));
+  assert.equal(foreignOffer.status, 403);
 });
 
 test('driver registration, demo verify and online toggle', async () => {

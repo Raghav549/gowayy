@@ -2,7 +2,7 @@
   "name": "gowayy",
   "version": "0.1.0",
   "private": true,
-  "description": "GOWAYY \u2014 connected travel, transport, hospitality and local commerce platform",
+  "description": "GOWAYY — connected travel, transport, hospitality and local commerce platform",
   "workspaces": [
     "apps/gowayy-customer/web",
     "apps/gowayy-partner/web",
@@ -30,7 +30,8 @@
     "typecheck:mobile": "tsc --noEmit -p apps/gowayy-customer/mobile/tsconfig.json",
     "test:supabase": "node --test tests/supabase/*.test.mjs",
     "seed:supabase": "node scripts/generate-supabase-seed.mjs",
-    "test:edge": "deno check --config supabase/functions/deno.json supabase/functions/gowayy-api/index.ts supabase/functions/payment-webhook/index.ts supabase/functions/tests/shared.test.ts && deno test --config supabase/functions/deno.json supabase/functions/tests/",
+    "provision:owners": "node scripts/provision-owner-accounts.mjs",
+    "test:edge": "deno check --config supabase/functions/deno.json supabase/functions/gowayy-api/index.ts supabase/functions/payment-webhook/index.ts supabase/functions/push-dispatcher/index.ts supabase/functions/tests/shared.test.ts supabase/functions/tests/phone-push.test.ts && deno test --allow-env --config supabase/functions/deno.json supabase/functions/tests/",
     "bundle:mobile:web": "cd apps/gowayy-customer/mobile && npx expo export --platform web --output-dir /tmp/gowayy-mobile-web",
     "bundle:mobile:android": "cd apps/gowayy-customer/mobile && npx expo export --platform android --output-dir /tmp/gowayy-mobile-android",
     "scan:secrets": "node scripts/scan-secrets.mjs",
@@ -49,12 +50,14 @@
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^4.3.4",
     "deno": "^2.9.6",
     "jsdom": "^25.0.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "web-push": "^3.6.7"
   },
   "engines": {
     "node": ">=20"

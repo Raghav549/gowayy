@@ -1,6 +1,6 @@
 import { client } from './client';
 
-const MAX_BYTES = 4 * 1024 * 1024;
+const MAX_BYTES = 2_500_000;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 
 /**
@@ -10,7 +10,7 @@ const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
  */
 export async function uploadImageFile(file: File): Promise<string> {
   if (!ALLOWED.includes(file.type)) throw new Error('Choose a JPEG, PNG or WebP image');
-  if (file.size > MAX_BYTES) throw new Error('Images must be smaller than 4 MB');
+  if (file.size > MAX_BYTES) throw new Error('Images must be 2.5 MB or smaller');
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));

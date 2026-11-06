@@ -5,6 +5,16 @@ export interface EdgeConfig {
   serviceKey: string;
   webhookSecret: string;
   otpProviderUrl: string;
+  paymentProvider: string;
+  razorpayKeyId: string;
+  razorpayKeySecret: string;
+  expoPushEnabled: boolean;
+  expoAccessToken: string;
+  webPushEnabled: boolean;
+  vapidSubject: string;
+  vapidPublicKey: string;
+  vapidPrivateKey: string;
+  pushDispatchSecret: string;
 }
 
 export function config(): EdgeConfig {
@@ -18,6 +28,16 @@ export function config(): EdgeConfig {
     url: url.replace(/\/$/, ''), anonKey, serviceKey,
     webhookSecret: Deno.env.get('GOWAYY_PAYMENT_WEBHOOK_SECRET') ?? '',
     otpProviderUrl: Deno.env.get('GOWAYY_EMAIL_PROVIDER_URL') ?? '',
+    paymentProvider: Deno.env.get('GOWAYY_PAYMENT_PROVIDER') ?? 'unconfigured',
+    razorpayKeyId: Deno.env.get('GOWAYY_RAZORPAY_KEY_ID') ?? '',
+    razorpayKeySecret: Deno.env.get('GOWAYY_RAZORPAY_KEY_SECRET') ?? '',
+    expoPushEnabled: Deno.env.get('GOWAYY_EXPO_PUSH_ENABLED') === 'true',
+    expoAccessToken: Deno.env.get('GOWAYY_EXPO_ACCESS_TOKEN') ?? '',
+    vapidSubject: Deno.env.get('GOWAYY_VAPID_SUBJECT') ?? '',
+    vapidPublicKey: Deno.env.get('GOWAYY_VAPID_PUBLIC_KEY') ?? '',
+    vapidPrivateKey: Deno.env.get('GOWAYY_VAPID_PRIVATE_KEY') ?? '',
+    webPushEnabled: Boolean(Deno.env.get('GOWAYY_VAPID_SUBJECT') && Deno.env.get('GOWAYY_VAPID_PUBLIC_KEY') && Deno.env.get('GOWAYY_VAPID_PRIVATE_KEY')),
+    pushDispatchSecret: Deno.env.get('GOWAYY_PUSH_DISPATCH_SECRET') ?? '',
   };
 }
 

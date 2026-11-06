@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Home, CarFront, Inbox, Wallet, Settings, LayoutDashboard } from 'lucide-react';
-import { AppShell, Brand, SplashScreen, ThemeProvider } from '@gowayy/ui';
+import { AppShell, Brand, SplashScreen, ThemeProvider, useBrowserPushRegistration } from '@gowayy/ui';
+import { client } from './lib/client';
 import { useSession, useUI } from './store';
 import { Login, Register } from './screens/Auth';
 import { Onboarding } from './screens/Onboarding';
@@ -33,16 +34,23 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [splash, setSplash] = useState(true);
+  const [splash, setSplash] = useState(() => {
+    try { return window.sessionStorage.getItem('gowayy.partner.splashSeen') !== 'true'; }
+    catch { return true; }
+  });
   const { loading } = useSession();
   const user = useSession((s) => s.user);
+  useBrowserPushRegistration({ client, installationKey: 'gowayy.partner.push.installation', enabled: Boolean(user) });
   const toast = useUI((s) => s.toast);
   const clearToast = useUI((s) => s.clearToast);
   const location = useLocation();
   useEffect(() => { void useSession.getState().hydrate(); }, []);
   useEffect(() => { if (toast) { const t = window.setTimeout(clearToast, 3800); return () => window.clearTimeout(t); } }, [toast, clearToast]);
 
-  if (splash) return <SplashScreen onDone={() => setSplash(false)} />;
+  if (splash) return <SplashScreen onDone={() => {
+    try { window.sessionStorage.setItem('gowayy.partner.splashSeen', 'true'); } catch { /* storage may be unavailable */ }
+    setSplash(false);
+  }} />;
   const isAuth = location.pathname.startsWith('/auth/');
   if (loading) return <div className="splash-page"><img src="/brand/g-symbol.svg" alt="" aria-hidden="true" /></div>;
   if (isAuth) return <Routes><Route path="/auth/login" element={<Login />} /><Route path="/auth/register" element={<Register />} /><Route path="*" element={<Navigate to="/auth/login" replace />} /></Routes>;

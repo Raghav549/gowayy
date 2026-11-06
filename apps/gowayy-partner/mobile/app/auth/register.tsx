@@ -33,7 +33,9 @@ export default function Register() {
   const verify = async () => {
     setBusy(true);
     try {
-      const res = await client.verifyOtp(regId, otp);
+      // The password is required once, at verification, by the Edge gateway
+      // (422 PASSWORD_REQUIRED). It is never persisted — it only creates the session.
+      const res = await client.verifyOtp(regId, otp, password);
       if (!('session' in res)) throw new Error(res.message ?? 'Verification failed');
       tokenStore.set(res.session.token);
       setSession(res.user as never, res.session.token);
@@ -56,7 +58,7 @@ export default function Register() {
           </>
         ) : (
           <>
-            <Body muted>Enter the 6-digit code sent to {email}.{demoOtp ? ` Dev build — demo adapter code: ${demoOtp} (not a real email).` : ''}</Body>
+            <Body muted>Enter the 6-digit code sent to {email}.{__DEV__ && demoOtp ? ` Dev build — demo adapter code: ${demoOtp} (not a real email).` : ''}</Body>
             <Input label="6-digit code" value={otp} onChangeText={setOtp} placeholder="123456" />
             <Button label={busy ? 'Verifying…' : 'Verify & continue'} onPress={() => void verify()} disabled={busy || otp.length !== 6} />
           </>

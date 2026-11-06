@@ -9,12 +9,14 @@ import {
   couponDiscountPaise, assertVariantAvailable,
 } from '@gowayy/commerce';
 import { makeId, nowIso, formatINR } from '@gowayy/shared-utils';
+import { isPublicProduct, isPublicStore } from './catalog-visibility.mjs';
+import { cartCoupon, singleCartStoreId } from './commerce-rules.mjs';
 
 export function createCommerceModule(ctx) {
   const { db, bad, auth, rateLimit, notify, audit, placeOrderFromCart } = ctx;
   /** Database-first product resolver so partner-created products behave exactly like seeded ones. */
   const getProduct = (idOrSlug) => (db().catalogProducts ?? []).find((p) => p.id === idOrSlug || p.slug === idOrSlug) ?? catalogGetProduct(idOrSlug);
-  const allProducts = () => (db().catalogProducts ?? []).filter((p) => p.active !== false && p.published !== false);
+  const allProducts = () => (db().catalogProducts ?? []).filter((p) => isPublicProduct(db(), p));
 
   function stockOf(productId, variantId) {
     const key = `${productId}:${variantId}`;
@@ -70,21 +72,23 @@ export function createCommerceModule(ctx) {
       return send(res, 200, { items: items.map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'stores') {
-      return send(res, 200, { items: (db().stores ?? []).filter((s) => s.status === 'active').map((s) => ({ id: s.id, name: s.name, categoryName: s.categoryName, destinationId: s.destinationId, productCount: allProducts().filter((p) => p.storeId === s.id).length, deliveryCoverageKm: s.deliveryCoverageKm, image: s.image, slots: s.slots, openingHours: s.openingHours, openingHoursVerified: s.openingHoursVerified, verified: s.verified, address: s.address, logo: s.logo ?? null, banner: s.banner ?? null })) });
+      return send(res, 200, { items: (db().stores ?? []).filter(isPublicStore).map((s) => ({ id: s.id, name: s.name, categoryName: s.categoryName, destinationId: s.destinationId, productCount: allProducts().filter((p) => p.storeId === s.id).length, deliveryCoverageKm: s.deliveryCoverageKm, image: s.image, slots: s.slots, openingHours: s.openingHours, openingHoursVerified: s.openingHoursVerified, verified: s.verified, address: s.address, logo: s.logo ?? null, banner: s.banner ?? null })) });
     }
     if (method === 'GET' && tail[0] === 'commerce' && tail[1] === 'products' && tail[2] && tail.length === 3) {
       const p = getProduct(tail[2]);
-      if (!p || p.active === false || p.published === false) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
+      if (!isPublicProduct(db(), p)) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
       const related = (p.relatedProductIds ?? []).map((id) => allProducts().find((x) => x.id === id)).filter(Boolean);
       const detail = assembleProductDetail(p, related, reviewStatsFor(p.id));
       detail.variants = detail.variants.map((v) => ({ ...v, stock: stockOf(p.id, v.id) }));
       detail.store = (db().stores ?? []).find((s) => s.id === p.storeId) ?? null;
-      detail.offers = (db().offers ?? []).filter((o) => o.active && ((o.productIds ?? []).includes(p.id) || (o.categoryIds ?? []).includes(p.categoryId) || o.scope === 'platform'));
+      detail.offers = (db().offers ?? []).filter((o) => o.active && ((o.productIds ?? []).includes(p.id)
+        || (o.categoryIds ?? []).includes(p.categoryId) || o.scope === 'platform'
+        || (o.scope === 'store' && o.storeId === p.storeId)));
       return send(res, 200, { product: detail });
     }
     if (method === 'POST' && tail[0] === 'products' && tail[2] === 'view') {
       const { user } = auth(req); const p = getProduct(tail[1]);
-      if (!p) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
+      if (!isPublicProduct(db(), p)) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
       db().productViews[user.id] ??= [];
       db().productViews[user.id] = [p.id, ...db().productViews[user.id].filter((x) => x !== p.id)].slice(0, 12);
       return ok(res, { recorded: true });
@@ -92,7 +96,7 @@ export function createCommerceModule(ctx) {
     if (method === 'GET' && tail[0] === 'products' && tail[1] === 'recently-viewed') {
       const { user } = auth(req);
       const ids = db().productViews[user.id] ?? [];
-      return send(res, 200, { items: ids.map((id) => getProduct(id)).filter(Boolean).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
+      return send(res, 200, { items: ids.map((id) => getProduct(id)).filter((p) => isPublicProduct(db(), p)).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
     }
 
     // ---- search recents ----
@@ -117,7 +121,7 @@ export function createCommerceModule(ctx) {
       if (method === 'POST' && tail[1] === 'items') {
         rateLimit(req, 'cart', 120);
         const p = getProduct(String(body.productId ?? ''));
-        if (!p) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
+        if (!isPublicProduct(db(), p)) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
         const variant = p.variants.find((v) => v.id === body.variantId);
         if (!variant) bad('VARIANT_NOT_FOUND', 'Variant not found', 404);
         const quantity = Math.max(1, Math.min(10, Number(body.quantity ?? 1)));
@@ -139,6 +143,7 @@ export function createCommerceModule(ctx) {
           const quantity = Math.max(0, Math.min(10, Number(body.quantity)));
           const p = getProduct(line.productId);
           const v = p?.variants.find((x) => x.id === line.variantId);
+          if (quantity > 0 && !isPublicProduct(db(), p)) bad('ITEM_UNAVAILABLE', 'This product is no longer available', 409);
           if (quantity > 0) assertVariantAvailable({ ...(v ?? {}), stock: stockOf(line.productId, line.variantId) }, quantity);
           if (quantity === 0) cart.lines = cart.lines.filter((l) => l.id !== line.id);
           else line.quantity = quantity;
@@ -162,12 +167,14 @@ export function createCommerceModule(ctx) {
         if (!cart.lines.length) bad('CART_EMPTY', 'Your cart is empty', 409);
         const lines = cart.lines.map((l) => {
           const p = getProduct(l.productId); const v = p?.variants.find((x) => x.id === l.variantId);
-          if (!p || !v) bad('ITEM_UNAVAILABLE', 'A cart item is no longer available', 409);
+          if (!isPublicProduct(db(), p) || !v) bad('ITEM_UNAVAILABLE', 'A cart item is no longer available', 409);
           assertVariantAvailable({ ...v, stock: stockOf(p.id, v.id) }, l.quantity);
-          return { unitPricePaise: v.pricePaise, quantity: l.quantity, protectionPlanId: l.protectionPlanId, mrpPaise: v.mrpPaise };
+          return { id: p.id, storeId: p.storeId, categoryId: p.categoryId, unitPricePaise: v.pricePaise, quantity: l.quantity, protectionPlanId: l.protectionPlanId, mrpPaise: v.mrpPaise };
         });
-        const coupon = body.coupon ? (db().coupons ?? []).find((c) => c.code === String(body.coupon).trim().toUpperCase() && c.active) : null;
-        if (body.coupon && !coupon) bad('INVALID_COUPON', 'This coupon code is not valid');
+        if (!singleCartStoreId(lines)) bad('MULTI_STORE_CART', 'Checkout one store at a time so fulfilment and coupons remain correct', 409);
+        const couponResult = cartCoupon(db(), body.coupon, lines);
+        if (couponResult.error) bad(couponResult.error, couponResult.error === 'COUPON_NOT_APPLICABLE' ? 'This coupon does not apply to every item in the cart' : 'This coupon code is not valid', 422);
+        const { coupon } = couponResult;
         const deliveryFeePaise = body.deliverySlot === 'express' ? 9900 : 0;
         const allPlans = allProducts().flatMap((p) => p.protectionPlans ?? []);
         const quote = quoteCheckout({ lines, protectionPlans: allPlans, deliveryFeePaise, coupon });
@@ -188,11 +195,11 @@ export function createCommerceModule(ctx) {
       const { user } = auth(req);
       db().wishlist[user.id] ??= [];
       if (method === 'GET' && tail.length === 1) {
-        return send(res, 200, { items: db().wishlist[user.id].map((id) => getProduct(id)).filter(Boolean).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
+        return send(res, 200, { items: db().wishlist[user.id].map((id) => getProduct(id)).filter((p) => isPublicProduct(db(), p)).map((p) => assembleProductDetail(p, [], reviewStatsFor(p.id))) });
       }
       if (method === 'POST' && tail.length === 1) {
         const p = getProduct(String(body.productId ?? ''));
-        if (!p) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
+        if (!isPublicProduct(db(), p)) bad('PRODUCT_NOT_FOUND', 'Product not found', 404);
         if (!db().wishlist[user.id].includes(p.id)) db().wishlist[user.id].push(p.id);
         return ok(res, { saved: true }, 201);
       }
@@ -219,7 +226,7 @@ export function createCommerceModule(ctx) {
     }
     if (method === 'POST' && tail[0] === 'checkout') {
       const { user } = auth(req); rateLimit(req, 'checkout', 30);
-      const order = placeOrderFromCart(user, body);
+      const order = placeOrderFromCart(user, { ...body, idempotencyKey: body.idempotencyKey ?? req.headers['idempotency-key'] });
       return ok(res, { order }, 201);
     }
     return false;

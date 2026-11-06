@@ -18,6 +18,12 @@ export const loginSchema = z.object({ email, password: z.string().min(1) });
 export const forgotSchema = z.object({ email });
 export const resetSchema = z.object({ resetId: z.string().min(8), code: z.string().length(6), password });
 export const otpSchema = z.object({ registrationId: z.string().min(8), code: z.string().regex(/^\d{6}$/), password: z.string().optional() });
+export const phone = z.string().trim().regex(/^\+[1-9]\d{7,14}$/, 'Use an international number such as +919876543210');
+export const phoneRequestSchema = z.object({ phone });
+export const phoneVerifySchema = z.object({
+  phone, code: z.string().regex(/^\d{6}$/),
+  firstName: name.optional(), lastName: name.optional(),
+});
 export const resendSchema = z.object({ registrationId: z.string().min(8) });
 export const idemSchema = z.object({ idempotencyKey: z.string().min(8) });
 

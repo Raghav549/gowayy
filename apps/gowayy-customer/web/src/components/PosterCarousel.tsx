@@ -44,7 +44,7 @@ export function PosterCarousel({ title, posters, ctaTo, ctaLabel }: {
       onTouchStart={() => setPaused(true)} onTouchEnd={() => setPaused(false)}>
       <div className="poster-panel__head">
         <h3>{title}</h3>
-        <Link className="poster-link" to={ctaTo}>{ctaLabel} <ArrowRight size={13} aria-hidden="true" /></Link>
+        <Link className="btn btn--secondary btn--sm" to={ctaTo}>{ctaLabel} <ArrowRight size={13} aria-hidden="true" /></Link>
       </div>
       <div className="poster-panel__viewport">
         <div className="poster-track" style={{ transform: `translateX(-${index * 100}%)` }}>

@@ -102,7 +102,9 @@ function OrderCard({ order, expanded = false }: { order: OrderView; expanded?: b
             <p className="small muted" style={{ marginTop: 10 }}>Deliver to: {order.deliveryAddress.name ? `${order.deliveryAddress.name}, ` : ''}{order.deliveryAddress.line}{order.deliveryAddress.city ? `, ${order.deliveryAddress.city}` : ''} {order.deliveryAddress.pincode ?? ''}</p>
           )}
           <div className="row row--wrap" style={{ gap: 10, marginTop: 14 }}>
-            {!order.paymentId && !['cancelled', 'refunded'].includes(order.status) && <button className="btn btn--primary btn--sm" onClick={() => navigate(`/checkout?step=payment&order=${order.id}`)}><CreditCard size={15} /> Complete payment</button>}
+            {order.paymentMethod !== 'cod' && !['paid', 'captured', 'cod_due'].includes(order.paymentStatus ?? '') && !['cancelled', 'refunded'].includes(order.status) && (
+              <button className="btn btn--primary btn--sm" onClick={() => navigate(`/checkout/booking?order=${order.id}`)}><CreditCard size={15} /> Complete payment</button>
+            )}
             <button className="btn btn--secondary btn--sm" onClick={() => void downloadInvoice('orders', order.id, order.reference).catch((e: Error) => showToast(e.message, 'error'))}><Receipt size={15} /> Invoice</button>
             {!['delivered', 'cancelled', 'refunded'].includes(order.status) && <button className="btn btn--danger btn--sm" onClick={() => void cancel()}>Cancel order</button>}
             <Link className="btn btn--ghost btn--sm" to="/support">Report an issue</Link>

@@ -66,6 +66,8 @@ a { color: inherit; }
 .shell__main { padding: 26px clamp(16px, 4vw, 48px); max-width: 1200px; width: 100%; margin: 0 auto; }
 .topbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--gw-bg) 86%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--gw-border); }
 .topbar__inner { display: flex; align-items: center; gap: 14px; padding: 12px clamp(16px, 4vw, 48px); max-width: 1200px; margin: 0 auto; }
+.topbar__brand { display: none; min-width: 0; }
+.topbar__slot { margin-left: auto; min-width: 0; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .icon-btn { position: relative; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--gw-border); background: var(--gw-surface); color: var(--gw-text); display: grid; place-items: center; cursor: pointer; text-decoration: none; }
 .icon-btn__dot { position: absolute; top: 7px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--gw-danger); }
@@ -74,6 +76,10 @@ a { color: inherit; }
 @media (max-width: 860px) {
   .shell { grid-template-columns: 1fr; }
   .shell__side { display: none; }
+  .topbar__brand { display: block; }
+  .topbar__brand .brand { gap: 7px; }
+  .topbar__brand .brand img:first-child { width: 28px; height: 28px; }
+  .topbar__brand .brand img:last-child { max-width: 124px; }
   .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; background: var(--gw-surface); border-top: 1px solid var(--gw-border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
   .bottom-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--gw-text-muted); text-decoration: none; padding: 6px 0; }
   .bottom-nav a.active { color: var(--gw-champagne-deep); font-weight: 700; }
@@ -188,3 +194,25 @@ body { background: var(--gw-gradient-page); color: var(--gw-text); }
 @media (prefers-reduced-motion: reduce) { .splash-page__mark { animation: none; opacity: 1; transform: none; } }
 /* No role-specific legacy palettes: the shared purple/orange mark and lilac foundation remain consistent. */
 .app-customer, .app-partner, .app-explore { --gw-accent:#421080; --gw-accent-contrast:#FFFFFF; --gw-champagne:#FFA500; --gw-champagne-deep:#421080; --gw-champagne-light:#FFC44D; }
+
+/* Responsive authentication and launch consistency (Partner + Admin). */
+.auth-stack {
+  width: 100%;
+  max-width: 440px;
+  min-width: 0;
+  margin: clamp(16px, 6vh, 64px) auto;
+  padding: clamp(4px, 2vw, 16px);
+}
+.auth-stack > *, .auth-stack .row, .auth-stack .input, .auth-stack .icon-btn { min-width: 0; }
+.auth-stack .row { width: 100%; }
+.auth-stack .icon-btn { flex: 0 0 48px; height: 48px; }
+.splash-page { background: radial-gradient(120% 120% at 50% 20%, #5B2A93 0%, #421080 42%, #2A1740 100%); }
+.bottom-nav a { min-width: 0; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+.shell__main, .shell__main > *, .grid-2 > *, .grid-3 > *, .card { min-width: 0; }
+.list-row__title, .list-row__sub { overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .shell__main { padding-inline: 14px; }
+  .auth-stack { padding-inline: 2px; }
+  .bottom-nav { left: 6px; right: 6px; padding-inline: 4px; }
+  .bottom-nav a { font-size: 9px; }
+}

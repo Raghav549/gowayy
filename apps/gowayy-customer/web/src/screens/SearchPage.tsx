@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Search, Store, X, UtensilsCrossed, MapPin, Package, BedDouble } from 'lucide-react';
+import { Clock, Search, Store, UtensilsCrossed, MapPin, Package, BedDouble } from 'lucide-react';
 import { client } from '../lib/client';
 import { useUI } from '../store/useUI';
 import { apiErrorText } from '../lib/guards';
+import { UniversalSearch } from '../components/UniversalSearch';
 
 const QUICK = ['Darjeeling', 'Mirik', 'Momos', 'Tea', 'Homestay', 'Airport taxi'];
 const CATEGORY_LINKS = [
@@ -56,21 +57,15 @@ export function SearchPage() {
 
   return (
     <div className="search-page stack">
-      <div className="search-field search-field--page" role="search">
-        <Search size={18} aria-hidden="true" className="search-field__icon" />
-        <input
-          className="search-field__input"
-          autoFocus
-          type="search"
-          value={text}
-          placeholder="Search destinations, hotels, shops, dishes…"
-          aria-label="Search"
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
-        />
-        {text && <button type="button" className="search-field__clear" aria-label="Clear search" onClick={() => { setText(''); setParams({}); }}><X size={16} /></button>}
-        <button type="button" className="search-field__submit" onClick={submit}>Search</button>
-      </div>
+      <UniversalSearch
+        value={text}
+        onChange={(value) => { setText(value); if (!value) setParams({}); }}
+        onSubmit={submit}
+        autoFocus
+        variant="page"
+        suggestions={false}
+        placeholder="Search destinations, hotels, shops, dishes…"
+      />
 
       <div className="chips search-categories">
         {CATEGORY_LINKS.map((c) => <Link key={c.to} to={c.to} className="chip"><c.icon size={13} aria-hidden="true" /> {c.label}</Link>)}

@@ -24,6 +24,9 @@ export async function requireCaller(req: Request): Promise<Caller> {
   if (!r.ok) throw new HttpError(401, 'INVALID_SESSION', 'Your session expired. Please sign in again.');
   const user = await r.json() as { id?: string; email?: string };
   if (!user.id) throw new HttpError(401, 'INVALID_SESSION', 'Your session expired. Please sign in again.');
+  // Auth validity alone is insufficient: suspended/deleted profiles must lose
+  // access to every protected operation, not only to particular UI routes.
+  await rpc('gowayy_assert_active', {}, token);
   return { id: user.id, email: user.email ?? '', token };
 }
 
@@ -123,6 +126,38 @@ export async function passwordLogin(email: string, password: string): Promise<{
   });
   if (!r.ok) throw new HttpError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect.');
   return await r.json();
+}
+
+export interface AuthSession {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  user: { id: string; email?: string; phone?: string; created_at?: string };
+}
+
+/** Supabase Auth owns SMS delivery, OTP expiry and code verification. */
+export async function requestPhoneOtp(phone: string): Promise<void> {
+  const { url, anonKey } = config();
+  const response = await fetch(`${url}/auth/v1/otp`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'content-type': 'application/json' },
+    body: JSON.stringify({ phone, create_user: true, options: { channel: 'sms' } }),
+  });
+  if (!response.ok) {
+    if (response.status === 429) throw new HttpError(429, 'PHONE_OTP_RATE_LIMITED', 'Too many SMS requests. Wait before trying again.');
+    throw new HttpError(502, 'PHONE_OTP_DELIVERY_FAILED', 'The configured SMS provider could not accept this request. Check Supabase phone Auth settings.');
+  }
+}
+
+export async function verifyPhoneOtp(phone: string, code: string): Promise<AuthSession> {
+  const { url, anonKey } = config();
+  const response = await fetch(`${url}/auth/v1/verify`, {
+    method: 'POST',
+    headers: { apikey: anonKey, 'content-type': 'application/json' },
+    body: JSON.stringify({ phone, token: code, type: 'sms' }),
+  });
+  if (!response.ok) throw new HttpError(401, 'INVALID_PHONE_OTP', 'The SMS code is invalid or expired. Request a new code and try again.');
+  return await response.json() as AuthSession;
 }
 
 export async function authLogout(token: string): Promise<void> {
